@@ -5,52 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>TOC Check</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin:0; background:#f6f7fb; color:#111; }
-    header { position:sticky; top:0; background:#fff; border-bottom:1px solid #e6e8ef; }
-    .wrap { max-width:1100px; margin:0 auto; padding:12px 14px; }
-    h1 { margin:0; font-size:18px; }
-    .badge { display:inline-block; margin-left:8px; font-size:12px; padding:2px 8px; border:1px solid #e6e8ef; border-radius:999px; background:#fafbff; }
-    main .wrap { padding-top:14px; padding-bottom:22px; }
-    .grid { display:grid; grid-template-columns:420px 1fr; gap:12px; }
-    @media (max-width:980px){ .grid{ grid-template-columns:1fr; } }
-    .card { background:#fff; border:1px solid #e6e8ef; border-radius:14px; padding:12px; }
-    .card h2 { margin:0 0 10px 0; font-size:14px; }
-    label { display:block; font-size:12px; color:#333; margin:10px 0 6px; }
-    input[type="text"], textarea { width:100%; border:1px solid #d7dbea; border-radius:10px; padding:10px; font-size:13px; outline:none; background:#fff; }
-    textarea { min-height:120px; resize:vertical; }
-    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    button { border:1px solid #d7dbea; background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; font-size:13px; }
+    :root { color-scheme: light; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #f6f7fb; color:#111; }
+    header { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #e6e8ef; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 14px; }
+    h1 { margin: 0; font-size: 18px; letter-spacing: .2px; }
+    .badge { display:inline-block; margin-left:8px; font-size:12px; padding:2px 8px; border:1px solid #e6e8ef; border-radius: 999px; background:#fafbff; }
+    main .wrap { padding-top: 14px; padding-bottom: 22px; }
+    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 12px; }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+    .card { background:#fff; border:1px solid #e6e8ef; border-radius: 14px; padding: 12px; }
+    .card h2 { margin: 0 0 10px 0; font-size: 14px; }
+    label { display:block; font-size:12px; color:#333; margin: 10px 0 6px; }
+    input[type="text"], textarea {
+      width: 100%; border:1px solid #d7dbea; border-radius: 10px; padding: 10px;
+      font-size: 13px; outline: none; background: #fff;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
+    button {
+      border:1px solid #d7dbea; background:#fff; padding: 8px 10px; border-radius: 10px;
+      cursor: pointer; font-size: 13px;
+    }
     button.primary { background:#111; color:#fff; border-color:#111; }
     button.danger { background:#fff; border-color:#f3c1c1; color:#b20000; }
     .muted { color:#666; font-size:12px; }
-    .kpi { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; }
-    .kpi .box { border:1px solid #e6e8ef; border-radius:12px; padding:10px; background:#fafbff; }
-    .kpi .n { font-size:18px; font-weight:700; }
-    .kpi .t { font-size:11px; color:#555; margin-top:2px; }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th, td { border-bottom:1px solid #eef0f6; padding:8px; text-align:left; vertical-align:top; }
-    th { font-size:12px; color:#444; background:#fcfdff; }
-    .status { font-weight:700; }
+    .kpi { display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-top: 10px;}
+    .kpi .box { border:1px solid #e6e8ef; border-radius: 12px; padding: 10px; background:#fafbff; }
+    .kpi .n { font-size: 18px; font-weight: 700; }
+    .kpi .t { font-size: 11px; color:#555; margin-top: 2px; }
+    table { width:100%; border-collapse: collapse; font-size: 13px; }
+    th, td { border-bottom:1px solid #eef0f6; padding: 8px; text-align:left; vertical-align: top; }
+    th { font-size: 12px; color:#444; background:#fcfdff; }
+    .status { font-weight: 700; }
     .PASS { color:#0b7a00; }
     .X { color:#b20000; }
     .UNJ { color:#555; }
-    .small { font-size:12px; color:#444; }
-    .pill { font-size:12px; border:1px solid #e6e8ef; border-radius:999px; padding:2px 8px; background:#fff; }
-    .footerline { border-top:1px solid #e6e8ef; margin-top:10px; padding-top:10px; }
+    .small { font-size: 12px; color:#444; }
+    .pill { font-size: 12px; border:1px solid #e6e8ef; border-radius: 999px; padding: 2px 8px; background:#fff; }
+    .footerline { border-top:1px solid #e6e8ef; margin-top: 10px; padding-top: 10px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .warn { border:1px solid #ffd7a6; background:#fff7ed; padding:10px; border-radius: 12px; font-size:12px; color:#7a4b00; }
   </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <div class="row" style="justify-content:space-between;">
+    <div class="row" style="justify-content: space-between;">
       <div>
         <h1>TOC Check <span class="badge" id="saveBadge">자동 저장: -</span></h1>
         <div class="muted">출력: 상태값 · 목록 · 변경 이력 · 미판단 목록</div>
       </div>
       <div class="row">
-        <button id="btnExport">내보내기(JSON)</button>
+        <button id="btnExport">내보내기(JSON 파일)</button>
         <button class="danger" id="btnReset">데이터 초기화</button>
       </div>
     </div>
@@ -62,6 +69,10 @@
     <div class="grid">
       <section class="card">
         <h2>입력</h2>
+
+        <div class="warn" id="storageWarn" style="display:none;">
+          현재 브라우저 저장값이 비어 있음(0). 이전 작업을 복구하려면 “가져오기(JSON)”에 백업 JSON을 붙여넣어야 함.
+        </div>
 
         <label>상위목차 / 하위목차 원문(사용자 입력)</label>
         <textarea id="tocRaw" placeholder="예:&#10;1. 상위목차 A&#10;1.1 하위목차 A-1&#10;2. 상위목차 B"></textarea>
@@ -99,6 +110,24 @@
           <div class="box"><div class="n" id="kUnj">0</div><div class="t">미판단 개수</div></div>
           <div class="box"><div class="n" id="kTotal">0</div><div class="t">전체 기준점</div></div>
         </div>
+
+        <div class="footerline"></div>
+
+        <h2>백업 JSON (항상 표시 / 복사 가능)</h2>
+        <textarea id="backupJson" class="mono" style="min-height:140px;" readonly></textarea>
+        <div class="row">
+          <button id="btnCopyBackup">백업 JSON 복사</button>
+        </div>
+
+        <div class="footerline"></div>
+
+        <h2>가져오기(JSON)</h2>
+        <textarea id="importJson" class="mono" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
+        <div class="row">
+          <button class="primary" id="btnImport">가져오기 실행</button>
+          <span class="muted">붙여넣기 → 가져오기</span>
+        </div>
+
       </section>
 
       <section class="card">
@@ -142,190 +171,281 @@
 
         <h2>미판단 기준점 목록</h2>
         <div id="listUnj" class="small"></div>
+
       </section>
     </div>
   </div>
 </main>
 
 <script>
-(() => {
-  const LS_KEY = "toc_check_v1_state";
+(function(){
+  const LS_KEY = "toc_check_v2_state";
 
-  let state = { raw:"", criteria:[], history:[], selectedId:null };
-
-  const $ = (id)=>document.getElementById(id);
-
-  const z2 = (n)=>String(n).padStart(2,"0");
-  const nowStamp = ()=>{
-    const d=new Date();
-    return `${d.getFullYear()}-${z2(d.getMonth()+1)}-${z2(d.getDate())} ${z2(d.getHours())}:${z2(d.getMinutes())}:${z2(d.getSeconds())}`;
+  let state = {
+    raw: "",
+    criteria: [],
+    history: [],
+    selectedId: null
   };
 
-  const save = ()=>{
+  const el = (id)=>document.getElementById(id);
+
+  function nowStamp(){
+    const d = new Date();
+    const z = (n)=>String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+  }
+
+  function buildBackupPayload(){
+    return JSON.stringify({
+      raw: state.raw,
+      criteria: state.criteria,
+      history: state.history
+    }, null, 2);
+  }
+
+  function updateBackupBox(){
+    el("backupJson").value = buildBackupPayload();
+  }
+
+  function save(){
     localStorage.setItem(LS_KEY, JSON.stringify(state));
-    $("saveBadge").textContent = "자동 저장: " + nowStamp();
-  };
+    el("saveBadge").textContent = "자동 저장: " + nowStamp();
+    updateBackupBox();
+  }
 
-  const load = ()=>{
+  function load(){
     const raw = localStorage.getItem(LS_KEY);
     if(!raw) return;
     try{
-      const p = JSON.parse(raw);
-      if(p && typeof p==="object") state = Object.assign(state, p);
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === "object"){
+        state = Object.assign(state, parsed);
+      }
     }catch(e){}
-  };
+  }
 
-  const nextAutoId = ()=>{
-    const used = new Set(state.criteria.map(c=>c.id));
-    let n=1;
-    while(true){
-      const id = "C"+String(n).padStart(3,"0");
-      if(!used.has(id)) return id;
-      n++;
-    }
-  };
+  function statusText(s){
+    if(s === "PASS") return "PASS";
+    if(s === "X") return "X";
+    return "UNJ";
+  }
 
-  const render = ()=>{
+  function render(){
     const pass = state.criteria.filter(c=>c.status==="PASS").length;
     const x = state.criteria.filter(c=>c.status==="X").length;
     const unj = state.criteria.filter(c=>c.status==="UNJ").length;
+    el("kPass").textContent = String(pass);
+    el("kX").textContent = String(x);
+    el("kUnj").textContent = String(unj);
+    el("kTotal").textContent = String(state.criteria.length);
 
-    $("kPass").textContent = String(pass);
-    $("kX").textContent = String(x);
-    $("kUnj").textContent = String(unj);
-    $("kTotal").textContent = String(state.criteria.length);
-
-    $("tocRaw").value = state.raw || "";
+    el("tocRaw").value = state.raw || "";
 
     const sel = state.criteria.find(c=>c.id===state.selectedId);
-    $("selInfo").textContent = sel ? sel.id : "-";
+    el("selInfo").textContent = sel ? sel.id : "-";
 
-    // table
-    const tbody = $("critTable");
+    el("storageWarn").style.display = (state.criteria.length===0 && (state.raw||"").trim()==="") ? "block" : "none";
+
+    const tbody = el("critTable");
     tbody.innerHTML = "";
     for(const c of state.criteria){
       const tr = document.createElement("tr");
 
       const tdId = document.createElement("td");
-      tdId.className = "mono"; tdId.textContent = c.id;
+      tdId.className = "mono";
+      tdId.textContent = c.id;
 
       const tdName = document.createElement("td");
       tdName.textContent = c.name;
 
       const tdStatus = document.createElement("td");
       tdStatus.className = "status " + (c.status==="PASS"?"PASS":c.status==="X"?"X":"UNJ");
-      tdStatus.textContent = c.status;
+      tdStatus.textContent = statusText(c.status);
 
       const tdUp = document.createElement("td");
-      tdUp.className = "mono small"; tdUp.textContent = c.updatedAt || "-";
+      tdUp.className = "mono small";
+      tdUp.textContent = c.updatedAt || "-";
 
       const tdBtn = document.createElement("td");
       const b = document.createElement("button");
       b.textContent = (state.selectedId===c.id) ? "선택됨" : "선택";
-      b.onclick = ()=>{ state.selectedId=c.id; save(); render(); };
+      b.addEventListener("click", ()=>{
+        state.selectedId = c.id;
+        save(); render();
+      });
       tdBtn.appendChild(b);
 
-      tr.append(tdId, tdName, tdStatus, tdUp, tdBtn);
+      tr.appendChild(tdId);
+      tr.appendChild(tdName);
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdUp);
+      tr.appendChild(tdBtn);
       tbody.appendChild(tr);
     }
 
-    // lists (IDs only)
-    $("listPass").textContent = state.criteria.filter(c=>c.status==="PASS").map(c=>c.id).join(", ") || "-";
-    $("listX").textContent = state.criteria.filter(c=>c.status==="X").map(c=>c.id).join(", ") || "-";
-    $("listUnj").textContent = state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id).join(", ") || "-";
+    const passIds = state.criteria.filter(c=>c.status==="PASS").map(c=>c.id).join(", ");
+    const xIds = state.criteria.filter(c=>c.status==="X").map(c=>c.id).join(", ");
+    el("listPass").textContent = passIds || "-";
+    el("listX").textContent = xIds || "-";
 
-    // history (only PASS<->X)
-    const hist = state.history.filter(h => (h.from==="PASS"&&h.to==="X") || (h.from==="X"&&h.to==="PASS"));
-    const htbody = $("histTable");
+    const htbody = el("histTable");
     htbody.innerHTML = "";
-    if(hist.length===0){
-      const tr=document.createElement("tr");
-      const td=document.createElement("td");
-      td.colSpan=4; td.className="small muted"; td.textContent="-";
-      tr.appendChild(td); htbody.appendChild(tr);
-    } else {
-      for(const h of hist.slice().reverse()){
-        const tr=document.createElement("tr");
-        const tdTs=document.createElement("td"); tdTs.className="mono small"; tdTs.textContent=h.ts;
-        const tdId=document.createElement("td"); tdId.className="mono"; tdId.textContent=h.id;
-        const tdCh=document.createElement("td"); tdCh.className="mono"; tdCh.textContent=`${h.from}→${h.to}`;
-        const tdNm=document.createElement("td"); tdNm.textContent=h.name;
-        tr.append(tdTs, tdId, tdCh, tdNm);
-        htbody.appendChild(tr);
-      }
+    const filteredHist = state.history.filter(h=>{
+      return (h.from==="PASS" && h.to==="X") || (h.from==="X" && h.to==="PASS");
+    });
+    for(const h of filteredHist.slice().reverse()){
+      const tr = document.createElement("tr");
+      const tdTs = document.createElement("td"); tdTs.className="mono small"; tdTs.textContent = h.ts;
+      const tdId = document.createElement("td"); tdId.className="mono"; tdId.textContent = h.id;
+      const tdCh = document.createElement("td"); tdCh.className="mono"; tdCh.textContent = `${h.from}→${h.to}`;
+      const tdNm = document.createElement("td"); tdNm.textContent = h.name;
+      tr.appendChild(tdTs); tr.appendChild(tdId); tr.appendChild(tdCh); tr.appendChild(tdNm);
+      htbody.appendChild(tr);
     }
-  };
+    if(filteredHist.length===0){
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "small muted";
+      td.textContent = "-";
+      tr.appendChild(td);
+      htbody.appendChild(tr);
+    }
 
-  const addCriterion = (id, name)=>{
+    const unjIds = state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id).join(", ");
+    el("listUnj").textContent = unjIds || "-";
+
+    updateBackupBox();
+  }
+
+  function nextAutoId(){
+    const used = new Set(state.criteria.map(c=>c.id.toUpperCase()));
+    let n = 1;
+    while(true){
+      const id = "C" + String(n).padStart(3,"0");
+      if(!used.has(id)) return id;
+      n++;
+    }
+  }
+
+  function addCriterion(id, name){
     if(!id || !name) return;
-    if(state.criteria.some(c=>c.id===id)) return;
-    state.criteria.push({ id, name, status:"UNJ", updatedAt:"-" });
-    state.selectedId = id;
+    const norm = id.trim();
+    if(state.criteria.some(c=>c.id===norm)) return;
+    state.criteria.push({ id: norm, name: name.trim(), status: "UNJ", updatedAt: "-" });
+    state.selectedId = norm;
     save(); render();
-  };
+  }
 
-  const setStatus = (to)=>{
+  function setStatus(newStatus){
     const sel = state.criteria.find(c=>c.id===state.selectedId);
     if(!sel) return;
-    const from = sel.status;
-    if(from===to) return;
+    const prev = sel.status;
+    if(prev === newStatus) return;
+
     const ts = nowStamp();
-    sel.status = to;
+    sel.status = newStatus;
     sel.updatedAt = ts;
-    state.history.push({ ts, id: sel.id, from, to, name: sel.name });
-    save(); render();
-  };
+    state.history.push({ ts, id: sel.id, from: prev, to: newStatus, name: sel.name });
 
-  const clearStatus = ()=>{
+    save(); render();
+  }
+
+  function clearStatus(){
     const sel = state.criteria.find(c=>c.id===state.selectedId);
     if(!sel) return;
-    if(sel.status==="UNJ") return;
-    const ts = nowStamp();
-    state.history.push({ ts, id: sel.id, from: sel.status, to:"UNJ", name: sel.name });
-    sel.status="UNJ"; sel.updatedAt=ts;
-    save(); render();
-  };
+    const prev = sel.status;
+    if(prev === "UNJ") return;
 
-  const deleteSelected = ()=>{
+    const ts = nowStamp();
+    sel.status = "UNJ";
+    sel.updatedAt = ts;
+    state.history.push({ ts, id: sel.id, from: prev, to: "UNJ", name: sel.name });
+
+    save(); render();
+  }
+
+  function deleteSelected(){
     const id = state.selectedId;
     if(!id) return;
     state.criteria = state.criteria.filter(c=>c.id!==id);
     state.history = state.history.filter(h=>h.id!==id);
     state.selectedId = null;
     save(); render();
-  };
+  }
 
-  // events
-  $("btnSaveRaw").onclick = ()=>{ state.raw = $("tocRaw").value || ""; save(); render(); };
-  $("btnAutoId").onclick = ()=>{ $("critId").value = nextAutoId(); };
-  $("btnAdd").onclick = ()=>{
-    const id = ($("critId").value||"").trim();
-    const name = ($("critName").value||"").trim();
+  el("btnSaveRaw").addEventListener("click", ()=>{
+    state.raw = el("tocRaw").value || "";
+    save(); render();
+  });
+
+  el("btnAutoId").addEventListener("click", ()=>{
+    el("critId").value = nextAutoId();
+  });
+
+  el("btnAdd").addEventListener("click", ()=>{
+    const id = (el("critId").value || "").trim();
+    const name = (el("critName").value || "").trim();
     addCriterion(id, name);
-    $("critId").value=""; $("critName").value="";
-  };
+    el("critId").value = "";
+    el("critName").value = "";
+  });
 
-  $("btnPass").onclick = ()=>setStatus("PASS");
-  $("btnX").onclick = ()=>setStatus("X");
-  $("btnClear").onclick = ()=>clearStatus();
-  $("btnDelete").onclick = ()=>deleteSelected();
+  el("btnPass").addEventListener("click", ()=>setStatus("PASS"));
+  el("btnX").addEventListener("click", ()=>setStatus("X"));
+  el("btnClear").addEventListener("click", ()=>clearStatus());
+  el("btnDelete").addEventListener("click", ()=>deleteSelected());
 
-  $("btnReset").onclick = ()=>{
+  el("btnReset").addEventListener("click", ()=>{
     localStorage.removeItem(LS_KEY);
     state = { raw:"", criteria:[], history:[], selectedId:null };
     render();
-    $("saveBadge").textContent = "자동 저장: -";
-  };
+    el("saveBadge").textContent = "자동 저장: -";
+  });
 
-  $("btnExport").onclick = ()=>{
-    const payload = JSON.stringify({ raw: state.raw, criteria: state.criteria, history: state.history }, null, 2);
+  el("btnExport").addEventListener("click", ()=>{
+    const payload = buildBackupPayload();
     const blob = new Blob([payload], {type:"application/json"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href=url; a.download="toc_check_export.json";
-    document.body.appendChild(a); a.click(); a.remove();
+    a.href = url;
+    a.download = "toc_check_backup.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     URL.revokeObjectURL(url);
-  };
+  });
+
+  el("btnCopyBackup").addEventListener("click", async ()=>{
+    try{
+      await navigator.clipboard.writeText(el("backupJson").value || "");
+    }catch(e){
+      // fallback
+      el("backupJson").focus();
+      el("backupJson").select();
+      document.execCommand("copy");
+    }
+  });
+
+  el("btnImport").addEventListener("click", ()=>{
+    const txt = (el("importJson").value || "").trim();
+    if(!txt) return;
+    try{
+      const parsed = JSON.parse(txt);
+      if(!parsed || typeof parsed !== "object") return;
+      const next = {
+        raw: String(parsed.raw || ""),
+        criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
+        history: Array.isArray(parsed.history) ? parsed.history : [],
+        selectedId: null
+      };
+      state = next;
+      save(); render();
+    }catch(e){
+      // ignore
+    }
+  });
 
   load();
   render();
