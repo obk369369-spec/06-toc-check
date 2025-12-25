@@ -6,7 +6,7 @@
   <title>TOC Check</title>
   <style>
     :root { color-scheme: light; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #f6f7fb; color:#111; }
+    body { margin: 0; background: #f6f7fb; color: #111; }
     header { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #e6e8ef; }
     .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 14px; }
     h1 { margin: 0; font-size: 18px; letter-spacing: .2px; }
@@ -45,7 +45,7 @@
     .pill { font-size: 12px; border:1px solid #e6e8ef; border-radius: 999px; padding: 2px 8px; background:#fff; }
     .footerline { border-top:1px solid #e6e8ef; margin-top: 10px; padding-top: 10px; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .warn { border:1px solid #ffd7a6; background:#fff7ed; padding:10px; border-radius: 12px; font-size:12px; color:#7a4b00; }
+    .warn { border-color:#ffd6a3 !important; background:#fff7ed !important; }
   </style>
 </head>
 <body>
@@ -57,7 +57,7 @@
         <div class="muted">출력: 상태값 · 목록 · 변경 이력 · 미판단 목록</div>
       </div>
       <div class="row">
-        <button id="btnExport">내보내기(JSON 파일)</button>
+        <button id="btnExport">내보내기(JSON)</button>
         <button class="danger" id="btnReset">데이터 초기화</button>
       </div>
     </div>
@@ -69,10 +69,6 @@
     <div class="grid">
       <section class="card">
         <h2>입력</h2>
-
-        <div class="warn" id="storageWarn" style="display:none;">
-          현재 브라우저 저장값이 비어 있음(0). 이전 작업을 복구하려면 “가져오기(JSON)”에 백업 JSON을 붙여넣어야 함.
-        </div>
 
         <label>상위목차 / 하위목차 원문(사용자 입력)</label>
         <textarea id="tocRaw" placeholder="예:&#10;1. 상위목차 A&#10;1.1 하위목차 A-1&#10;2. 상위목차 B"></textarea>
@@ -113,19 +109,22 @@
 
         <div class="footerline"></div>
 
-        <h2>백업 JSON (항상 표시 / 복사 가능)</h2>
-        <textarea id="backupJson" class="mono" style="min-height:140px;" readonly></textarea>
+        <h2>백업 JSON (항상 표시)</h2>
+        <div class="muted" id="backupHint">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
+        <textarea id="backupBox" class="mono" style="min-height:160px;"></textarea>
         <div class="row">
           <button id="btnCopyBackup">백업 JSON 복사</button>
+          <button id="btnDownloadBackup">백업 JSON 다운로드</button>
         </div>
 
         <div class="footerline"></div>
 
         <h2>가져오기(JSON)</h2>
-        <textarea id="importJson" class="mono" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
+        <div class="muted">붙여넣기 → Import</div>
+        <textarea id="importBox" class="mono" placeholder='여기에 백업 JSON을 붙여넣기'></textarea>
         <div class="row">
-          <button class="primary" id="btnImport">가져오기 실행</button>
-          <span class="muted">붙여넣기 → 가져오기</span>
+          <button class="primary" id="btnImport">Import(복구)</button>
+          <span class="muted" id="importMsg">-</span>
         </div>
 
       </section>
@@ -179,7 +178,7 @@
 
 <script>
 (function(){
-  const LS_KEY = "toc_check_v2_state";
+  const LS_KEY = "toc_check_v1_state";
 
   let state = {
     raw: "",
@@ -196,22 +195,23 @@
     return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
   }
 
-  function buildBackupPayload(){
-    return JSON.stringify({
-      raw: state.raw,
-      criteria: state.criteria,
-      history: state.history
-    }, null, 2);
+  function safeStringify(obj){
+    try { return JSON.stringify(obj, null, 2); }
+    catch(e){ return ""; }
   }
 
-  function updateBackupBox(){
-    el("backupJson").value = buildBackupPayload();
+  function refreshBackupBox(){
+    const payload = safeStringify({ raw: state.raw, criteria: state.criteria, history: state.history });
+    el("backupBox").value = payload || "";
+    // 경고(비어있으면)
+    const empty = (!state.criteria || state.criteria.length === 0) && (!state.raw || state.raw.trim() === "");
+    el("backupBox").classList.toggle("warn", empty);
   }
 
   function save(){
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     el("saveBadge").textContent = "자동 저장: " + nowStamp();
-    updateBackupBox();
+    refreshBackupBox();
   }
 
   function load(){
@@ -244,8 +244,6 @@
 
     const sel = state.criteria.find(c=>c.id===state.selectedId);
     el("selInfo").textContent = sel ? sel.id : "-";
-
-    el("storageWarn").style.display = (state.criteria.length===0 && (state.raw||"").trim()==="") ? "block" : "none";
 
     const tbody = el("critTable");
     tbody.innerHTML = "";
@@ -316,11 +314,11 @@
     const unjIds = state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id).join(", ");
     el("listUnj").textContent = unjIds || "-";
 
-    updateBackupBox();
+    refreshBackupBox();
   }
 
   function nextAutoId(){
-    const used = new Set(state.criteria.map(c=>c.id.toUpperCase()));
+    const used = new Set(state.criteria.map(c=>String(c.id)));
     let n = 1;
     while(true){
       const id = "C" + String(n).padStart(3,"0");
@@ -331,10 +329,9 @@
 
   function addCriterion(id, name){
     if(!id || !name) return;
-    const norm = id.trim();
-    if(state.criteria.some(c=>c.id===norm)) return;
-    state.criteria.push({ id: norm, name: name.trim(), status: "UNJ", updatedAt: "-" });
-    state.selectedId = norm;
+    if(state.criteria.some(c=>c.id===id)) return;
+    state.criteria.push({ id, name, status: "UNJ", updatedAt: "-" });
+    state.selectedId = id;
     save(); render();
   }
 
@@ -347,6 +344,7 @@
     const ts = nowStamp();
     sel.status = newStatus;
     sel.updatedAt = ts;
+
     state.history.push({ ts, id: sel.id, from: prev, to: newStatus, name: sel.name });
 
     save(); render();
@@ -362,7 +360,6 @@
     sel.status = "UNJ";
     sel.updatedAt = ts;
     state.history.push({ ts, id: sel.id, from: prev, to: "UNJ", name: sel.name });
-
     save(); render();
   }
 
@@ -375,6 +372,79 @@
     save(); render();
   }
 
+  function exportJson(){
+    const payload = safeStringify({ raw: state.raw, criteria: state.criteria, history: state.history });
+    const blob = new Blob([payload], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "toc_check_export.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadBackup(){
+    const payload = el("backupBox").value || "";
+    const blob = new Blob([payload], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "toc_check_backup_" + nowStamp().replace(/[: ]/g,"-") + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function copyBackup(){
+    const t = el("backupBox");
+    t.focus();
+    t.select();
+    document.execCommand("copy");
+  }
+
+  function doImport(){
+    el("importMsg").textContent = "-";
+    const text = (el("importBox").value || "").trim();
+    if(!text){ el("importMsg").textContent = "Import: X"; return; }
+    try{
+      const parsed = JSON.parse(text);
+      if(!parsed || typeof parsed !== "object"){ el("importMsg").textContent = "Import: X"; return; }
+
+      const next = {
+        raw: String(parsed.raw || ""),
+        criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
+        history: Array.isArray(parsed.history) ? parsed.history : [],
+        selectedId: null
+      };
+
+      // 최소 형태 검증
+      next.criteria = next.criteria.map(c=>({
+        id: String(c.id || ""),
+        name: String(c.name || ""),
+        status: (c.status==="PASS"||c.status==="X"||c.status==="UNJ") ? c.status : "UNJ",
+        updatedAt: String(c.updatedAt || "-")
+      })).filter(c=>c.id && c.name);
+
+      next.history = next.history.map(h=>({
+        ts: String(h.ts || "-"),
+        id: String(h.id || ""),
+        from: String(h.from || ""),
+        to: String(h.to || ""),
+        name: String(h.name || "")
+      })).filter(h=>h.id);
+
+      state = next;
+      save(); render();
+      el("importMsg").textContent = "Import: PASS";
+    }catch(e){
+      el("importMsg").textContent = "Import: X";
+    }
+  }
+
+  // Wire up
   el("btnSaveRaw").addEventListener("click", ()=>{
     state.raw = el("tocRaw").value || "";
     save(); render();
@@ -404,49 +474,14 @@
     el("saveBadge").textContent = "자동 저장: -";
   });
 
-  el("btnExport").addEventListener("click", ()=>{
-    const payload = buildBackupPayload();
-    const blob = new Blob([payload], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "toc_check_backup.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  });
+  el("btnExport").addEventListener("click", exportJson);
 
-  el("btnCopyBackup").addEventListener("click", async ()=>{
-    try{
-      await navigator.clipboard.writeText(el("backupJson").value || "");
-    }catch(e){
-      // fallback
-      el("backupJson").focus();
-      el("backupJson").select();
-      document.execCommand("copy");
-    }
-  });
+  el("btnCopyBackup").addEventListener("click", copyBackup);
+  el("btnDownloadBackup").addEventListener("click", downloadBackup);
 
-  el("btnImport").addEventListener("click", ()=>{
-    const txt = (el("importJson").value || "").trim();
-    if(!txt) return;
-    try{
-      const parsed = JSON.parse(txt);
-      if(!parsed || typeof parsed !== "object") return;
-      const next = {
-        raw: String(parsed.raw || ""),
-        criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
-        history: Array.isArray(parsed.history) ? parsed.history : [],
-        selectedId: null
-      };
-      state = next;
-      save(); render();
-    }catch(e){
-      // ignore
-    }
-  });
+  el("btnImport").addEventListener("click", doImport);
 
+  // Init
   load();
   render();
 })();
