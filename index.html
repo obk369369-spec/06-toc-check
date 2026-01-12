@@ -231,12 +231,21 @@
     return "UNJ";
   }
 
-  function render(){
-    // render() 안에서, 기존 pass/x/unj 3줄을 아래로 교체
-const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
-const pass = state.criteria.filter(c=>norm(c.status)==="PASS").length;
-const x    = state.criteria.filter(c=>norm(c.status)==="X").length;
-const unj  = state.criteria.length - pass - x;
+  // 1) render() 맨 위의 3줄(기존 pass/x/unj 계산)만 아래로 "교체"
+function render(){
+  const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
+  const pass = state.criteria.filter(c=>norm(c.status)==="PASS").length;
+  const x    = state.criteria.filter(c=>norm(c.status)==="X").length;
+  const unj  = state.criteria.length - pass - x;
+
+  // ↓↓↓ (여기부터 아래 기존 코드 그대로)
+  el("kPass").textContent = String(pass);
+  el("kX").textContent = String(x);
+  el("kUnj").textContent = String(unj);
+  el("kTotal").textContent = String(state.criteria.length);
+  ...
+}
+
 
 
 
@@ -340,20 +349,22 @@ const unj  = state.criteria.length - pass - x;
     save(); render();
   }
 
-  function setStatus(newStatus){
-    const sel = state.criteria.find(c=>c.id===state.selectedId);
-    if(!sel) return;
-    const prev = sel.status;
-    if(prev === newStatus) return;
+  // 2) setStatus()에서 sel.status 대입 1줄을 "교체"
+function setStatus(newStatus){
+  const sel = state.criteria.find(c=>c.id===state.selectedId);
+  if(!sel) return;
+  const prev = sel.status;
+  const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
+  const nextStatus = norm(newStatus);
+  if(norm(prev) === nextStatus) return;
 
-    const ts = nowStamp();
-    sel.status = newStatus;
-    sel.updatedAt = ts;
+  const ts = nowStamp();
+  sel.status = nextStatus;          // ← 이 줄이 핵심(강제 고정)
+  sel.updatedAt = ts;
+  state.history.push({ ts, id: sel.id, from: prev, to: nextStatus, name: sel.name });
+  save(); render();
+}
 
-    state.history.push({ ts, id: sel.id, from: prev, to: newStatus, name: sel.name });
-
-    save(); render();
-  }
 
   function clearStatus(){
     const sel = state.criteria.find(c=>c.id===state.selectedId);
@@ -425,13 +436,16 @@ const unj  = state.criteria.length - pass - x;
         selectedId: null
       };
 
-      // 최소 형태 검증
-      next.criteria = next.criteria.map(c=>({
-        id: String(c.id || ""),
-        name: String(c.name || ""),
-        status: (c.status==="PASS"||c.status==="X"||c.status==="UNJ") ? c.status : "UNJ",
-        updatedAt: String(c.updatedAt || "-")
-      })).filter(c=>c.id && c.name);
+      // 3) doImport()에서 status 매핑 1줄을 "교체"
+next.criteria = next.criteria.map(c=>({
+  id: String(c.id || ""),
+  name: String(c.name || ""),
+  status: ["PASS","X","UNJ"].includes(String(c.status||"UNJ").trim().toUpperCase())
+    ? String(c.status||"UNJ").trim().toUpperCase()
+    : "UNJ",
+  updatedAt: String(c.updatedAt || "-")
+})).filter(c=>c.id && c.name);
+
 
       next.history = next.history.map(h=>({
         ts: String(h.ts || "-"),
