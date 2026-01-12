@@ -239,6 +239,7 @@ const x    = state.criteria.filter(c=>norm(c.status)==="X").length;
 const unj  = state.criteria.length - pass - x;
 
 
+
     el("kPass").textContent = String(pass);
     el("kX").textContent = String(x);
     el("kUnj").textContent = String(unj);
@@ -286,8 +287,8 @@ const unj  = state.criteria.length - pass - x;
       tbody.appendChild(tr);
     }
 
-    const passIds = state.criteria.filter(c=>c.status==="PASS").map(c=>c.id).join(", ");
-    const xIds = state.criteria.filter(c=>c.status==="X").map(c=>c.id).join(", ");
+    const passIds = state.criteria.filter(c=>norm(c.status)==="PASS").map(c=>c.id).join(", ");
+    const xIds = state.criteria.filter(c=>norm(c.status)==="X").map(c=>c.id).join(", ");
     el("listPass").textContent = passIds || "-";
     el("listX").textContent = xIds || "-";
 
