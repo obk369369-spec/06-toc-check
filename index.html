@@ -232,9 +232,10 @@
   }
 
   function render(){
-    const pass = state.criteria.filter(c=>c.status==="PASS").length;
-    const x = state.criteria.filter(c=>c.status==="X").length;
-    const unj = state.criteria.filter(c=>c.status==="UNJ").length;
+    const pass = state.criteria.filter(c => ((c.status || "UNJ") + "").toUpperCase() === "PASS").length;
+    const x    = state.criteria.filter(c => ((c.status || "UNJ") + "").toUpperCase() === "X").length;
+    const unj  = state.criteria.filter(c => ((c.status || "UNJ") + "").toUpperCase() === "UNJ").length;
+
     el("kPass").textContent = String(pass);
     el("kX").textContent = String(x);
     el("kUnj").textContent = String(unj);
