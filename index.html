@@ -178,8 +178,13 @@
 
 <!-- (1) 179번째 줄 근처: <script> 바로 아래 3줄을 이렇게 맞춰 -->
 <script>
+window.addEventListener("error",(e)=>{
+  const b=document.getElementById("saveBadge");
+  if(b) b.textContent="JS 오류: "+(e.message||"unknown");
+});
+
+  
 (function(){
-  try{
     const LS_KEY = "toc_check_v1_state";
 
   let state = {
@@ -511,11 +516,6 @@ next.criteria = next.criteria.map(c=>({
   load();
   render();
 
-  } catch(e){
-    const b = document.getElementById("saveBadge");
-    if(b) b.textContent = "JS 오류: " + (e && e.message ? e.message : "unknown");
-    console.error(e);
-  }
 })();
 </script>  
 </body>
