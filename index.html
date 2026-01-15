@@ -238,22 +238,19 @@ window.addEventListener("error",(e)=>{
     return "UNJ";
   }
 
-  // 1) render() 맨 위의 3줄(기존 pass/x/unj 계산)만 아래로 "교체"
+ // 1) render() 맨 위의 3줄(기존 pass/x/unj 계산)만 아래로 "교체"
 function render(){
   const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
   const pass = state.criteria.filter(c=>norm(c.status)==="PASS").length;
   const x    = state.criteria.filter(c=>norm(c.status)==="X").length;
   const unj  = state.criteria.length - pass - x;
 
-  // ↓↓↓ (여기부터 아래 기존 코드 그대로)
+  // ↓↓↓ 아래는 기존 코드 유지 (… 제거!)
   el("kPass").textContent = String(pass);
   el("kX").textContent = String(x);
   el("kUnj").textContent = String(unj);
   el("kTotal").textContent = String(state.criteria.length);
-  ...
 }
-
-
 
 
     el("kPass").textContent = String(pass);
