@@ -178,6 +178,7 @@
 
 <script>
 (function(){
+  try{
   const LS_KEY = "toc_check_v1_state";
 
   let state = {
@@ -503,6 +504,14 @@ next.criteria = next.criteria.map(c=>({
   // Init
   load();
   render();
+
+// 2) 이 줄을 찾기: })();
+  } catch(e){
+    const b = document.getElementById("saveBadge");
+    if(b) b.textContent = "JS 오류: " + (e && e.message ? e.message : "unknown");
+  }
+
+  
 })();
 </script>
 </body>
