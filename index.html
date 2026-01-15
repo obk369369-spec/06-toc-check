@@ -176,10 +176,11 @@
   </div>
 </main>
 
+<!-- (1) 179번째 줄 근처: <script> 바로 아래 3줄을 이렇게 맞춰 -->
 <script>
 (function(){
   try{
-  const LS_KEY = "toc_check_v1_state";
+    const LS_KEY = "toc_check_v1_state";
 
   let state = {
     raw: "",
@@ -504,15 +505,18 @@ next.criteria = next.criteria.map(c=>({
   // Init
   load();
   render();
+<!-- (2) 맨 아래(현재 508번째 줄 근처) 네가 넣어둔 catch 블록은 "통째로 삭제"하고,
+     대신 render() 호출 직후에 아래를 "삽입"해 -->
+  // Init
+  load();
+  render();
 
-// 2) 이 줄을 찾기: })();
   } catch(e){
     const b = document.getElementById("saveBadge");
     if(b) b.textContent = "JS 오류: " + (e && e.message ? e.message : "unknown");
+    console.error(e);
   }
-
-  
 })();
-</script>
+</script>  
 </body>
 </html>
