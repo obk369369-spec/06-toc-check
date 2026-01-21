@@ -363,7 +363,6 @@ function setStatus(newStatus){
   if(norm(prev) === nextStatus) return;
 
 // 여기서부터 state에는 PASS / X / UNJ 만 들어감
-sel.status = nextStatus;
   
   const ts = nowStamp();
   sel.status = nextStatus;          // ← 이 줄이 핵심(강제 고정)
