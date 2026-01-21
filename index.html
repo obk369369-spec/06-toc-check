@@ -240,61 +240,6 @@ window.addEventListener("error",(e)=>{
 
  // 1) render() 맨 위의 3줄(기존 pass/x/unj 계산)만 아래로 "교체"
 
-function render(){
-  // 대/소문자, 공백 섞여도 동일 인식
-  const normStatus = (s)=>String(s||"UNJ").trim().toUpperCase();
-
-  const pass = state.criteria.filter(c=>normStatus(c.status)==="PASS").length;
-  const x    = state.criteria.filter(c=>normStatus(c.status)==="X").length;
-  const unj  = state.criteria.length - pass - x;
-
-  el("kPass").textContent = String(pass);
-  el("kX").textContent = String(x);
-  el("kUnj").textContent = String(unj);
-  el("kTotal").textContent = String(state.criteria.length);
-
-  el("tocRaw").value = state.raw || "";
-
-  const sel = state.criteria.find(c=>c.id===state.selectedId);
-  el("selInfo").textContent = sel ? sel.id : "-";
-
-  const tbody = el("critTable");
-  tbody.innerHTML = "";
-  for(const c of state.criteria){
-    const tr = document.createElement("tr");
-
-    const tdId = document.createElement("td");
-    tdId.className = "mono";
-    tdId.textContent = c.id;
-
-    const tdName = document.createElement("td");
-    tdName.textContent = c.name;
-
-    const tdStatus = document.createElement("td");
-    const s = normStatus(c.status);
-    tdStatus.className = "status " + (s==="PASS"?"PASS":s==="X"?"X":"UNJ");
-    tdStatus.textContent = (s==="PASS"?"PASS":s==="X"?"X":"UNJ");
-
-    const tdUp = document.createElement("td");
-    tdUp.className = "mono small";
-    tdUp.textContent = c.updatedAt || "-";
-
-    const tdBtn = document.createElement("td");
-    const b = document.createElement("button");
-    b.textContent = (state.selectedId===c.id) ? "선택됨" : "선택";
-    b.addEventListener("click", ()=>{
-      state.selectedId = c.id;
-      save(); render();
-    });
-    tdBtn.appendChild(b);
-
-    tr.appendChild(tdId);
-    tr.appendChild(tdName);
-    tr.appendChild(tdStatus);
-    tr.appendChild(tdUp);
-    tr.appendChild(tdBtn);
-    tbody.appendChild(tr);
-  }
 
   const passIds = state.criteria.filter(c=>normStatus(c.status)==="PASS").map(c=>c.id).join(", ");
   const xIds = state.criteria.filter(c=>normStatus(c.status)==="X").map(c=>c.id).join(", ");
