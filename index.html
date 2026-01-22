@@ -1,164 +1,420 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>TOC Check (Stable)</title>
-<style>
-body{font-family:sans-serif;padding:12px}
-button{margin:2px}
-table{border-collapse:collapse;width:100%;margin-top:8px}
-th,td{border:1px solid #ccc;padding:4px;text-align:left}
-.status.PASS{color:green;font-weight:bold}
-.status.X{color:red;font-weight:bold}
-.status.UNJ{color:#999}
-#saveBadge{font-size:12px;color:#555}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TOC Check</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Apple SD Gothic Neo,Malgun Gothic,sans-serif; margin:16px; line-height:1.35;}
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .card{border:1px solid #ddd; border-radius:10px; padding:12px; margin:10px 0;}
+    .badge{font-weight:700;}
+    textarea,input{width:100%; box-sizing:border-box; padding:8px; border:1px solid #ccc; border-radius:8px;}
+    button{padding:8px 10px; border:1px solid #bbb; border-radius:10px; background:#fff; cursor:pointer;}
+    table{width:100%; border-collapse:collapse; margin-top:8px;}
+    th,td{border:1px solid #ddd; padding:6px; font-size:13px;}
+    th{background:#f7f7f7;}
+    .small{font-size:12px; color:#555;}
+    .status.PASS{font-weight:700;}
+    .status.X{font-weight:700;}
+    .status.UNJ{color:#777;}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  </style>
 </head>
 <body>
+  <div class="row">
+    <div class="badge">TOC Check 자동 저장: <span id="saveBadge">-</span></div>
+  </div>
 
-<h3>TOC Check <span id="saveBadge">-</span></h3>
+  <div class="card">
+    <div class="row">
+      <button id="btnExport">내보내기(JSON)</button>
+      <button id="btnReset">데이터 초기화</button>
+    </div>
+  </div>
 
-<div>
-<button onclick="setStatus('PASS')">PASS</button>
-<button onclick="setStatus('X')">X</button>
-<button onclick="setStatus('UNJ')">미판단</button>
-<button onclick="removeSelected()">기준점 삭제</button>
-</div>
+  <div class="card">
+    <h3>입력</h3>
+    <div class="small">상위목차 / 하위목차 원문(사용자 입력)</div>
+    <textarea id="rawInput" rows="5" placeholder="예:
+1. 상위목차 A
+1.1 하위목차 A-1
+2. 상위목차 B"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnSaveRaw">원문 저장</button>
+      <span class="small">저장: 원문 + 상태/이력</span>
+    </div>
+  </div>
 
-<div>
-PASS <span id="kPass">0</span> /
-X <span id="kX">0</span> /
-미판단 <span id="kUnj">0</span> /
-전체 <span id="kTotal">0</span>
-</div>
+  <div class="card">
+    <h3>기준점 추가</h3>
+    <div class="row">
+      <div style="flex:1; min-width:220px;">
+        <div class="small">기준점 ID</div>
+        <input id="critId" placeholder="예: C001" />
+        <div class="small">ID 자동</div>
+        <button id="btnAutoId">ID 자동</button>
+      </div>
+      <div style="flex:2; min-width:260px;">
+        <div class="small">기준점 이름</div>
+        <input id="critName" placeholder="예: 상위/하위 입력 유지(F5)" />
+        <div class="small">&nbsp;</div>
+        <button id="btnAdd">기준점 추가</button>
+      </div>
+    </div>
+  </div>
 
-<table>
-<thead>
-<tr><th>ID</th><th>이름</th><th>상태</th><th>선택</th></tr>
-</thead>
-<tbody id="list"></tbody>
-</table>
+  <div class="card">
+    <h3>선택 기준점 상태 변경</h3>
+    <div class="row">
+      <div>선택: <span id="selInfo">-</span></div>
+      <button id="btnSetPASS">PASS</button>
+      <button id="btnSetX">X</button>
+      <button id="btnSetUNJ">미판단</button>
+      <button id="btnDel">기준점 삭제</button>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <div>PASS 개수 <b id="kPass">0</b></div>
+      <div>X 개수 <b id="kX">0</b></div>
+      <div>미판단 개수 <b id="kUnj">0</b></div>
+      <div>전체 기준점 <b id="kTotal">0</b></div>
+    </div>
+  </div>
 
-<hr>
+  <div class="card">
+    <h3>백업 JSON (항상 표시)</h3>
+    <div class="small">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
+    <textarea id="backupBox" class="mono" rows="6" readonly></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnCopyBackup">백업 JSON 복사</button>
+      <button id="btnDownloadBackup">백업 JSON 다운로드</button>
+    </div>
+  </div>
 
-<textarea id="importBox" rows="6" style="width:100%"></textarea><br>
-<button onclick="doImport()">Import</button>
-<button onclick="doExport()">Export</button>
+  <div class="card">
+    <h3>가져오기(JSON)</h3>
+    <div class="small">붙여넣기 → Import</div>
+    <textarea id="importBox" class="mono" rows="6" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
+    <div class="row" style="margin-top:8px;">
+      <button id="btnImport">Import(복구)</button>
+      <span id="importMsg" class="small">-</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>상태값 / 목록</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>기준점 ID</th>
+          <th>기준점 이름</th>
+          <th>상태</th>
+          <th>최종 변경</th>
+          <th>선택</th>
+        </tr>
+      </thead>
+      <tbody id="critTbody">
+        <tr><td colspan="5" class="small">-</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:14px;">PASS / X 기준점 목록</h3>
+    <div class="row">
+      <div style="flex:1;">
+        <div class="small">PASS</div>
+        <div id="listPass" class="mono small">-</div>
+      </div>
+      <div style="flex:1;">
+        <div class="small">X</div>
+        <div id="listX" class="mono small">-</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:14px;">PASS ↔ X 변경 이력</h3>
+    <table>
+      <thead>
+        <tr><th>시간</th><th>기준점 ID</th><th>변경</th><th>이름</th></tr>
+      </thead>
+      <tbody id="histTbody">
+        <tr><td colspan="4" class="small">-</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:14px;">미판단 기준점 목록</h3>
+    <div id="listUnj" class="mono small">-</div>
+  </div>
 
 <script>
+/* 전역 에러를 화면에 표시 */
+window.addEventListener("error",(e)=>{
+  const b=document.getElementById("saveBadge");
+  if(b) b.textContent="JS 오류: "+(e.message||"unknown");
+});
+
 (function(){
-const LS_KEY="toc_check_state_v2";
+  const LS_KEY="toc_check_v1_state_v2";
 
-const norm = v => {
-  const s=String(v||"UNJ").trim().toUpperCase();
-  return (s==="PASS"||s==="X"||s==="UNJ")?s:"UNJ";
-};
+  const el=(id)=>document.getElementById(id);
 
-let state={
-  criteria:[],
-  history:[],
-  selectedId:null
-};
+  // ✅ 입구 1곳 정규화 (state에는 PASS/X/UNJ만 존재)
+  const normStatus=(s)=>{
+    const v=String(s??"UNJ").trim().toUpperCase();
+    if(v==="PASS") return "PASS";
+    if(v==="X") return "X";
+    return "UNJ";
+  };
 
-function save(){
-  localStorage.setItem(LS_KEY,JSON.stringify(state));
-  document.getElementById("saveBadge").textContent="자동 저장됨";
-}
+  const nowStamp=()=>{
+    const d=new Date();
+    const pad=(n)=>String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
 
-function load(){
-  try{
-    const d=JSON.parse(localStorage.getItem(LS_KEY)||"");
-    if(d && Array.isArray(d.criteria)){
-      state.criteria=d.criteria.map(c=>({
-        id:String(c.id),
-        name:String(c.name||""),
-        status:norm(c.status),
-        updatedAt:c.updatedAt||""
-      }));
-      state.history=Array.isArray(d.history)?d.history:[];
-      state.selectedId=d.selectedId||null;
+  let state={ raw:"", criteria:[], history:[], selectedId:null };
+
+  const safeSchema=(obj)=>{
+    if(!obj || typeof obj!=="object") return null;
+    if(!Array.isArray(obj.criteria) || !Array.isArray(obj.history) || typeof obj.raw!=="string") return null;
+    const clean={
+      raw: obj.raw,
+      criteria: obj.criteria.map(c=>({
+        id: String(c.id??"").trim(),
+        name: String(c.name??"").trim(),
+        status: normStatus(c.status),
+        updatedAt: String(c.updatedAt??"").trim()
+      })).filter(c=>c.id.length>0),
+      history: obj.history.map(h=>({
+        ts: String(h.ts??"").trim(),
+        id: String(h.id??"").trim(),
+        from: normStatus(h.from),
+        to: normStatus(h.to),
+        name: String(h.name??"").trim()
+      })),
+      selectedId: (obj.selectedId==null? null : String(obj.selectedId))
+    };
+    return clean;
+  };
+
+  const save=()=>{
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    el("saveBadge").textContent="OK";
+    refreshBackupBox();
+  };
+
+  const load=()=>{
+    try{
+      const raw=localStorage.getItem(LS_KEY);
+      if(!raw) return;
+      const parsed=JSON.parse(raw);
+      const clean=safeSchema(parsed);
+      if(clean){ state=clean; el("saveBadge").textContent="OK"; }
+    }catch(e){
+      el("saveBadge").textContent="JS 오류: "+(e.message||"unknown");
     }
-  }catch(e){}
-}
+  };
 
-function render(){
-  const pass=state.criteria.filter(c=>c.status==="PASS").length;
-  const x=state.criteria.filter(c=>c.status==="X").length;
-  const unj=state.criteria.length-pass-x;
+  const refreshBackupBox=()=>{
+    el("backupBox").value=JSON.stringify({raw:state.raw,criteria:state.criteria,history:state.history},null,2);
+  };
 
-  kPass.textContent=pass;
-  kX.textContent=x;
-  kUnj.textContent=unj;
-  kTotal.textContent=state.criteria.length;
+  const render=()=>{
+    const pass=state.criteria.filter(c=>c.status==="PASS").length;
+    const x=state.criteria.filter(c=>c.status==="X").length;
+    const unj=state.criteria.length-pass-x;
 
-  const tb=list;
-  tb.innerHTML="";
-  state.criteria.forEach(c=>{
-    const tr=document.createElement("tr");
-    tr.onclick=()=>{state.selectedId=c.id;render();};
-    tr.innerHTML=
-      `<td>${c.id}</td>
-       <td>${c.name}</td>
-       <td class="status ${c.status}">${c.status}</td>
-       <td>${state.selectedId===c.id?"선택됨":""}</td>`;
-    tb.appendChild(tr);
-  });
-}
+    el("kPass").textContent=String(pass);
+    el("kX").textContent=String(x);
+    el("kUnj").textContent=String(unj);
+    el("kTotal").textContent=String(state.criteria.length);
 
-window.setStatus=function(v){
-  if(!state.selectedId) return;
-  const c=state.criteria.find(c=>c.id===state.selectedId);
-  if(!c) return;
-  const next=norm(v);
-  if(c.status===next) return;
-  state.history.push({
-    ts:new Date().toISOString(),
-    id:c.id,
-    from:c.status,
-    to:next,
-    name:c.name
-  });
-  c.status=next;
-  c.updatedAt=new Date().toISOString();
-  save();
-  render();
-};
+    // table
+    const tb=el("critTbody");
+    tb.innerHTML="";
+    if(state.criteria.length===0){
+      tb.innerHTML=`<tr><td colspan="5" class="small">-</td></tr>`;
+    }else{
+      state.criteria.forEach(c=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td class="mono">${c.id}</td>
+          <td>${c.name}</td>
+          <td class="status ${c.status}">${c.status}</td>
+          <td class="mono">${c.updatedAt||"-"}</td>
+          <td><button data-sel="${c.id}">선택</button></td>
+        `;
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll("button[data-sel]").forEach(btn=>{
+        btn.addEventListener("click",()=>{
+          state.selectedId=btn.getAttribute("data-sel");
+          renderSelected();
+          save();
+        });
+      });
+    }
 
-window.removeSelected=function(){
-  if(!state.selectedId) return;
-  state.criteria=state.criteria.filter(c=>c.id!==state.selectedId);
-  state.selectedId=null;
-  save();
-  render();
-};
+    el("listPass").textContent=state.criteria.filter(c=>c.status==="PASS").map(c=>c.id).join(", ") || "-";
+    el("listX").textContent=state.criteria.filter(c=>c.status==="X").map(c=>c.id).join(", ") || "-";
+    el("listUnj").textContent=state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id).join(", ") || "-";
 
-window.doImport=function(){
-  try{
-    const d=JSON.parse(importBox.value);
-    if(!Array.isArray(d.criteria)) throw 0;
-    state.criteria=d.criteria.map(c=>({
-      id:String(c.id),
-      name:String(c.name||""),
-      status:norm(c.status),
-      updatedAt:c.updatedAt||""
-    }));
-    state.history=Array.isArray(d.history)?d.history:[];
+    const hb=el("histTbody");
+    hb.innerHTML="";
+    if(state.history.length===0){
+      hb.innerHTML=`<tr><td colspan="4" class="small">-</td></tr>`;
+    }else{
+      state.history.slice().reverse().forEach(h=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`
+          <td class="mono">${h.ts}</td>
+          <td class="mono">${h.id}</td>
+          <td class="mono">${h.from} → ${h.to}</td>
+          <td>${h.name}</td>
+        `;
+        hb.appendChild(tr);
+      });
+    }
+
+    renderSelected();
+    refreshBackupBox();
+  };
+
+  const renderSelected=()=>{
+    const id=state.selectedId;
+    if(!id){ el("selInfo").textContent="-"; return; }
+    const sel=state.criteria.find(c=>c.id===id);
+    el("selInfo").textContent=sel ? `${sel.id} / ${sel.name}` : "-";
+  };
+
+  const nextAutoId=()=>{
+    const used=new Set(state.criteria.map(c=>String(c.id).toUpperCase()));
+    let n=1;
+    while(true){
+      const id="C"+String(n).padStart(3,"0");
+      if(!used.has(id)) return id;
+      n++;
+    }
+  };
+
+  const addCriterion=()=>{
+    const id=String(el("critId").value||"").trim();
+    const name=String(el("critName").value||"").trim();
+    if(!id){ el("importMsg").textContent="ID가 비어있음"; return; }
+    if(state.criteria.some(c=>String(c.id).toUpperCase()===id.toUpperCase())){
+      el("importMsg").textContent="이미 존재하는 ID"; return;
+    }
+    const ts=nowStamp();
+    state.criteria.push({id, name:name||id, status:"UNJ", updatedAt:ts});
+    state.selectedId=id;
+    el("critId").value="";
+    el("critName").value="";
+    el("importMsg").textContent="추가됨";
+    save(); render();
+  };
+
+  // ✅ 상태 변경 “입구 1곳” (state에는 PASS/X/UNJ만 저장)
+  const setSelectedStatus=(newStatus)=>{
+    const id=state.selectedId;
+    if(!id) return;
+    const sel=state.criteria.find(c=>c.id===id);
+    if(!sel) return;
+
+    const next=normStatus(newStatus);
+    const prev=normStatus(sel.status);
+    if(prev===next) return;
+
+    // PASS <-> X 외 변화 제한(UNJ는 수동으로만)
+    // 요구가 “PASS↔X만”이면 아래 2줄을 활성화하면 됨.
+    // if((prev==="PASS" && next!=="X") || (prev==="X" && next!=="PASS")) return;
+
+    const ts=nowStamp();
+    sel.status=next;
+    sel.updatedAt=ts;
+    state.history.push({ts, id:sel.id, from:prev, to:next, name:sel.name});
+
+    save(); render();
+  };
+
+  const deleteSelected=()=>{
+    const id=state.selectedId;
+    if(!id) return;
+    state.criteria=state.criteria.filter(c=>c.id!==id);
     state.selectedId=null;
-    save();
+    save(); render();
+  };
+
+  const exportJson=()=>{
+    const data=JSON.stringify({raw:state.raw,criteria:state.criteria,history:state.history},null,2);
+    const blob=new Blob([data],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="toc-check-backup.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const copyBackup=async()=>{
+    try{
+      await navigator.clipboard.writeText(el("backupBox").value);
+      el("importMsg").textContent="복사됨";
+    }catch(e){
+      el("importMsg").textContent="복사 실패";
+    }
+  };
+
+  const importJson=()=>{
+    const txt=String(el("importBox").value||"").trim();
+    if(!txt){ el("importMsg").textContent="붙여넣기 비어있음"; return; }
+    try{
+      const parsed=JSON.parse(txt);
+      const clean=safeSchema(parsed);
+      if(!clean){ el("importMsg").textContent="스키마 불일치"; return; }
+      state=clean;
+      // 상태는 이미 normStatus로 PASS/X/UNJ만 됨
+      save();
+      render();
+      el("importMsg").textContent="Import 완료";
+    }catch(e){
+      el("importMsg").textContent="JSON 오류";
+      el("saveBadge").textContent="JS 오류: "+(e.message||"unknown");
+    }
+  };
+
+  const resetAll=()=>{
+    if(!confirm("데이터를 초기화할까요?")) return;
+    state={ raw:"", criteria:[], history:[], selectedId:null };
+    localStorage.removeItem(LS_KEY);
+    el("importBox").value="";
+    el("importMsg").textContent="초기화됨";
+    el("saveBadge").textContent="-";
     render();
-  }catch(e){
-    alert("Import 실패");
-  }
-};
+  };
 
-window.doExport=function(){
-  importBox.value=JSON.stringify(state,null,2);
-};
+  const saveRaw=()=>{
+    state.raw=String(el("rawInput").value||"");
+    save(); render();
+  };
 
-load();
-render();
+  // 이벤트 연결(필수)
+  el("btnAutoId").addEventListener("click",()=>{ el("critId").value=nextAutoId(); });
+  el("btnAdd").addEventListener("click",addCriterion);
+  el("btnSetPASS").addEventListener("click",()=>setSelectedStatus("PASS"));
+  el("btnSetX").addEventListener("click",()=>setSelectedStatus("X"));
+  el("btnSetUNJ").addEventListener("click",()=>setSelectedStatus("UNJ"));
+  el("btnDel").addEventListener("click",deleteSelected);
+
+  el("btnSaveRaw").addEventListener("click",saveRaw);
+  el("btnExport").addEventListener("click",exportJson);
+  el("btnReset").addEventListener("click",resetAll);
+
+  el("btnCopyBackup").addEventListener("click",copyBackup);
+  el("btnDownloadBackup").addEventListener("click",exportJson);
+  el("btnImport").addEventListener("click",importJson);
+
+  // Init
+  load();
+  el("rawInput").value=state.raw||"";
+  render();
 })();
 </script>
-
 </body>
 </html>
