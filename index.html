@@ -1,521 +1,164 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TOC Check</title>
-  <style>
-    :root { color-scheme: light; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background: #f6f7fb; color: #111; }
-    header { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #e6e8ef; }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 12px 14px; }
-    h1 { margin: 0; font-size: 18px; letter-spacing: .2px; }
-    .badge { display:inline-block; margin-left:8px; font-size:12px; padding:2px 8px; border:1px solid #e6e8ef; border-radius: 999px; background:#fafbff; }
-    main .wrap { padding-top: 14px; padding-bottom: 22px; }
-    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 12px; }
-    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
-    .card { background:#fff; border:1px solid #e6e8ef; border-radius: 14px; padding: 12px; }
-    .card h2 { margin: 0 0 10px 0; font-size: 14px; }
-    label { display:block; font-size:12px; color:#333; margin: 10px 0 6px; }
-    input[type="text"], textarea {
-      width: 100%; border:1px solid #d7dbea; border-radius: 10px; padding: 10px;
-      font-size: 13px; outline: none; background: #fff;
-    }
-    textarea { min-height: 120px; resize: vertical; }
-    .row { display:flex; gap:8px; align-items:center; flex-wrap: wrap; }
-    button {
-      border:1px solid #d7dbea; background:#fff; padding: 8px 10px; border-radius: 10px;
-      cursor: pointer; font-size: 13px;
-    }
-    button.primary { background:#111; color:#fff; border-color:#111; }
-    button.danger { background:#fff; border-color:#f3c1c1; color:#b20000; }
-    .muted { color:#666; font-size:12px; }
-    .kpi { display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-top: 10px;}
-    .kpi .box { border:1px solid #e6e8ef; border-radius: 12px; padding: 10px; background:#fafbff; }
-    .kpi .n { font-size: 18px; font-weight: 700; }
-    .kpi .t { font-size: 11px; color:#555; margin-top: 2px; }
-    table { width:100%; border-collapse: collapse; font-size: 13px; }
-    th, td { border-bottom:1px solid #eef0f6; padding: 8px; text-align:left; vertical-align: top; }
-    th { font-size: 12px; color:#444; background:#fcfdff; }
-    .status { font-weight: 700; }
-    .PASS { color:#0b7a00; }
-    .X { color:#b20000; }
-    .UNJ { color:#555; }
-    .small { font-size: 12px; color:#444; }
-    .pill { font-size: 12px; border:1px solid #e6e8ef; border-radius: 999px; padding: 2px 8px; background:#fff; }
-    .footerline { border-top:1px solid #e6e8ef; margin-top: 10px; padding-top: 10px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    .warn { border-color:#ffd6a3 !important; background:#fff7ed !important; }
-  </style>
+<meta charset="UTF-8">
+<title>TOC Check (Stable)</title>
+<style>
+body{font-family:sans-serif;padding:12px}
+button{margin:2px}
+table{border-collapse:collapse;width:100%;margin-top:8px}
+th,td{border:1px solid #ccc;padding:4px;text-align:left}
+.status.PASS{color:green;font-weight:bold}
+.status.X{color:red;font-weight:bold}
+.status.UNJ{color:#999}
+#saveBadge{font-size:12px;color:#555}
+</style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="row" style="justify-content: space-between;">
-      <div>
-        <h1>TOC Check <span class="badge" id="saveBadge">자동 저장: -</span></h1>
-        <div class="muted">출력: 상태값 · 목록 · 변경 이력 · 미판단 목록</div>
-      </div>
-      <div class="row">
-        <button id="btnExport">내보내기(JSON)</button>
-        <button class="danger" id="btnReset">데이터 초기화</button>
-      </div>
-    </div>
-  </div>
-</header>
 
-<main>
-  <div class="wrap">
-    <div class="grid">
-      <section class="card">
-        <h2>입력</h2>
+<h3>TOC Check <span id="saveBadge">-</span></h3>
 
-        <label>상위목차 / 하위목차 원문(사용자 입력)</label>
-        <textarea id="tocRaw" placeholder="예:&#10;1. 상위목차 A&#10;1.1 하위목차 A-1&#10;2. 상위목차 B"></textarea>
-        <div class="row">
-          <button id="btnSaveRaw">원문 저장</button>
-          <span class="muted">저장: 원문 + 상태/이력</span>
-        </div>
+<div>
+<button onclick="setStatus('PASS')">PASS</button>
+<button onclick="setStatus('X')">X</button>
+<button onclick="setStatus('UNJ')">미판단</button>
+<button onclick="removeSelected()">기준점 삭제</button>
+</div>
 
-        <div class="footerline"></div>
+<div>
+PASS <span id="kPass">0</span> /
+X <span id="kX">0</span> /
+미판단 <span id="kUnj">0</span> /
+전체 <span id="kTotal">0</span>
+</div>
 
-        <label>기준점 ID</label>
-        <input id="critId" type="text" placeholder="예: C001" />
-        <label>기준점 이름</label>
-        <input id="critName" type="text" placeholder="예: 상위/하위 입력 유지(F5)" />
+<table>
+<thead>
+<tr><th>ID</th><th>이름</th><th>상태</th><th>선택</th></tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
 
-        <div class="row" style="margin-top:10px;">
-          <button class="primary" id="btnAdd">기준점 추가</button>
-          <button id="btnAutoId">ID 자동</button>
-        </div>
+<hr>
 
-        <div class="footerline"></div>
+<textarea id="importBox" rows="6" style="width:100%"></textarea><br>
+<button onclick="doImport()">Import</button>
+<button onclick="doExport()">Export</button>
 
-        <label>선택 기준점 상태 변경</label>
-        <div class="row">
-          <span class="pill">선택: <span id="selInfo" class="mono">-</span></span>
-          <button id="btnPass">PASS</button>
-          <button id="btnX">X</button>
-          <button id="btnClear">미판단</button>
-          <button class="danger" id="btnDelete">기준점 삭제</button>
-        </div>
-
-        <div class="kpi">
-          <div class="box"><div class="n" id="kPass">0</div><div class="t">PASS 개수</div></div>
-          <div class="box"><div class="n" id="kX">0</div><div class="t">X 개수</div></div>
-          <div class="box"><div class="n" id="kUnj">0</div><div class="t">미판단 개수</div></div>
-          <div class="box"><div class="n" id="kTotal">0</div><div class="t">전체 기준점</div></div>
-        </div>
-
-        <div class="footerline"></div>
-
-        <h2>백업 JSON (항상 표시)</h2>
-        <div class="muted" id="backupHint">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
-        <textarea id="backupBox" class="mono" style="min-height:160px;"></textarea>
-        <div class="row">
-          <button id="btnCopyBackup">백업 JSON 복사</button>
-          <button id="btnDownloadBackup">백업 JSON 다운로드</button>
-        </div>
-
-        <div class="footerline"></div>
-
-        <h2>가져오기(JSON)</h2>
-        <div class="muted">붙여넣기 → Import</div>
-        <textarea id="importBox" class="mono" placeholder='여기에 백업 JSON을 붙여넣기'></textarea>
-        <div class="row">
-          <button class="primary" id="btnImport">Import(복구)</button>
-          <span class="muted" id="importMsg">-</span>
-        </div>
-
-      </section>
-
-      <section class="card">
-        <h2>상태값 / 목록</h2>
-
-        <table>
-          <thead>
-            <tr>
-              <th style="width:120px;">기준점 ID</th>
-              <th>기준점 이름</th>
-              <th style="width:90px;">상태</th>
-              <th style="width:170px;">최종 변경</th>
-              <th style="width:90px;">선택</th>
-            </tr>
-          </thead>
-          <tbody id="critTable"></tbody>
-        </table>
-
-        <div class="footerline"></div>
-
-        <h2>PASS / X 기준점 목록</h2>
-        <table>
-          <thead><tr><th>PASS</th><th>X</th></tr></thead>
-          <tbody>
-            <tr>
-              <td id="listPass" class="small"></td>
-              <td id="listX" class="small"></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="footerline"></div>
-
-        <h2>PASS ↔ X 변경 이력</h2>
-        <table>
-          <thead><tr><th style="width:170px;">시간</th><th style="width:120px;">기준점 ID</th><th style="width:90px;">변경</th><th>이름</th></tr></thead>
-          <tbody id="histTable"></tbody>
-        </table>
-
-        <div class="footerline"></div>
-
-        <h2>미판단 기준점 목록</h2>
-        <div id="listUnj" class="small"></div>
-
-      </section>
-    </div>
-  </div>
-</main>
-
-<!-- (1) 179번째 줄 근처: <script> 바로 아래 3줄을 이렇게 맞춰 -->
 <script>
-window.addEventListener("error",(e)=>{
-  const b=document.getElementById("saveBadge");
-  if(b) b.textContent="JS 오류: "+(e.message||"unknown");
-});
-
-  
 (function(){
-    const LS_KEY = "toc_check_v1_state";
+const LS_KEY="toc_check_state_v2";
 
-  let state = {
-    raw: "",
-    criteria: [],
-    history: [],
-    selectedId: null
-  };
+const norm = v => {
+  const s=String(v||"UNJ").trim().toUpperCase();
+  return (s==="PASS"||s==="X"||s==="UNJ")?s:"UNJ";
+};
 
-  const el = (id)=>document.getElementById(id);
+let state={
+  criteria:[],
+  history:[],
+  selectedId:null
+};
 
-  function nowStamp(){
-    const d = new Date();
-    const z = (n)=>String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
-  }
+function save(){
+  localStorage.setItem(LS_KEY,JSON.stringify(state));
+  document.getElementById("saveBadge").textContent="자동 저장됨";
+}
 
-  function safeStringify(obj){
-    try { return JSON.stringify(obj, null, 2); }
-    catch(e){ return ""; }
-  }
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_KEY)||"");
+    if(d && Array.isArray(d.criteria)){
+      state.criteria=d.criteria.map(c=>({
+        id:String(c.id),
+        name:String(c.name||""),
+        status:norm(c.status),
+        updatedAt:c.updatedAt||""
+      }));
+      state.history=Array.isArray(d.history)?d.history:[];
+      state.selectedId=d.selectedId||null;
+    }
+  }catch(e){}
+}
 
-  function refreshBackupBox(){
-    const payload = safeStringify({ raw: state.raw, criteria: state.criteria, history: state.history });
-    el("backupBox").value = payload || "";
-    // 경고(비어있으면)
-    const empty = (!state.criteria || state.criteria.length === 0) && (!state.raw || state.raw.trim() === "");
-    el("backupBox").classList.toggle("warn", empty);
-  }
-
-  function save(){
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-    el("saveBadge").textContent = "자동 저장: " + nowStamp();
-    refreshBackupBox();
-  }
-
-  function load(){
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return;
-    try{
-      const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed === "object"){
-        state = Object.assign(state, parsed);
-      }
-    }catch(e){}
-  }
-
-  function statusText(s){
-    if(s === "PASS") return "PASS";
-    if(s === "X") return "X";
-    return "UNJ";
-  }
-
- // 1) render() 맨 위의 3줄(기존 pass/x/unj 계산)만 아래로 "교체"
 function render(){
-  const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
-  const pass = state.criteria.filter(c=>norm(c.status)==="PASS").length;
-  const x    = state.criteria.filter(c=>norm(c.status)==="X").length;
-  const unj  = state.criteria.length - pass - x;
+  const pass=state.criteria.filter(c=>c.status==="PASS").length;
+  const x=state.criteria.filter(c=>c.status==="X").length;
+  const unj=state.criteria.length-pass-x;
 
-  // ↓↓↓ 아래는 기존 코드 유지 (… 제거!)
-  el("kPass").textContent = String(pass);
-  el("kX").textContent = String(x);
-  el("kUnj").textContent = String(unj);
-  el("kTotal").textContent = String(state.criteria.length);
+  kPass.textContent=pass;
+  kX.textContent=x;
+  kUnj.textContent=unj;
+  kTotal.textContent=state.criteria.length;
+
+  const tb=list;
+  tb.innerHTML="";
+  state.criteria.forEach(c=>{
+    const tr=document.createElement("tr");
+    tr.onclick=()=>{state.selectedId=c.id;render();};
+    tr.innerHTML=
+      `<td>${c.id}</td>
+       <td>${c.name}</td>
+       <td class="status ${c.status}">${c.status}</td>
+       <td>${state.selectedId===c.id?"선택됨":""}</td>`;
+    tb.appendChild(tr);
+  });
 }
 
-
-    el("kPass").textContent = String(pass);
-    el("kX").textContent = String(x);
-    el("kUnj").textContent = String(unj);
-    el("kTotal").textContent = String(state.criteria.length);
-
-    el("tocRaw").value = state.raw || "";
-
-    const sel = state.criteria.find(c=>c.id===state.selectedId);
-    el("selInfo").textContent = sel ? sel.id : "-";
-
-    const tbody = el("critTable");
-    tbody.innerHTML = "";
-    for(const c of state.criteria){
-      const tr = document.createElement("tr");
-
-      const tdId = document.createElement("td");
-      tdId.className = "mono";
-      tdId.textContent = c.id;
-
-      const tdName = document.createElement("td");
-      tdName.textContent = c.name;
-
-      const tdStatus = document.createElement("td");
-      tdStatus.className = "status " + (c.status==="PASS"?"PASS":c.status==="X"?"X":"UNJ");
-      tdStatus.textContent = statusText(c.status);
-
-      const tdUp = document.createElement("td");
-      tdUp.className = "mono small";
-      tdUp.textContent = c.updatedAt || "-";
-
-      const tdBtn = document.createElement("td");
-      const b = document.createElement("button");
-      b.textContent = (state.selectedId===c.id) ? "선택됨" : "선택";
-      b.addEventListener("click", ()=>{
-        state.selectedId = c.id;
-        save(); render();
-      });
-      tdBtn.appendChild(b);
-
-      tr.appendChild(tdId);
-      tr.appendChild(tdName);
-      tr.appendChild(tdStatus);
-      tr.appendChild(tdUp);
-      tr.appendChild(tdBtn);
-      tbody.appendChild(tr);
-    }
-
-    const passIds = state.criteria.filter(c=>norm(c.status)==="PASS").map(c=>c.id).join(", ");
-    const xIds = state.criteria.filter(c=>norm(c.status)==="X").map(c=>c.id).join(", ");
-    el("listPass").textContent = passIds || "-";
-    el("listX").textContent = xIds || "-";
-
-    const htbody = el("histTable");
-    htbody.innerHTML = "";
-    const filteredHist = state.history.filter(h=>{
-      return (h.from==="PASS" && h.to==="X") || (h.from==="X" && h.to==="PASS");
-    });
-    for(const h of filteredHist.slice().reverse()){
-      const tr = document.createElement("tr");
-      const tdTs = document.createElement("td"); tdTs.className="mono small"; tdTs.textContent = h.ts;
-      const tdId = document.createElement("td"); tdId.className="mono"; tdId.textContent = h.id;
-      const tdCh = document.createElement("td"); tdCh.className="mono"; tdCh.textContent = `${h.from}→${h.to}`;
-      const tdNm = document.createElement("td"); tdNm.textContent = h.name;
-      tr.appendChild(tdTs); tr.appendChild(tdId); tr.appendChild(tdCh); tr.appendChild(tdNm);
-      htbody.appendChild(tr);
-    }
-    if(filteredHist.length===0){
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.className = "small muted";
-      td.textContent = "-";
-      tr.appendChild(td);
-      htbody.appendChild(tr);
-    }
-
-    const unjIds = state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id).join(", ");
-    el("listUnj").textContent = unjIds || "-";
-
-    refreshBackupBox();
-  }
-
-  function nextAutoId(){
-    const used = new Set(state.criteria.map(c=>String(c.id)));
-    let n = 1;
-    while(true){
-      const id = "C" + String(n).padStart(3,"0");
-      if(!used.has(id)) return id;
-      n++;
-    }
-  }
-
-  function addCriterion(id, name){
-    if(!id || !name) return;
-    if(state.criteria.some(c=>c.id===id)) return;
-    state.criteria.push({ id, name, status: "UNJ", updatedAt: "-" });
-    state.selectedId = id;
-    save(); render();
-  }
-
-  // 2) setStatus()에서 sel.status 대입 1줄을 "교체"
-function setStatus(newStatus){
-  const sel = state.criteria.find(c=>c.id===state.selectedId);
-  if(!sel) return;
-  const prev = sel.status;
-  const norm = (s)=>String(s||"UNJ").trim().toUpperCase();
-  const nextStatus = norm(newStatus);
-  if(norm(prev) === nextStatus) return;
-
-// 여기서부터 state에는 PASS / X / UNJ 만 들어감
-  
-  const ts = nowStamp();
-  sel.status = nextStatus;          // ← 이 줄이 핵심(강제 고정)
-  sel.updatedAt = ts;
-  state.history.push({ ts, id: sel.id, from: prev, to: nextStatus, name: sel.name });
-  save(); render();
-}
-
-
-  function clearStatus(){
-    const sel = state.criteria.find(c=>c.id===state.selectedId);
-    if(!sel) return;
-    const prev = sel.status;
-    if(prev === "UNJ") return;
-
-    const ts = nowStamp();
-    sel.status = "UNJ";
-    sel.updatedAt = ts;
-    state.history.push({ ts, id: sel.id, from: prev, to: "UNJ", name: sel.name });
-    save(); render();
-  }
-
-  function deleteSelected(){
-    const id = state.selectedId;
-    if(!id) return;
-    state.criteria = state.criteria.filter(c=>c.id!==id);
-    state.history = state.history.filter(h=>h.id!==id);
-    state.selectedId = null;
-    save(); render();
-  }
-
-  function exportJson(){
-    const payload = safeStringify({ raw: state.raw, criteria: state.criteria, history: state.history });
-    const blob = new Blob([payload], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "toc_check_export.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function downloadBackup(){
-    const payload = el("backupBox").value || "";
-    const blob = new Blob([payload], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "toc_check_backup_" + nowStamp().replace(/[: ]/g,"-") + ".json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function copyBackup(){
-    const t = el("backupBox");
-    t.focus();
-    t.select();
-    document.execCommand("copy");
-  }
-
-  function doImport(){
-    el("importMsg").textContent = "-";
-    const text = (el("importBox").value || "").trim();
-    if(!text){ el("importMsg").textContent = "Import: X"; return; }
-    try{
-      const parsed = JSON.parse(text);
-      if(!parsed || typeof parsed !== "object"){ el("importMsg").textContent = "Import: X"; return; }
-
-      const next = {
-        raw: String(parsed.raw || ""),
-        criteria: Array.isArray(parsed.criteria) ? parsed.criteria : [],
-        history: Array.isArray(parsed.history) ? parsed.history : [],
-        selectedId: null
-      };
-
-      // 3) doImport()에서 status 매핑 1줄을 "교체"
-next.criteria = next.criteria.map(c=>({
-  id: String(c.id || ""),
-  name: String(c.name || ""),
-  status: ["PASS","X","UNJ"].includes(String(c.status||"UNJ").trim().toUpperCase())
-    ? String(c.status||"UNJ").trim().toUpperCase()
-    : "UNJ",
-  updatedAt: String(c.updatedAt || "-")
-})).filter(c=>c.id && c.name);
-
-
-      next.history = next.history.map(h=>({
-        ts: String(h.ts || "-"),
-        id: String(h.id || ""),
-        from: String(h.from || ""),
-        to: String(h.to || ""),
-        name: String(h.name || "")
-      })).filter(h=>h.id);
-
-      state = next;
-      save(); render();
-      el("importMsg").textContent = "Import: PASS";
-    }catch(e){
-      el("importMsg").textContent = "Import: X";
-    }
-  }
-
-  // Wire up
-  el("btnSaveRaw").addEventListener("click", ()=>{
-    state.raw = el("tocRaw").value || "";
-    save(); render();
+window.setStatus=function(v){
+  if(!state.selectedId) return;
+  const c=state.criteria.find(c=>c.id===state.selectedId);
+  if(!c) return;
+  const next=norm(v);
+  if(c.status===next) return;
+  state.history.push({
+    ts:new Date().toISOString(),
+    id:c.id,
+    from:c.status,
+    to:next,
+    name:c.name
   });
+  c.status=next;
+  c.updatedAt=new Date().toISOString();
+  save();
+  render();
+};
 
-  el("btnAutoId").addEventListener("click", ()=>{
-    el("critId").value = nextAutoId();
-  });
+window.removeSelected=function(){
+  if(!state.selectedId) return;
+  state.criteria=state.criteria.filter(c=>c.id!==state.selectedId);
+  state.selectedId=null;
+  save();
+  render();
+};
 
-  el("btnAdd").addEventListener("click", ()=>{
-    const id = (el("critId").value || "").trim();
-    const name = (el("critName").value || "").trim();
-    addCriterion(id, name);
-    el("critId").value = "";
-    el("critName").value = "";
-  });
-
-  el("btnPass").addEventListener("click", ()=>setStatus("PASS"));
-  el("btnX").addEventListener("click", ()=>setStatus("X"));
-  el("btnClear").addEventListener("click", ()=>clearStatus());
-  el("btnDelete").addEventListener("click", ()=>deleteSelected());
-
-  el("btnReset").addEventListener("click", ()=>{
-    localStorage.removeItem(LS_KEY);
-    state = { raw:"", criteria:[], history:[], selectedId:null };
+window.doImport=function(){
+  try{
+    const d=JSON.parse(importBox.value);
+    if(!Array.isArray(d.criteria)) throw 0;
+    state.criteria=d.criteria.map(c=>({
+      id:String(c.id),
+      name:String(c.name||""),
+      status:norm(c.status),
+      updatedAt:c.updatedAt||""
+    }));
+    state.history=Array.isArray(d.history)?d.history:[];
+    state.selectedId=null;
+    save();
     render();
-    el("saveBadge").textContent = "자동 저장: -";
-  });
+  }catch(e){
+    alert("Import 실패");
+  }
+};
 
-  el("btnExport").addEventListener("click", exportJson);
+window.doExport=function(){
+  importBox.value=JSON.stringify(state,null,2);
+};
 
-  el("btnCopyBackup").addEventListener("click", copyBackup);
-  el("btnDownloadBackup").addEventListener("click", downloadBackup);
-
-  el("btnImport").addEventListener("click", doImport);
-
-  // Init
-  load();
-  render();
-<!-- (2) 맨 아래(현재 508번째 줄 근처) 네가 넣어둔 catch 블록은 "통째로 삭제"하고,
-     대신 render() 호출 직후에 아래를 "삽입"해 -->
-  // Init
-  load();
-  render();
-
+load();
+render();
 })();
-</script>  
+</script>
+
 </body>
 </html>
