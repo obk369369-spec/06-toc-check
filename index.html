@@ -5,531 +5,572 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TOC Check</title>
   <style>
-    :root{--b:#e5e7eb;--t:#111827;--m:#6b7280;--bg:#ffffff;--p:#2563eb;--ok:#059669;--x:#dc2626}
+    :root { --bd:#e5e7eb; --tx:#111827; --mut:#6b7280; --bg:#ffffff; --bg2:#f9fafb; }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Noto Sans KR,Apple SD Gothic Neo,sans-serif;color:var(--t);background:var(--bg)}
-    .wrap{max-width:1080px;margin:0 auto;padding:16px}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-    .badge{font-weight:700}
-    .badge small{font-weight:600;color:var(--m)}
-    .row{display:flex;gap:8px;flex-wrap:wrap}
-    button{border:1px solid var(--b);background:#fff;padding:8px 10px;border-radius:8px;cursor:pointer}
-    button:hover{border-color:#cbd5e1}
-    button.primary{border-color:var(--p);color:var(--p);font-weight:700}
-    button.danger{border-color:var(--x);color:var(--x);font-weight:700}
-    button.ok{border-color:var(--ok);color:var(--ok);font-weight:700}
-    .card{border:1px solid var(--b);border-radius:12px;padding:12px;margin-top:12px}
-    .card h2{margin:0 0 8px 0;font-size:16px}
-    .hint{color:var(--m);font-size:12px;line-height:1.4}
-    textarea,input{width:100%;border:1px solid var(--b);border-radius:10px;padding:10px;font-size:13px}
-    textarea{min-height:140px;resize:vertical}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    .mini{font-size:12px;color:var(--m)}
-    .hr{height:1px;background:var(--b);margin:10px 0}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--tx);background:var(--bg)}
+    header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:2}
+    header .badge{font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:999px;background:var(--bg2);color:var(--mut)}
+    header .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    button{cursor:pointer;border:1px solid var(--bd);background:var(--bg2);padding:8px 10px;border-radius:10px;font-size:13px}
+    button.primary{background:#111827;color:#fff;border-color:#111827}
+    button.danger{background:#fee2e2;border-color:#fecaca}
+    button.ok{background:#dcfce7;border-color:#bbf7d0}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    main{padding:16px;max-width:1200px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .card{border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:#fff}
+    .card h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg2);font-size:14px}
+    .card .p{padding:12px}
+    textarea{width:100%;min-height:200px;resize:vertical;padding:10px;border-radius:12px;border:1px solid var(--bd);font-size:13px;line-height:1.35}
+    .mut{color:var(--mut);font-size:12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .row > *{flex:0 0 auto}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    ul{margin:0;padding-left:18px}
+    li{margin:2px 0;font-size:13px}
+    .pill{display:inline-block;font-size:12px;padding:2px 8px;border:1px solid var(--bd);border-radius:999px;background:var(--bg2)}
+    .kpi{display:flex;gap:8px;flex-wrap:wrap}
+    .kpi .pill{background:#fff}
     table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--b);padding:8px 6px;text-align:left;font-size:13px;vertical-align:top}
-    th{font-size:12px;color:var(--m);font-weight:700}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid var(--b);border-radius:999px;font-size:12px;color:var(--m)}
-    .pill.pass{border-color:var(--ok);color:var(--ok);font-weight:700}
-    .pill.x{border-color:var(--x);color:var(--x);font-weight:700}
-    .pill.unj{border-color:#9ca3af;color:#6b7280;font-weight:700}
-    pre{white-space:pre-wrap;word-break:break-word;background:#fafafa;border:1px solid var(--b);border-radius:10px;padding:10px;margin:0;font-size:12px}
-    .twoCols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width:900px){.grid2,.grid3,.twoCols{grid-template-columns:1fr}}
+    th,td{border-bottom:1px solid var(--bd);padding:8px 10px;font-size:12px;text-align:left;vertical-align:top}
+    th{background:var(--bg2)}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .small{font-size:11px}
+    .note{padding:10px 12px;background:#fff7ed;border-top:1px solid #fed7aa;color:#9a3412;font-size:12px}
+    select,input{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:13px}
+    .right{margin-left:auto}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="badge">
-      TOC Check <small>자동 저장: <span id="autosave">...</span></small>
-    </div>
-    <div class="row">
-      <button id="btnExport">내보내기(JSON)</button>
-      <button id="btnReset" class="danger">데이터 초기화</button>
-    </div>
+<header>
+  <div class="row">
+    <strong>TOC Check</strong>
+    <span class="badge" id="autoSaveBadge">자동 저장: 확인중…</span>
   </div>
-
-  <div class="card">
-    <h2>입력</h2>
-    <div class="hint">상위목차 / 하위목차 원문(사용자 입력)<br>예: <span class="mini">1. 상위목차 A / 1.1 하위목차 A-1 / 2. 상위목차 B</span></div>
-    <textarea id="raw" placeholder=""></textarea>
-    <div class="row" style="margin-top:8px">
-      <button id="btnSaveRaw" class="primary">원문 저장</button>
-      <div class="mini" style="align-self:center">저장: 원문 + 상태/이력</div>
-    </div>
-
-    <!-- ✅ 여기: “정리 결과 출력” 영역 (원문 저장 바로 아래) -->
-    <div class="hr"></div>
-    <h2>정리 결과 출력</h2>
-    <div class="hint">이 영역은 “정답 판단”이 아니라, 현재 입력이 <b>어떻게 읽혔는지</b>만 보여준다.</div>
-    <div class="twoCols" style="margin-top:8px">
-      <div>
-        <div class="mini" style="margin-bottom:6px">상위목차(인식)</div>
-        <pre id="outTop">-</pre>
-      </div>
-      <div>
-        <div class="mini" style="margin-bottom:6px">하위목차(인식)</div>
-        <pre id="outSub">-</pre>
-      </div>
-    </div>
-    <div style="margin-top:10px">
-      <div class="mini" style="margin-bottom:6px">미분류/확인 필요 라인</div>
-      <pre id="outOther">-</pre>
-    </div>
-    <div class="mini" style="margin-top:8px">
-      상위 <span id="cntTop">0</span> / 하위 <span id="cntSub">0</span> / 미분류 <span id="cntOther">0</span>
-    </div>
+  <div class="row right">
+    <button id="btnExport" class="primary">내보내기(JSON)</button>
+    <button id="btnDownload">백업 JSON 다운로드</button>
+    <button id="btnReset" class="danger">데이터 초기화</button>
   </div>
+</header>
 
-  <div class="card">
-    <h2>기준점 추가</h2>
-    <div class="grid2">
-      <div>
-        <div class="mini">기준점 ID</div>
-        <input id="critId" placeholder="예: C001" />
-        <div class="row" style="margin-top:8px">
-          <button id="btnIdAuto">ID 자동</button>
-          <div class="mini" style="align-self:center">ID 자동</div>
+<main>
+  <div class="grid">
+    <section class="card">
+      <h3>입력</h3>
+      <div class="p">
+        <div class="mut">상위목차 / 하위목차 원문(사용자 입력)</div>
+        <textarea id="rawInput" placeholder="여기에 목차 원문을 붙여넣고 ‘원문 저장/분석’ 버튼을 누르세요."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button id="btnSaveRaw" class="primary">원문 저장/분석</button>
+          <span class="mut">저장: 원문 + 상태/이력</span>
         </div>
       </div>
-      <div>
-        <div class="mini">기준점 이름</div>
-        <input id="critName" placeholder="예: 상위/하위 입력 유지(F5)" />
-        <div class="row" style="margin-top:8px">
-          <button id="btnAddCrit" class="primary">기준점 추가</button>
+    </section>
+
+    <section class="card">
+      <h3>기준점</h3>
+      <div class="p">
+        <div class="row">
+          <span class="pill">기준점 추가</span>
+          <input id="critId" placeholder="기준점 ID (예: C021)" class="mono" />
+          <input id="critName" placeholder="기준점 이름 (예: 01/23 · 오늘 작업 확인)" />
+          <button id="btnAddCrit">기준점 추가</button>
+          <button id="btnAutoId">ID 자동</button>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <span class="pill">선택 기준점 상태 변경</span>
+          <select id="critSelect"></select>
+          <span class="mut" id="selInfo">선택: 없음</span>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="btnPass" class="ok">PASS</button>
+          <button id="btnX" class="danger">X</button>
+          <button id="btnUnj">미판단</button>
+          <button id="btnDelCrit">기준점 삭제</button>
+        </div>
+
+        <div class="kpi" style="margin-top:10px">
+          <span class="pill">PASS 개수 <b id="cntPass">0</b></span>
+          <span class="pill">X 개수 <b id="cntX">0</b></span>
+          <span class="pill">미판단 개수 <b id="cntUnj">0</b></span>
+          <span class="pill">전체 기준점 <b id="cntAll">0</b></span>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>선택 기준점 상태 변경</h2>
-    <div class="row">
-      <div class="mini" style="align-self:center">선택: <span id="selectedLabel">없음</span></div>
-      <button id="btnPass" class="ok">PASS</button>
-      <button id="btnX" class="danger">X</button>
-      <button id="btnUnj">미판단</button>
-      <button id="btnDelCrit">기준점 삭제</button>
-    </div>
-    <div class="mini" style="margin-top:8px">
-      PASS 개수 <b id="nPass">0</b> · X 개수 <b id="nX">0</b> · 미판단 개수 <b id="nUnj">0</b> · 전체 기준점 <b id="nAll">0</b>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>백업 JSON (항상 표시)</h2>
-    <div class="hint">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
-    <pre id="backup">-</pre>
-    <div class="row" style="margin-top:8px">
-      <button id="btnCopy">백업 JSON 복사</button>
-      <button id="btnDownload">백업 JSON 다운로드</button>
-    </div>
-
-    <div class="hr"></div>
-    <h2>가져오기(JSON)</h2>
-    <div class="hint">붙여넣기 → Import</div>
-    <textarea id="importBox" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
-    <div class="row" style="margin-top:8px">
-      <button id="btnImport" class="primary">Import(복구)</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>상태값 / 목록</h2>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:140px">기준점 ID</th>
-          <th>기준점 이름</th>
-          <th style="width:80px">상태</th>
-          <th style="width:170px">최종 변경</th>
-        </tr>
-      </thead>
-      <tbody id="critTable"></tbody>
-    </table>
-
-    <div class="hr"></div>
-    <h2>PASS / X 기준점 목록</h2>
-    <div class="twoCols">
-      <div>
-        <div class="mini">PASS</div>
-        <pre id="listPass">-</pre>
+      <div class="note">
+        ✅ PASS/X는 “현재 화면 결과”에 대한 체크 기록용이다. 선택이 비어있으면 자동으로 마지막 기준점을 선택해서 기록한다.
       </div>
-      <div>
-        <div class="mini">X</div>
-        <pre id="listX">-</pre>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-    <h2>PASS ↔ X 변경 이력</h2>
-    <table>
-      <thead>
-        <tr>
-          <th style="width:170px">시간</th>
-          <th style="width:120px">기준점 ID</th>
-          <th style="width:110px">변경</th>
-          <th>이름</th>
-        </tr>
-      </thead>
-      <tbody id="histTable"></tbody>
-    </table>
-
-    <div class="hr"></div>
-    <h2>미판단 기준점 목록</h2>
-    <pre id="listUnj">-</pre>
+    </section>
   </div>
-</div>
+
+  <div class="grid" style="margin-top:16px">
+    <section class="card">
+      <h3>분리 출력</h3>
+      <div class="p split">
+        <div>
+          <div class="row" style="margin-bottom:6px">
+            <span class="pill">상위 목차</span>
+            <span class="mut">개수: <b id="topCount">0</b></span>
+          </div>
+          <ul id="topList"></ul>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:6px">
+            <span class="pill">하위 목차</span>
+            <span class="mut">개수: <b id="subCount">0</b></span>
+          </div>
+          <ul id="subList"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>미분류/확인 필요 라인</h3>
+      <div class="p">
+        <div class="row" style="margin-bottom:6px">
+          <span class="mut">상위 <b id="sumTop">0</b> / 하위 <b id="sumSub">0</b> / 미분류 <b id="sumUnk">0</b></span>
+        </div>
+        <ul id="unkList"></ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid" style="margin-top:16px">
+    <section class="card">
+      <h3>백업 JSON (항상 표시)</h3>
+      <div class="p">
+        <div class="mut">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
+        <textarea id="backupBox" class="mono" style="min-height:240px" readonly></textarea>
+        <div class="row" style="margin-top:10px">
+          <button id="btnCopy">백업 JSON 복사</button>
+          <button id="btnImport" class="primary">가져오기(JSON)</button>
+          <span class="mut">붙여넣기 → Import</span>
+        </div>
+        <div class="mut small" style="margin-top:8px">가져오기: 아래 입력칸에 백업 JSON을 붙여넣고 Import(복구)</div>
+        <textarea id="importBox" class="mono" style="min-height:180px" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button id="btnDoImport" class="primary">Import(복구)</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>PASS ↔ X 변경 이력</h3>
+      <div class="p">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:170px">시간</th>
+              <th style="width:90px">기준점 ID</th>
+              <th style="width:110px">변경</th>
+              <th>이름</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
 
 <script>
-(() => {
-  const LS_KEY = "toc_check_v1";
+  const LS_KEY = "toc_check_v2";
 
-  /** @type {{raw:string, criteria:Array<{id:string,name:string,status:"PASS"|"X"|"UNJ",updatedAt:string}>, history:Array<{ts:string,id:string,from:string,to:string,name:string}>}} */
-  let state = { raw:"", criteria:[], history:[] };
-
-  const $ = (id) => document.getElementById(id);
-
-  const el = {
-    autosave: $("autosave"),
-    raw: $("raw"),
-    btnSaveRaw: $("btnSaveRaw"),
-    btnExport: $("btnExport"),
-    btnReset: $("btnReset"),
-    backup: $("backup"),
-    btnCopy: $("btnCopy"),
-    btnDownload: $("btnDownload"),
-    importBox: $("importBox"),
-    btnImport: $("btnImport"),
-
-    critId: $("critId"),
-    critName: $("critName"),
-    btnIdAuto: $("btnIdAuto"),
-    btnAddCrit: $("btnAddCrit"),
-
-    selectedLabel: $("selectedLabel"),
-    btnPass: $("btnPass"),
-    btnX: $("btnX"),
-    btnUnj: $("btnUnj"),
-    btnDelCrit: $("btnDelCrit"),
-
-    nPass: $("nPass"),
-    nX: $("nX"),
-    nUnj: $("nUnj"),
-    nAll: $("nAll"),
-
-    critTable: $("critTable"),
-    histTable: $("histTable"),
-
-    listPass: $("listPass"),
-    listX: $("listX"),
-    listUnj: $("listUnj"),
-
-    outTop: $("outTop"),
-    outSub: $("outSub"),
-    outOther: $("outOther"),
-    cntTop: $("cntTop"),
-    cntSub: $("cntSub"),
-    cntOther: $("cntOther"),
-  };
-
-  let selectedId = null;
-
-  function nowStr() {
+  function nowTs(){
     const d = new Date();
-    const pad = (n) => String(n).padStart(2,"0");
+    const pad = n => String(n).padStart(2,"0");
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
-  function saveLS() {
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(state));
-      el.autosave.textContent = "OK";
-    } catch (e) {
-      el.autosave.textContent = "FAIL";
-    }
+  // ID 정규화: 공백 제거 + 대문자 통일
+  function normId(s){
+    return String(s ?? "").trim().replace(/\s+/g,"").toUpperCase();
   }
 
-  function loadLS() {
-    try {
-      const s = localStorage.getItem(LS_KEY);
-      if (!s) return;
-      const parsed = JSON.parse(s);
-      if (parsed && typeof parsed === "object") {
-        state.raw = String(parsed.raw ?? "");
-        state.criteria = Array.isArray(parsed.criteria) ? parsed.criteria : [];
-        state.history = Array.isArray(parsed.history) ? parsed.history : [];
-      }
-    } catch {}
-  }
-
-  // ✅ “정리 결과 출력”용 최소 파서: 판단/추론 없이 "어떻게 읽혔는지"만
-  function parseTOC(rawText) {
-    const lines = String(rawText || "")
-      .replace(/\r\n?/g, "\n")
+  // 줄 정리
+  function splitLines(raw){
+    return String(raw ?? "")
+      .replace(/\r\n/g,"\n")
       .split("\n")
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+  }
 
+  // TOC 파서(숫자/텍스트 결합):
+  // - "4.2.1" 같은 번호 라인이 따로 오고 다음 줄이 제목이면 결합
+  // - "4.2.1 TITLE" 형태도 처리
+  function parseToc(raw){
+    const lines = splitLines(raw);
+
+    const numOnly = /^(\d+(?:\.\d+){0,10})$/;
+    const numTitle = /^(\d+(?:\.\d+){0,10})\s+(.+)$/;
+    const roman = /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\b\.?\s+(.+)$/i;
+
+    const items = [];
+    let i = 0;
+    while(i < lines.length){
+      const line = lines[i];
+
+      let m = line.match(numTitle);
+      if(m){
+        items.push({ num:m[1], title:m[2].trim() });
+        i++; continue;
+      }
+
+      m = line.match(numOnly);
+      if(m){
+        const num = m[1];
+        const next = lines[i+1] ?? "";
+        // 다음 줄이 또 번호면, 제목 없는 번호로 취급(미분류로 보냄)
+        if(next && !numOnly.test(next) && !numTitle.test(next)){
+          // 다음 줄이 제목(텍스트)일 가능성이 높음
+          items.push({ num, title: next });
+          i += 2; continue;
+        } else {
+          // 제목 못 찾음
+          items.push({ num, title: "" , unknown:true});
+          i++; continue;
+        }
+      }
+
+      m = line.match(roman);
+      if(m){
+        // 로마숫자는 상위로 간주
+        items.push({ num: "", title: m[1].trim(), forceTop:true });
+        i++; continue;
+      }
+
+      // 일반 텍스트 라인
+      items.push({ num:"", title: line, textOnly:true });
+      i++;
+    }
+
+    // 분류 규칙:
+    // - 번호가 없고 텍스트만이면: 기본 상위로 보내되, "설명문(문장형)"은 미분류
+    // - 번호가 있으면:
+    //    depth 0 (예: 1, 15) => 상위
+    //    depth >=1 (예: 4.2, 4.2.1) => 하위
     const top = [];
     const sub = [];
-    const other = [];
+    const unk = [];
 
-    // 번호 패턴: 1 / 1. / 1.1 / 4.2.1.3 등
-    const numRe = /^(\d+(?:\.\d+)*)\s*[\)\.]?\s*(.*)$/;
+    for(const it of items){
+      const title = (it.title ?? "").trim();
+      const num = (it.num ?? "").trim();
 
-    for (const line of lines) {
-      // 순수 숫자만(페이지/카운트) 같은 건 미분류로
-      if (/^\d+$/.test(line)) { other.push(line); continue; }
+      const isSentenceLike = title.length > 60 || /[.!?]$/.test(title) || /\bwith\b|\bmaps\b|\bhighlights\b/i.test(title);
 
-      const m = line.match(numRe);
-      if (m) {
-        const key = m[1];           // 4.2.1.3
-        const rest = (m[2] || "").trim();
-        const isSub = key.includes(".");
-
-        // rest가 비어있으면(숫자만 뽑힌 라인) 미분류로
-        if (!rest) { other.push(line); continue; }
-
-        const out = `${key} ${rest}`.trim();
-        if (isSub) sub.push(out);
-        else top.push(out);
+      if(it.unknown){
+        unk.push(num);
         continue;
       }
 
-      // 번호 없이 대문자/문장만 있는 라인: 상위로 "표시" (판단 아님)
-      // 너무 많은 잡음 방지: 길이가 2 이상일 때만
-      if (line.length >= 2) top.push(line);
-      else other.push(line);
+      if(it.forceTop){
+        if(title) top.push(title);
+        else unk.push(line);
+        continue;
+      }
+
+      if(num){
+        const depth = num.split(".").length - 1; // 0이면 1, 15 같은 상위
+        if(!title){
+          unk.push(num);
+        } else if(depth === 0){
+          top.push(title);
+        } else {
+          sub.push(`${num} ${title}`);
+        }
+        continue;
+      }
+
+      // 텍스트만 있는 경우
+      if(!title){
+        continue;
+      }
+      if(isSentenceLike){
+        unk.push(title);
+      } else {
+        top.push(title);
+      }
     }
 
-    return { top, sub, other };
+    return { top, sub, unk };
   }
 
-  function renderParse() {
-    const r = parseTOC(state.raw);
-    el.outTop.textContent = r.top.length ? r.top.map(x => `- ${x}`).join("\n") : "-";
-    el.outSub.textContent = r.sub.length ? r.sub.map(x => `- ${x}`).join("\n") : "-";
-    el.outOther.textContent = r.other.length ? r.other.map(x => `- ${x}`).join("\n") : "-";
-    el.cntTop.textContent = String(r.top.length);
-    el.cntSub.textContent = String(r.sub.length);
-    el.cntOther.textContent = String(r.other.length);
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return { raw:"", criteria:[], history:[] };
+      const obj = JSON.parse(raw);
+      if(!obj || typeof obj !== "object") throw new Error("bad");
+      obj.raw = String(obj.raw ?? "");
+      obj.criteria = Array.isArray(obj.criteria) ? obj.criteria : [];
+      obj.history = Array.isArray(obj.history) ? obj.history : [];
+      return obj;
+    }catch{
+      return { raw:"", criteria:[], history:[] };
+    }
   }
 
-  function renderBackup() {
-    el.backup.textContent = JSON.stringify(state, null, 2);
+  function saveState(st){
+    localStorage.setItem(LS_KEY, JSON.stringify(st));
+    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
   }
 
-  function renderCounts() {
-    const pass = state.criteria.filter(c => c.status === "PASS").length;
-    const x = state.criteria.filter(c => c.status === "X").length;
-    const unj = state.criteria.filter(c => c.status === "UNJ").length;
-    el.nPass.textContent = String(pass);
-    el.nX.textContent = String(x);
-    el.nUnj.textContent = String(unj);
-    el.nAll.textContent = String(state.criteria.length);
-
-    const list = (arr) => arr.length ? arr.join(", ") : "-";
-    el.listPass.textContent = list(state.criteria.filter(c=>c.status==="PASS").map(c=>c.id));
-    el.listX.textContent = list(state.criteria.filter(c=>c.status==="X").map(c=>c.id));
-    el.listUnj.textContent = list(state.criteria.filter(c=>c.status==="UNJ").map(c=>c.id));
+  function ensureUniqueId(st, id){
+    const ids = new Set(st.criteria.map(c => normId(c.id)));
+    if(!ids.has(id)) return id;
+    // 충돌 시 뒤에 -2, -3...
+    let k=2;
+    while(ids.has(`${id}-${k}`)) k++;
+    return `${id}-${k}`;
   }
 
-  function pill(status) {
-    if (status === "PASS") return `<span class="pill pass">PASS</span>`;
-    if (status === "X") return `<span class="pill x">X</span>`;
-    return `<span class="pill unj">UNJ</span>`;
-  }
+  function renderAll(){
+    const st = loadState();
 
-  function renderCriteriaTable() {
-    el.critTable.innerHTML = "";
-    const sorted = [...state.criteria].sort((a,b) => (a.updatedAt||"").localeCompare(b.updatedAt||""));
-    for (const c of sorted) {
+    // 입력 반영
+    document.getElementById("rawInput").value = st.raw ?? "";
+
+    // TOC 분리
+    const {top, sub, unk} = parseToc(st.raw ?? "");
+    const topList = document.getElementById("topList");
+    const subList = document.getElementById("subList");
+    const unkList = document.getElementById("unkList");
+    topList.innerHTML = "";
+    subList.innerHTML = "";
+    unkList.innerHTML = "";
+
+    for(const t of top){ const li=document.createElement("li"); li.textContent=t; topList.appendChild(li); }
+    for(const s of sub){ const li=document.createElement("li"); li.textContent=s; subList.appendChild(li); }
+    for(const u of unk){ const li=document.createElement("li"); li.textContent=u; unkList.appendChild(li); }
+
+    document.getElementById("topCount").textContent = top.length;
+    document.getElementById("subCount").textContent = sub.length;
+    document.getElementById("sumTop").textContent = top.length;
+    document.getElementById("sumSub").textContent = sub.length;
+    document.getElementById("sumUnk").textContent = unk.length;
+
+    // 기준점 셀렉트
+    const sel = document.getElementById("critSelect");
+    const prev = sel.value;
+    sel.innerHTML = "";
+    if(st.criteria.length === 0){
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "기준점 없음";
+      sel.appendChild(opt);
+    } else {
+      for(const c of st.criteria){
+        const opt = document.createElement("option");
+        opt.value = normId(c.id);
+        opt.textContent = `${normId(c.id)} / ${c.name ?? ""}`;
+        sel.appendChild(opt);
+      }
+      // 이전 선택 유지, 없으면 마지막 자동 선택
+      const want = prev && [...sel.options].some(o=>o.value===prev) ? prev : normId(st.criteria[st.criteria.length-1].id);
+      sel.value = want;
+    }
+
+    // 선택 표시
+    const selectedId = sel.value;
+    const selected = st.criteria.find(c => normId(c.id) === selectedId);
+    document.getElementById("selInfo").textContent = selected
+      ? `선택: ${normId(selected.id)} / ${selected.name ?? ""}`
+      : "선택: 없음";
+
+    // 카운트
+    const cntPass = st.criteria.filter(c => c.status === "PASS").length;
+    const cntX = st.criteria.filter(c => c.status === "X").length;
+    const cntUnj = st.criteria.filter(c => c.status === "UNJ").length;
+    document.getElementById("cntPass").textContent = cntPass;
+    document.getElementById("cntX").textContent = cntX;
+    document.getElementById("cntUnj").textContent = cntUnj;
+    document.getElementById("cntAll").textContent = st.criteria.length;
+
+    // 백업 JSON
+    document.getElementById("backupBox").value = JSON.stringify(st, null, 2);
+
+    // 이력
+    const tb = document.getElementById("histBody");
+    tb.innerHTML = "";
+    // 최신이 위로
+    const hist = [...st.history].slice().reverse();
+    for(const h of hist){
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><button data-pick="${c.id}" style="padding:4px 8px;border-radius:8px">${c.id}</button></td>
-        <td>${escapeHtml(c.name || "")}</td>
-        <td>${pill(c.status)}</td>
-        <td>${escapeHtml(c.updatedAt || "")}</td>
+        <td class="mono">${h.ts ?? ""}</td>
+        <td class="mono">${normId(h.id ?? "")}</td>
+        <td class="mono">${(h.from ?? "")} → ${(h.to ?? "")}</td>
+        <td>${h.name ?? ""}</td>
       `;
-      el.critTable.appendChild(tr);
-    }
-    el.critTable.querySelectorAll("button[data-pick]").forEach(btn=>{
-      btn.addEventListener("click", () => {
-        selectedId = btn.getAttribute("data-pick");
-        renderSelected();
-      });
-    });
-  }
-
-  function renderHistory() {
-    el.histTable.innerHTML = "";
-    const rows = [...state.history].slice().reverse();
-    for (const h of rows) {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(h.ts||"")}</td>
-        <td>${escapeHtml(h.id||"")}</td>
-        <td>${escapeHtml((h.from||"") + " → " + (h.to||""))}</td>
-        <td>${escapeHtml(h.name||"")}</td>
-      `;
-      el.histTable.appendChild(tr);
+      tb.appendChild(tr);
     }
   }
 
-  function renderSelected() {
-    if (!selectedId) { el.selectedLabel.textContent = "없음"; return; }
-    const c = state.criteria.find(x=>x.id===selectedId);
-    if (!c) { el.selectedLabel.textContent = "없음"; selectedId=null; return; }
-    el.selectedLabel.textContent = `${c.id} / ${c.updatedAt?.slice(5,10).replace("-","/") || ""} · (${c.name || ""})`;
-  }
+  function getSelectedOrAutoLast(st){
+    const sel = document.getElementById("critSelect");
+    let id = normId(sel.value);
+    if(id && st.criteria.some(c=>normId(c.id)===id)) return id;
 
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  function setStatus(newStatus) {
-    if (!selectedId) return;
-    const c = state.criteria.find(x=>x.id===selectedId);
-    if (!c) return;
-    const from = c.status;
-    c.status = newStatus;
-    c.updatedAt = nowStr();
-    state.history.push({ ts: nowStr(), id: c.id, from, to: newStatus, name: c.name || "" });
-    saveLS();
-    renderAll();
-  }
-
-  function nextIdAuto() {
-    // C001, C002 ... 형식
-    let max = 0;
-    for (const c of state.criteria) {
-      const m = String(c.id||"").match(/^C(\d{3,})$/i);
-      if (m) max = Math.max(max, parseInt(m[1],10));
+    if(st.criteria.length > 0){
+      const last = normId(st.criteria[st.criteria.length-1].id);
+      sel.value = last;
+      return last;
     }
-    const next = max + 1;
-    return "C" + String(next).padStart(3,"0");
+    return "";
   }
 
-  function downloadText(filename, text) {
-    const blob = new Blob([text], {type:"application/json;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function renderAll() {
-    el.raw.value = state.raw || "";
-    renderParse();          // ✅ 핵심: 저장된 raw 기준으로 출력 표시
-    renderBackup();
-    renderCounts();
-    renderCriteriaTable();
-    renderHistory();
-    renderSelected();
-  }
-
-  // --- events ---
-  el.btnSaveRaw.addEventListener("click", () => {
-    state.raw = el.raw.value || "";
-    saveLS();
-    renderAll();
-  });
-
-  el.btnExport.addEventListener("click", () => {
-    const text = JSON.stringify(state, null, 2);
-    downloadText("toc-check-backup.json", text);
-  });
-
-  el.btnReset.addEventListener("click", () => {
-    if (!confirm("정말 데이터 전체를 초기화할까요?")) return;
-    state = { raw:"", criteria:[], history:[] };
-    selectedId = null;
-    try { localStorage.removeItem(LS_KEY); } catch {}
-    saveLS();
-    renderAll();
-  });
-
-  el.btnCopy.addEventListener("click", async () => {
-    const text = JSON.stringify(state, null, 2);
-    try { await navigator.clipboard.writeText(text); } catch {}
-  });
-
-  el.btnDownload.addEventListener("click", () => {
-    const text = JSON.stringify(state, null, 2);
-    downloadText("toc-check-backup.json", text);
-  });
-
-  el.btnImport.addEventListener("click", () => {
-    const text = el.importBox.value || "";
-    try {
-      const obj = JSON.parse(text);
-      if (!obj || typeof obj !== "object") return;
-
-      state.raw = String(obj.raw ?? "");
-      state.criteria = Array.isArray(obj.criteria) ? obj.criteria : [];
-      state.history = Array.isArray(obj.history) ? obj.history : [];
-
-      // status 정규화
-      state.criteria = state.criteria.map(c => ({
-        id: String(c.id ?? ""),
-        name: String(c.name ?? ""),
-        status: (c.status === "PASS" || c.status === "X" || c.status === "UNJ") ? c.status : "UNJ",
-        updatedAt: String(c.updatedAt ?? nowStr())
-      })).filter(c => c.id.length > 0);
-
-      selectedId = null;
-      saveLS();
+  function setStatus(toStatus){
+    const st = loadState();
+    const id = getSelectedOrAutoLast(st);
+    if(!id){
+      // 기준점이 없으면: 자동으로 하나 만들어 기록 가능하게
+      const newIdBase = "C001";
+      const newId = ensureUniqueId(st, newIdBase);
+      st.criteria.push({ id:newId, name:"자동 생성", status:"UNJ", updatedAt: nowTs() });
+      saveState(st);
       renderAll();
-    } catch {}
-  });
+      return setStatus(toStatus);
+    }
 
-  el.btnIdAuto.addEventListener("click", () => {
-    el.critId.value = nextIdAuto();
-  });
+    const c = st.criteria.find(x => normId(x.id) === id);
+    const from = c.status ?? "UNJ";
+    c.status = toStatus;
+    c.updatedAt = nowTs();
 
-  el.btnAddCrit.addEventListener("click", () => {
-    const id = (el.critId.value || "").trim();
-    const name = (el.critName.value || "").trim();
-    if (!id) return;
+    st.history.push({
+      ts: nowTs(),
+      id: normId(c.id),
+      from,
+      to: toStatus,
+      name: c.name ?? ""
+    });
 
-    if (state.criteria.some(c=>String(c.id).toLowerCase()===id.toLowerCase())) return;
+    saveState(st);
+    renderAll();
+  }
 
-    state.criteria.push({ id, name: name || id, status:"UNJ", updatedAt: nowStr() });
-    selectedId = id;
-    saveLS();
+  // 이벤트 바인딩
+  document.getElementById("btnSaveRaw").addEventListener("click", () => {
+    const st = loadState();
+    st.raw = document.getElementById("rawInput").value || "";
+    saveState(st);
     renderAll();
   });
 
-  el.btnPass.addEventListener("click", () => setStatus("PASS"));
-  el.btnX.addEventListener("click", () => setStatus("X"));
-  el.btnUnj.addEventListener("click", () => setStatus("UNJ"));
+  document.getElementById("btnAddCrit").addEventListener("click", () => {
+    const st = loadState();
+    const id0 = normId(document.getElementById("critId").value);
+    const name = String(document.getElementById("critName").value || "").trim();
 
-  el.btnDelCrit.addEventListener("click", () => {
-    if (!selectedId) return;
-    const idx = state.criteria.findIndex(c=>c.id===selectedId);
-    if (idx < 0) return;
-    state.criteria.splice(idx, 1);
-    selectedId = null;
-    saveLS();
+    if(!id0 || !name){
+      // 입력이 비면 아무것도 안 함 (강제 질문/경고 없이)
+      return;
+    }
+    const id = ensureUniqueId(st, id0);
+    st.criteria.push({ id, name, status:"UNJ", updatedAt: nowTs() });
+    saveState(st);
+    document.getElementById("critId").value = "";
+    document.getElementById("critName").value = "";
     renderAll();
   });
 
-  // init
-  loadLS();
-  saveLS();
-  renderAll();
-})();
+  document.getElementById("btnAutoId").addEventListener("click", () => {
+    const st = loadState();
+    // C001부터 채움
+    let n = 1;
+    const exists = new Set(st.criteria.map(c=>normId(c.id)));
+    while(exists.has(`C${String(n).padStart(3,"0")}`)) n++;
+    document.getElementById("critId").value = `C${String(n).padStart(3,"0")}`;
+  });
+
+  document.getElementById("critSelect").addEventListener("change", () => renderAll());
+
+  document.getElementById("btnPass").addEventListener("click", () => setStatus("PASS"));
+  document.getElementById("btnX").addEventListener("click", () => setStatus("X"));
+  document.getElementById("btnUnj").addEventListener("click", () => setStatus("UNJ"));
+
+  document.getElementById("btnDelCrit").addEventListener("click", () => {
+    const st = loadState();
+    const id = getSelectedOrAutoLast(st);
+    if(!id) return;
+    st.criteria = st.criteria.filter(c => normId(c.id) !== id);
+    saveState(st);
+    renderAll();
+  });
+
+  document.getElementById("btnCopy").addEventListener("click", async () => {
+    const txt = document.getElementById("backupBox").value;
+    try{ await navigator.clipboard.writeText(txt); }catch{}
+  });
+
+  document.getElementById("btnExport").addEventListener("click", () => {
+    // backupBox 내용 그대로 다운로드/복사 용도
+    const txt = document.getElementById("backupBox").value;
+    const blob = new Blob([txt], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `toc_backup_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById("btnDownload").addEventListener("click", () => {
+    const txt = document.getElementById("backupBox").value;
+    const blob = new Blob([txt], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `toc_backup_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById("btnImport").addEventListener("click", () => {
+    document.getElementById("importBox").focus();
+  });
+
+  document.getElementById("btnDoImport").addEventListener("click", () => {
+    const txt = document.getElementById("importBox").value || "";
+    try{
+      const obj = JSON.parse(txt);
+      // 최소 스키마 보정
+      const st = {
+        raw: String(obj.raw ?? ""),
+        criteria: Array.isArray(obj.criteria) ? obj.criteria.map(c => ({
+          id: normId(c.id ?? ""),
+          name: String(c.name ?? ""),
+          status: (c.status === "PASS" || c.status === "X" || c.status === "UNJ") ? c.status : "UNJ",
+          updatedAt: String(c.updatedAt ?? nowTs())
+        })) : [],
+        history: Array.isArray(obj.history) ? obj.history.map(h => ({
+          ts: String(h.ts ?? ""),
+          id: normId(h.id ?? ""),
+          from: String(h.from ?? ""),
+          to: String(h.to ?? ""),
+          name: String(h.name ?? "")
+        })) : []
+      };
+      saveState(st);
+      renderAll();
+    }catch{
+      // 실패 시 아무것도 안 함(질문/경고 없이)
+    }
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    localStorage.removeItem(LS_KEY);
+    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
+    renderAll();
+  });
+
+  // 초기 로드
+  (function init(){
+    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
+    renderAll();
+  })();
 </script>
 </body>
 </html>
