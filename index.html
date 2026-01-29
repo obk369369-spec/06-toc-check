@@ -1,576 +1,140 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TOC Check</title>
+  <meta charset="UTF-8" />
+  <title>6번 도구: TOC Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root { --bd:#e5e7eb; --tx:#111827; --mut:#6b7280; --bg:#ffffff; --bg2:#f9fafb; }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--tx);background:var(--bg)}
-    header{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;gap:10px;align-items:center;z-index:2}
-    header .badge{font-size:12px;padding:4px 8px;border:1px solid var(--bd);border-radius:999px;background:var(--bg2);color:var(--mut)}
-    header .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    button{cursor:pointer;border:1px solid var(--bd);background:var(--bg2);padding:8px 10px;border-radius:10px;font-size:13px}
-    button.primary{background:#111827;color:#fff;border-color:#111827}
-    button.danger{background:#fee2e2;border-color:#fecaca}
-    button.ok{background:#dcfce7;border-color:#bbf7d0}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    main{padding:16px;max-width:1200px;margin:0 auto}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .card{border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:#fff}
-    .card h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--bd);background:var(--bg2);font-size:14px}
-    .card .p{padding:12px}
-    textarea{width:100%;min-height:200px;resize:vertical;padding:10px;border-radius:12px;border:1px solid var(--bd);font-size:13px;line-height:1.35}
-    .mut{color:var(--mut);font-size:12px}
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .row > *{flex:0 0 auto}
-    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    ul{margin:0;padding-left:18px}
-    li{margin:2px 0;font-size:13px}
-    .pill{display:inline-block;font-size:12px;padding:2px 8px;border:1px solid var(--bd);border-radius:999px;background:var(--bg2)}
-    .kpi{display:flex;gap:8px;flex-wrap:wrap}
-    .kpi .pill{background:#fff}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--bd);padding:8px 10px;font-size:12px;text-align:left;vertical-align:top}
-    th{background:var(--bg2)}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
-    .small{font-size:11px}
-    .note{padding:10px 12px;background:#fff7ed;border-top:1px solid #fed7aa;color:#9a3412;font-size:12px}
-    select,input{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:13px}
-    .right{margin-left:auto}
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; }
+    h1 { font-size: 18px; margin-bottom: 8px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    textarea { width: 100%; min-height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    button { padding: 8px 12px; }
+    .panel { border: 1px solid #ddd; padding: 12px; border-radius: 6px; }
+    .out { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .toc-title { font-weight: 600; margin-bottom: 6px; }
+    .indent { padding-left: 18px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; background:#eee; font-size: 12px; }
+    .log { font-size: 12px; }
+    .pass { color: #0a7; }
+    .fail { color: #c33; }
   </style>
 </head>
 <body>
-<header>
+  <h1>6번 도구: TOC Check <span class="badge">C021 고정</span></h1>
+
   <div class="row">
-    <strong>TOC Check</strong>
-    <span class="badge" id="autoSaveBadge">자동 저장: 확인중…</span>
-  </div>
-  <div class="row right">
-    <button id="btnExport" class="primary">내보내기(JSON)</button>
-    <button id="btnDownload">백업 JSON 다운로드</button>
-    <button id="btnReset" class="danger">데이터 초기화</button>
-  </div>
-</header>
-
-<main>
-  <div class="grid">
-    <section class="card">
-      <h3>입력</h3>
-      <div class="p">
-        <div class="mut">상위목차 / 하위목차 원문(사용자 입력)</div>
-        <textarea id="rawInput" placeholder="여기에 목차 원문을 붙여넣고 ‘원문 저장/분석’ 버튼을 누르세요."></textarea>
-        <div class="row" style="margin-top:10px">
-          <button id="btnSaveRaw" class="primary">원문 저장/분석</button>
-          <span class="mut">저장: 원문 + 상태/이력</span>
-        </div>
+    <div class="panel" style="flex:1 1 420px;">
+      <div class="toc-title">입력 (목차 원문 붙여넣기)</div>
+      <textarea id="input" placeholder="PDF에서 복사한 목차를 그대로 붙여넣으세요."></textarea>
+      <div style="margin-top:8px;">
+        <button id="run">분류 실행</button>
+        <button id="clear">입력 비우기</button>
       </div>
-    </section>
+    </div>
 
-    <section class="card">
-      <h3>기준점</h3>
-      <div class="p">
-        <div class="row">
-          <span class="pill">기준점 추가</span>
-          <input id="critId" placeholder="기준점 ID (예: C021)" class="mono" />
-          <input id="critName" placeholder="기준점 이름 (예: 01/23 · 오늘 작업 확인)" />
-          <button id="btnAddCrit">기준점 추가</button>
-          <button id="btnAutoId">ID 자동</button>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <span class="pill">선택 기준점 상태 변경</span>
-          <select id="critSelect"></select>
-          <span class="mut" id="selInfo">선택: 없음</span>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button id="btnPass" class="ok">PASS</button>
-          <button id="btnX" class="danger">X</button>
-          <button id="btnUnj">미판단</button>
-          <button id="btnDelCrit">기준점 삭제</button>
-        </div>
-
-        <div class="kpi" style="margin-top:10px">
-          <span class="pill">PASS 개수 <b id="cntPass">0</b></span>
-          <span class="pill">X 개수 <b id="cntX">0</b></span>
-          <span class="pill">미판단 개수 <b id="cntUnj">0</b></span>
-          <span class="pill">전체 기준점 <b id="cntAll">0</b></span>
-        </div>
-      </div>
-      <div class="note">
-        ✅ PASS/X는 “현재 화면 결과”에 대한 체크 기록용이다. 선택이 비어있으면 자동으로 마지막 기준점을 선택해서 기록한다.
-      </div>
-    </section>
+    <div class="panel" style="flex:1 1 420px;">
+      <div class="toc-title">출력 (상위/하위목차)</div>
+      <div id="output" class="out"></div>
+    </div>
   </div>
 
-  <div class="grid" style="margin-top:16px">
-    <section class="card">
-      <h3>분리 출력</h3>
-      <div class="p split">
-        <div>
-          <div class="row" style="margin-bottom:6px">
-            <span class="pill">상위 목차</span>
-            <span class="mut">개수: <b id="topCount">0</b></span>
-          </div>
-          <ul id="topList"></ul>
-        </div>
-        <div>
-          <div class="row" style="margin-bottom:6px">
-            <span class="pill">하위 목차</span>
-            <span class="mut">개수: <b id="subCount">0</b></span>
-          </div>
-          <ul id="subList"></ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>미분류/확인 필요 라인</h3>
-      <div class="p">
-        <div class="row" style="margin-bottom:6px">
-          <span class="mut">상위 <b id="sumTop">0</b> / 하위 <b id="sumSub">0</b> / 미분류 <b id="sumUnk">0</b></span>
-        </div>
-        <ul id="unkList"></ul>
-      </div>
-    </section>
+  <div class="panel" style="margin-top:12px;">
+    <div class="toc-title">판정</div>
+    <button id="btnPass">PASS</button>
+    <button id="btnFail">X</button>
+    <span class="badge">방향성 판정</span>
   </div>
 
-  <div class="grid" style="margin-top:16px">
-    <section class="card">
-      <h3>백업 JSON (항상 표시)</h3>
-      <div class="p">
-        <div class="mut">여기에 있는 JSON을 복사해두면, 데이터가 지워져도 Import로 복구 가능</div>
-        <textarea id="backupBox" class="mono" style="min-height:240px" readonly></textarea>
-        <div class="row" style="margin-top:10px">
-          <button id="btnCopy">백업 JSON 복사</button>
-          <button id="btnImport" class="primary">가져오기(JSON)</button>
-          <span class="mut">붙여넣기 → Import</span>
-        </div>
-        <div class="mut small" style="margin-top:8px">가져오기: 아래 입력칸에 백업 JSON을 붙여넣고 Import(복구)</div>
-        <textarea id="importBox" class="mono" style="min-height:180px" placeholder="여기에 백업 JSON을 붙여넣기"></textarea>
-        <div class="row" style="margin-top:10px">
-          <button id="btnDoImport" class="primary">Import(복구)</button>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h3>PASS ↔ X 변경 이력</h3>
-      <div class="p">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:170px">시간</th>
-              <th style="width:90px">기준점 ID</th>
-              <th style="width:110px">변경</th>
-              <th>이름</th>
-            </tr>
-          </thead>
-          <tbody id="histBody"></tbody>
-        </table>
-      </div>
-    </section>
+  <div class="panel" style="margin-top:12px;">
+    <div class="toc-title">이력 (localStorage)</div>
+    <div id="history" class="log"></div>
   </div>
-</main>
 
 <script>
-  const LS_KEY = "toc_check_v2";
+(function(){
+  const LS_KEY = "toc_check_history_v6";
+  const input = document.getElementById("input");
+  const output = document.getElementById("output");
+  const historyBox = document.getElementById("history");
 
-  function nowTs(){
-    const d = new Date();
-    const pad = n => String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  function loadHistory(){
+    const h = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    historyBox.textContent = h.map(x =>
+      `[${x.time}] C021 ${x.result}`
+    ).join("\n");
   }
 
-  // ID 정규화: 공백 제거 + 대문자 통일
-  function normId(s){
-    return String(s ?? "").trim().replace(/\s+/g,"").toUpperCase();
+  function saveHistory(result){
+    const h = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
+    h.push({ time: new Date().toLocaleString(), result });
+    localStorage.setItem(LS_KEY, JSON.stringify(h));
+    loadHistory();
   }
 
-  // 줄 정리
-  function splitLines(raw){
-    return String(raw ?? "")
-      .replace(/\r\n/g,"\n")
-      .split("\n")
-      .map(l => l.trim())
-      .filter(l => l.length > 0);
-  }
+  // ---- TOC 파서 (미세 조정) ----
+  // 원칙:
+  // 1) 상위목차: 번호 없는 굵은 개념 라인 또는 로마자/대문자 단독 라인
+  // 2) 하위목차: 숫자/다단 번호(1., 1.1, 1.1.1 등) → 들여쓰기
+  // 3) 설명문/번호만/문장형은 제외 가능
+  function parseTOC(text){
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const res = [];
+    for(const line of lines){
+      // 번호만 있는 라인 제외
+      if (/^[\dIVXivx\.\-]+$/.test(line)) continue;
 
-  // TOC 파서(숫자/텍스트 결합):
-  // - "4.2.1" 같은 번호 라인이 따로 오고 다음 줄이 제목이면 결합
-  // - "4.2.1 TITLE" 형태도 처리
-  function parseToc(raw){
-    const lines = splitLines(raw);
+      // 문장형(마침표 2개 이상 또는 조사 다수) 제외
+      if ((line.match(/[\.。]/g)||[]).length >= 2) continue;
 
-    const numOnly = /^(\d+(?:\.\d+){0,10})$/;
-    const numTitle = /^(\d+(?:\.\d+){0,10})\s+(.+)$/;
-    const roman = /^(?:I|II|III|IV|V|VI|VII|VIII|IX|X)\b\.?\s+(.+)$/i;
-
-    const items = [];
-    let i = 0;
-    while(i < lines.length){
-      const line = lines[i];
-
-      let m = line.match(numTitle);
-      if(m){
-        items.push({ num:m[1], title:m[2].trim() });
-        i++; continue;
-      }
-
-      m = line.match(numOnly);
-      if(m){
-        const num = m[1];
-        const next = lines[i+1] ?? "";
-        // 다음 줄이 또 번호면, 제목 없는 번호로 취급(미분류로 보냄)
-        if(next && !numOnly.test(next) && !numTitle.test(next)){
-          // 다음 줄이 제목(텍스트)일 가능성이 높음
-          items.push({ num, title: next });
-          i += 2; continue;
-        } else {
-          // 제목 못 찾음
-          items.push({ num, title: "" , unknown:true});
-          i++; continue;
-        }
-      }
-
-      m = line.match(roman);
-      if(m){
-        // 로마숫자는 상위로 간주
-        items.push({ num: "", title: m[1].trim(), forceTop:true });
-        i++; continue;
-      }
-
-      // 일반 텍스트 라인
-      items.push({ num:"", title: line, textOnly:true });
-      i++;
-    }
-
-    // 분류 규칙:
-    // - 번호가 없고 텍스트만이면: 기본 상위로 보내되, "설명문(문장형)"은 미분류
-    // - 번호가 있으면:
-    //    depth 0 (예: 1, 15) => 상위
-    //    depth >=1 (예: 4.2, 4.2.1) => 하위
-    const top = [];
-    const sub = [];
-    const unk = [];
-
-    for(const it of items){
-      const title = (it.title ?? "").trim();
-      const num = (it.num ?? "").trim();
-
-      const isSentenceLike = title.length > 60 || /[.!?]$/.test(title) || /\bwith\b|\bmaps\b|\bhighlights\b/i.test(title);
-
-      if(it.unknown){
-        unk.push(num);
+      // 다단 번호 → 하위
+      if (/^\d+(\.\d+)+\s+/.test(line) || /^\d+[\.\)]\s+/.test(line)){
+        res.push({ level: "sub", text: line.replace(/^\d+(\.\d+)*[\.\)]\s+/, "") });
         continue;
       }
 
-      if(it.forceTop){
-        if(title) top.push(title);
-        else unk.push(line);
+      // 로마자/대문자 단독 → 상위
+      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.?\s+/.test(line) || /^[A-Z][A-Z\s\-]+$/.test(line)){
+        res.push({ level: "top", text: line.replace(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.?\s+/, "") });
         continue;
       }
 
-      if(num){
-        const depth = num.split(".").length - 1; // 0이면 1, 15 같은 상위
-        if(!title){
-          unk.push(num);
-        } else if(depth === 0){
-          top.push(title);
-        } else {
-          sub.push(`${num} ${title}`);
-        }
+      // 짧고 명사형에 가까운 라인 → 상위
+      if (line.length <= 40 && !/[.!?]$/.test(line)){
+        res.push({ level: "top", text: line });
         continue;
       }
 
-      // 텍스트만 있는 경우
-      if(!title){
-        continue;
-      }
-      if(isSentenceLike){
-        unk.push(title);
-      } else {
-        top.push(title);
-      }
+      // 나머지는 미분류(출력 제외)
     }
-
-    return { top, sub, unk };
+    return res;
   }
 
-  function loadState(){
-    try{
-      const raw = localStorage.getItem(LS_KEY);
-      if(!raw) return { raw:"", criteria:[], history:[] };
-      const obj = JSON.parse(raw);
-      if(!obj || typeof obj !== "object") throw new Error("bad");
-      obj.raw = String(obj.raw ?? "");
-      obj.criteria = Array.isArray(obj.criteria) ? obj.criteria : [];
-      obj.history = Array.isArray(obj.history) ? obj.history : [];
-      return obj;
-    }catch{
-      return { raw:"", criteria:[], history:[] };
-    }
-  }
-
-  function saveState(st){
-    localStorage.setItem(LS_KEY, JSON.stringify(st));
-    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
-  }
-
-  function ensureUniqueId(st, id){
-    const ids = new Set(st.criteria.map(c => normId(c.id)));
-    if(!ids.has(id)) return id;
-    // 충돌 시 뒤에 -2, -3...
-    let k=2;
-    while(ids.has(`${id}-${k}`)) k++;
-    return `${id}-${k}`;
-  }
-
-  function renderAll(){
-    const st = loadState();
-
-    // 입력 반영
-    document.getElementById("rawInput").value = st.raw ?? "";
-
-    // TOC 분리
-    const {top, sub, unk} = parseToc(st.raw ?? "");
-    const topList = document.getElementById("topList");
-    const subList = document.getElementById("subList");
-    const unkList = document.getElementById("unkList");
-    topList.innerHTML = "";
-    subList.innerHTML = "";
-    unkList.innerHTML = "";
-
-    for(const t of top){ const li=document.createElement("li"); li.textContent=t; topList.appendChild(li); }
-    for(const s of sub){ const li=document.createElement("li"); li.textContent=s; subList.appendChild(li); }
-    for(const u of unk){ const li=document.createElement("li"); li.textContent=u; unkList.appendChild(li); }
-
-    document.getElementById("topCount").textContent = top.length;
-    document.getElementById("subCount").textContent = sub.length;
-    document.getElementById("sumTop").textContent = top.length;
-    document.getElementById("sumSub").textContent = sub.length;
-    document.getElementById("sumUnk").textContent = unk.length;
-
-    // 기준점 셀렉트
-    const sel = document.getElementById("critSelect");
-    const prev = sel.value;
-    sel.innerHTML = "";
-    if(st.criteria.length === 0){
-      const opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = "기준점 없음";
-      sel.appendChild(opt);
-    } else {
-      for(const c of st.criteria){
-        const opt = document.createElement("option");
-        opt.value = normId(c.id);
-        opt.textContent = `${normId(c.id)} / ${c.name ?? ""}`;
-        sel.appendChild(opt);
-      }
-      // 이전 선택 유지, 없으면 마지막 자동 선택
-      const want = prev && [...sel.options].some(o=>o.value===prev) ? prev : normId(st.criteria[st.criteria.length-1].id);
-      sel.value = want;
-    }
-
-    // 선택 표시
-    const selectedId = sel.value;
-    const selected = st.criteria.find(c => normId(c.id) === selectedId);
-    document.getElementById("selInfo").textContent = selected
-      ? `선택: ${normId(selected.id)} / ${selected.name ?? ""}`
-      : "선택: 없음";
-
-    // 카운트
-    const cntPass = st.criteria.filter(c => c.status === "PASS").length;
-    const cntX = st.criteria.filter(c => c.status === "X").length;
-    const cntUnj = st.criteria.filter(c => c.status === "UNJ").length;
-    document.getElementById("cntPass").textContent = cntPass;
-    document.getElementById("cntX").textContent = cntX;
-    document.getElementById("cntUnj").textContent = cntUnj;
-    document.getElementById("cntAll").textContent = st.criteria.length;
-
-    // 백업 JSON
-    document.getElementById("backupBox").value = JSON.stringify(st, null, 2);
-
-    // 이력
-    const tb = document.getElementById("histBody");
-    tb.innerHTML = "";
-    // 최신이 위로
-    const hist = [...st.history].slice().reverse();
-    for(const h of hist){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="mono">${h.ts ?? ""}</td>
-        <td class="mono">${normId(h.id ?? "")}</td>
-        <td class="mono">${(h.from ?? "")} → ${(h.to ?? "")}</td>
-        <td>${h.name ?? ""}</td>
-      `;
-      tb.appendChild(tr);
-    }
-  }
-
-  function getSelectedOrAutoLast(st){
-    const sel = document.getElementById("critSelect");
-    let id = normId(sel.value);
-    if(id && st.criteria.some(c=>normId(c.id)===id)) return id;
-
-    if(st.criteria.length > 0){
-      const last = normId(st.criteria[st.criteria.length-1].id);
-      sel.value = last;
-      return last;
-    }
-    return "";
-  }
-
-  function setStatus(toStatus){
-    const st = loadState();
-    const id = getSelectedOrAutoLast(st);
-    if(!id){
-      // 기준점이 없으면: 자동으로 하나 만들어 기록 가능하게
-      const newIdBase = "C001";
-      const newId = ensureUniqueId(st, newIdBase);
-      st.criteria.push({ id:newId, name:"자동 생성", status:"UNJ", updatedAt: nowTs() });
-      saveState(st);
-      renderAll();
-      return setStatus(toStatus);
-    }
-
-    const c = st.criteria.find(x => normId(x.id) === id);
-    const from = c.status ?? "UNJ";
-    c.status = toStatus;
-    c.updatedAt = nowTs();
-
-    st.history.push({
-      ts: nowTs(),
-      id: normId(c.id),
-      from,
-      to: toStatus,
-      name: c.name ?? ""
+  function render(list){
+    output.innerHTML = "";
+    list.forEach(item=>{
+      const div = document.createElement("div");
+      div.textContent = item.text;
+      if(item.level === "sub") div.className = "indent";
+      output.appendChild(div);
     });
-
-    saveState(st);
-    renderAll();
   }
 
-  // 이벤트 바인딩
-  document.getElementById("btnSaveRaw").addEventListener("click", () => {
-    const st = loadState();
-    st.raw = document.getElementById("rawInput").value || "";
-    saveState(st);
-    renderAll();
-  });
+  document.getElementById("run").onclick = ()=>{
+    const list = parseTOC(input.value || "");
+    render(list);
+  };
 
-  document.getElementById("btnAddCrit").addEventListener("click", () => {
-    const st = loadState();
-    const id0 = normId(document.getElementById("critId").value);
-    const name = String(document.getElementById("critName").value || "").trim();
+  document.getElementById("clear").onclick = ()=>{
+    input.value = "";
+    output.textContent = "";
+  };
 
-    if(!id0 || !name){
-      // 입력이 비면 아무것도 안 함 (강제 질문/경고 없이)
-      return;
-    }
-    const id = ensureUniqueId(st, id0);
-    st.criteria.push({ id, name, status:"UNJ", updatedAt: nowTs() });
-    saveState(st);
-    document.getElementById("critId").value = "";
-    document.getElementById("critName").value = "";
-    renderAll();
-  });
+  document.getElementById("btnPass").onclick = ()=> saveHistory("PASS");
+  document.getElementById("btnFail").onclick = ()=> saveHistory("X");
 
-  document.getElementById("btnAutoId").addEventListener("click", () => {
-    const st = loadState();
-    // C001부터 채움
-    let n = 1;
-    const exists = new Set(st.criteria.map(c=>normId(c.id)));
-    while(exists.has(`C${String(n).padStart(3,"0")}`)) n++;
-    document.getElementById("critId").value = `C${String(n).padStart(3,"0")}`;
-  });
-
-  document.getElementById("critSelect").addEventListener("change", () => renderAll());
-
-  document.getElementById("btnPass").addEventListener("click", () => setStatus("PASS"));
-  document.getElementById("btnX").addEventListener("click", () => setStatus("X"));
-  document.getElementById("btnUnj").addEventListener("click", () => setStatus("UNJ"));
-
-  document.getElementById("btnDelCrit").addEventListener("click", () => {
-    const st = loadState();
-    const id = getSelectedOrAutoLast(st);
-    if(!id) return;
-    st.criteria = st.criteria.filter(c => normId(c.id) !== id);
-    saveState(st);
-    renderAll();
-  });
-
-  document.getElementById("btnCopy").addEventListener("click", async () => {
-    const txt = document.getElementById("backupBox").value;
-    try{ await navigator.clipboard.writeText(txt); }catch{}
-  });
-
-  document.getElementById("btnExport").addEventListener("click", () => {
-    // backupBox 내용 그대로 다운로드/복사 용도
-    const txt = document.getElementById("backupBox").value;
-    const blob = new Blob([txt], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `toc_backup_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  document.getElementById("btnDownload").addEventListener("click", () => {
-    const txt = document.getElementById("backupBox").value;
-    const blob = new Blob([txt], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `toc_backup_${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  document.getElementById("btnImport").addEventListener("click", () => {
-    document.getElementById("importBox").focus();
-  });
-
-  document.getElementById("btnDoImport").addEventListener("click", () => {
-    const txt = document.getElementById("importBox").value || "";
-    try{
-      const obj = JSON.parse(txt);
-      // 최소 스키마 보정
-      const st = {
-        raw: String(obj.raw ?? ""),
-        criteria: Array.isArray(obj.criteria) ? obj.criteria.map(c => ({
-          id: normId(c.id ?? ""),
-          name: String(c.name ?? ""),
-          status: (c.status === "PASS" || c.status === "X" || c.status === "UNJ") ? c.status : "UNJ",
-          updatedAt: String(c.updatedAt ?? nowTs())
-        })) : [],
-        history: Array.isArray(obj.history) ? obj.history.map(h => ({
-          ts: String(h.ts ?? ""),
-          id: normId(h.id ?? ""),
-          from: String(h.from ?? ""),
-          to: String(h.to ?? ""),
-          name: String(h.name ?? "")
-        })) : []
-      };
-      saveState(st);
-      renderAll();
-    }catch{
-      // 실패 시 아무것도 안 함(질문/경고 없이)
-    }
-  });
-
-  document.getElementById("btnReset").addEventListener("click", () => {
-    localStorage.removeItem(LS_KEY);
-    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
-    renderAll();
-  });
-
-  // 초기 로드
-  (function init(){
-    document.getElementById("autoSaveBadge").textContent = "자동 저장: OK";
-    renderAll();
-  })();
+  loadHistory();
+})();
 </script>
 </body>
 </html>
