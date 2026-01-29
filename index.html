@@ -5,136 +5,97 @@
   <title>6번 도구: TOC Check</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; }
-    h1 { font-size: 18px; margin-bottom: 8px; }
-    .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    textarea { width: 100%; min-height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    button { padding: 8px 12px; }
-    .panel { border: 1px solid #ddd; padding: 12px; border-radius: 6px; }
-    .out { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .toc-title { font-weight: 600; margin-bottom: 6px; }
-    .indent { padding-left: 18px; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; background:#eee; font-size: 12px; }
-    .log { font-size: 12px; }
-    .pass { color: #0a7; }
-    .fail { color: #c33; }
+    body { font-family: system-ui, sans-serif; margin: 16px; }
+    h1 { font-size: 18px; }
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      font-family: monospace;
+      margin-bottom: 8px;
+    }
+    button { padding: 8px 14px; margin-right: 6px; }
+    .panel {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .output div { margin-left: 16px; }
+    .top { margin-left: 0; font-weight: bold; }
+    .log { font-size: 12px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
-  <h1>6번 도구: TOC Check <span class="badge">C021 고정</span></h1>
 
-  <div class="row">
-    <div class="panel" style="flex:1 1 420px;">
-      <div class="toc-title">입력 (목차 원문 붙여넣기)</div>
-      <textarea id="input" placeholder="PDF에서 복사한 목차를 그대로 붙여넣으세요."></textarea>
-      <div style="margin-top:8px;">
-        <button id="run">분류 실행</button>
-        <button id="clear">입력 비우기</button>
-      </div>
-    </div>
+<h1>6번 도구: TOC Check (C021 고정)</h1>
 
-    <div class="panel" style="flex:1 1 420px;">
-      <div class="toc-title">출력 (상위/하위목차)</div>
-      <div id="output" class="out"></div>
-    </div>
-  </div>
+<div class="panel">
+  <textarea id="input" placeholder="목차 원문 붙여넣기"></textarea>
+  <button onclick="run()">분류 실행</button>
+  <button onclick="clearAll()">초기화</button>
+</div>
 
-  <div class="panel" style="margin-top:12px;">
-    <div class="toc-title">판정</div>
-    <button id="btnPass">PASS</button>
-    <button id="btnFail">X</button>
-    <span class="badge">방향성 판정</span>
-  </div>
+<div class="panel">
+  <strong>출력</strong>
+  <div id="output" class="output"></div>
+</div>
 
-  <div class="panel" style="margin-top:12px;">
-    <div class="toc-title">이력 (localStorage)</div>
-    <div id="history" class="log"></div>
-  </div>
+<div class="panel">
+  <button onclick="record('PASS')">PASS</button>
+  <button onclick="record('X')">X</button>
+</div>
+
+<div class="panel">
+  <strong>이력</strong>
+  <div id="history" class="log"></div>
+</div>
 
 <script>
-(function(){
-  const LS_KEY = "toc_check_history_v6";
-  const input = document.getElementById("input");
-  const output = document.getElementById("output");
-  const historyBox = document.getElementById("history");
+const KEY = "toc_check_history";
 
-  function loadHistory(){
-    const h = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-    historyBox.textContent = h.map(x =>
-      `[${x.time}] C021 ${x.result}`
-    ).join("\n");
-  }
+function run() {
+  const text = document.getElementById("input").value;
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const out = document.getElementById("output");
+  out.innerHTML = "";
 
-  function saveHistory(result){
-    const h = JSON.parse(localStorage.getItem(LS_KEY) || "[]");
-    h.push({ time: new Date().toLocaleString(), result });
-    localStorage.setItem(LS_KEY, JSON.stringify(h));
-    loadHistory();
-  }
-
-  // ---- TOC 파서 (미세 조정) ----
-  // 원칙:
-  // 1) 상위목차: 번호 없는 굵은 개념 라인 또는 로마자/대문자 단독 라인
-  // 2) 하위목차: 숫자/다단 번호(1., 1.1, 1.1.1 등) → 들여쓰기
-  // 3) 설명문/번호만/문장형은 제외 가능
-  function parseTOC(text){
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    const res = [];
-    for(const line of lines){
-      // 번호만 있는 라인 제외
-      if (/^[\dIVXivx\.\-]+$/.test(line)) continue;
-
-      // 문장형(마침표 2개 이상 또는 조사 다수) 제외
-      if ((line.match(/[\.。]/g)||[]).length >= 2) continue;
-
-      // 다단 번호 → 하위
-      if (/^\d+(\.\d+)+\s+/.test(line) || /^\d+[\.\)]\s+/.test(line)){
-        res.push({ level: "sub", text: line.replace(/^\d+(\.\d+)*[\.\)]\s+/, "") });
-        continue;
-      }
-
-      // 로마자/대문자 단독 → 상위
-      if (/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.?\s+/.test(line) || /^[A-Z][A-Z\s\-]+$/.test(line)){
-        res.push({ level: "top", text: line.replace(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)\.?\s+/, "") });
-        continue;
-      }
-
-      // 짧고 명사형에 가까운 라인 → 상위
-      if (line.length <= 40 && !/[.!?]$/.test(line)){
-        res.push({ level: "top", text: line });
-        continue;
-      }
-
-      // 나머지는 미분류(출력 제외)
-    }
-    return res;
-  }
-
-  function render(list){
-    output.innerHTML = "";
-    list.forEach(item=>{
+  lines.forEach(line => {
+    // 숫자 계층만 인정 (보이는 것만)
+    if (/^\d+(\.\d+)+/.test(line)) {
       const div = document.createElement("div");
-      div.textContent = item.text;
-      if(item.level === "sub") div.className = "indent";
-      output.appendChild(div);
-    });
-  }
+      div.textContent = line;
+      out.appendChild(div);
+    } else if (/^(Chapter|CHAPTER)\s+\d+/i.test(line)) {
+      const div = document.createElement("div");
+      div.textContent = line;
+      div.className = "top";
+      out.appendChild(div);
+    }
+  });
+}
 
-  document.getElementById("run").onclick = ()=>{
-    const list = parseTOC(input.value || "");
-    render(list);
-  };
+function record(result) {
+  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
+  logs.push({
+    time: new Date().toLocaleString(),
+    result: result
+  });
+  localStorage.setItem(KEY, JSON.stringify(logs));
+  renderHistory();
+}
 
-  document.getElementById("clear").onclick = ()=>{
-    input.value = "";
-    output.textContent = "";
-  };
+function renderHistory() {
+  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
+  document.getElementById("history").textContent =
+    logs.map(l => `[${l.time}] C021 ${l.result}`).join("\n");
+}
 
-  document.getElementById("btnPass").onclick = ()=> saveHistory("PASS");
-  document.getElementById("btnFail").onclick = ()=> saveHistory("X");
+function clearAll() {
+  document.getElementById("input").value = "";
+  document.getElementById("output").innerHTML = "";
+}
 
-  loadHistory();
-})();
+renderHistory();
 </script>
+
 </body>
 </html>
