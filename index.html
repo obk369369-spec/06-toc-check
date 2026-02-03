@@ -5,19 +5,14 @@
 <title>6번 도구: TOC Check</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-body { font-family: system-ui, sans-serif; margin: 16px; }
-h1 { font-size: 18px; }
-textarea {
-  width: 100%;
-  min-height: 220px;
-  font-family: monospace;
-  margin-bottom: 8px;
-}
-button { padding: 8px 14px; margin-right: 6px; }
-.panel { border: 1px solid #ccc; padding: 12px; margin-top: 12px; }
-.output div { margin-left: 16px; }
-.top { margin-left: 0; font-weight: bold; }
-.log { font-size: 12px; white-space: pre-wrap; }
+body { font-family: system-ui, sans-serif; margin:16px; }
+h1 { font-size:18px; }
+textarea { width:100%; min-height:220px; font-family:monospace; }
+button { padding:8px 14px; margin-right:6px; }
+.panel { border:1px solid #ccc; padding:12px; margin-top:12px; }
+.output div { margin-left:16px; }
+.top { margin-left:0; font-weight:bold; }
+.log { font-size:12px; white-space:pre-wrap; }
 </style>
 </head>
 <body>
@@ -25,7 +20,7 @@ button { padding: 8px 14px; margin-right: 6px; }
 <h1>6번 도구: TOC Check (C021 고정)</h1>
 
 <div class="panel">
-<textarea id="input" placeholder="목차 원문 붙여넣기"></textarea>
+<textarea id="input" placeholder="목차 원문 붙여넣기"></textarea><br>
 <button onclick="run()">분류 실행</button>
 <button onclick="clearAll()">초기화</button>
 </div>
@@ -46,66 +41,67 @@ button { padding: 8px 14px; margin-right: 6px; }
 </div>
 
 <script>
-const KEY = "toc_check_history_v3";
+const KEY = "toc_check_history";
 
-/* ---------- 핵심 로직 ---------- */
-function run() {
+function run(){
   const text = document.getElementById("input").value;
-  const rawLines = text.split(/\r?\n/);
-
+  const raw = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
   const out = document.getElementById("output");
   out.innerHTML = "";
 
-  rawLines.forEach(line => {
-    const clean = line.replace(/\s+/g," ").trim();
-    if (!clean) return;
+  for(let i=0;i<raw.length;i++){
+    let line = raw[i];
 
-    // 페이지 번호 제거 (숫자 단독 줄)
-    if (/^\d{1,3}$/.test(clean)) return;
-
-    // Chapter 인식
-    if (/^(Chapter|CHAPTER)\s+\d+/i.test(clean)) {
-      const div = document.createElement("div");
-      div.textContent = clean;
-      div.className = "top";
-      out.appendChild(div);
-      return;
+    // 1) CHAPTER
+    if(/^(chapter|CHAPTER)\s+\d+/i.test(line)){
+      add(line,"top");
+      continue;
     }
 
-    // 숫자 계층 + 제목 있는 줄만 허용
-    if (/^\d+(\.\d+)*\s+[A-Za-z]/.test(clean)) {
-      const div = document.createElement("div");
-      div.textContent = clean;
-      out.appendChild(div);
-      return;
+    // 2) 1.1 / 2.3.4
+    if(/^\d+(\.\d+)+/.test(line)){
+      add(line);
+      continue;
     }
 
-    // 숫자만 있는 줄은 무시
-    if (/^\d+(\.\d+)*$/.test(clean)) return;
-  });
+    // 3) "1" 다음줄 제목 → 합치기
+    if(/^\d+$/.test(line)){
+      const next = raw[i+1] || "";
+      if(/[A-Za-z가-힣]/.test(next)){
+        add(line + " " + next);
+        i++;
+      }
+      continue;
+    }
+
+    // 4) 페이지 숫자만 (27, 32 등) → 버림
+    if(/^\d+$/.test(line)) continue;
+  }
+
+  function add(txt,cls){
+    const d=document.createElement("div");
+    d.textContent=txt;
+    if(cls) d.className=cls;
+    out.appendChild(d);
+  }
 }
 
-/* ---------- 기록 ---------- */
-function record(result) {
-  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
-  logs.push({
-    time: new Date().toLocaleString(),
-    result
-  });
+function record(result){
+  const logs = JSON.parse(localStorage.getItem(KEY)||"[]");
+  logs.push({time:new Date().toLocaleString(), result});
   localStorage.setItem(KEY, JSON.stringify(logs));
   renderHistory();
 }
 
-function renderHistory() {
-  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
+function renderHistory(){
+  const logs = JSON.parse(localStorage.getItem(KEY)||"[]");
   document.getElementById("history").textContent =
-    logs.map(l => `[${l.time}] C021 ${l.result}`).join("\n");
+    logs.map(l=>`[${l.time}] C021 ${l.result}`).join("\n");
 }
 
-/* ---------- 초기화 ---------- */
-function clearAll() {
-  document.getElementById("input").value = "";
-  document.getElementById("output").innerHTML = "";
+function clearAll(){
+  document.getElementById("input").value="";
+  document.getElementById("output").innerHTML="";
 }
 
 renderHistory();
