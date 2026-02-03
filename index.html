@@ -1,51 +1,36 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>6번 도구: TOC Check</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root { --indent: 18px; }
-    body { font-family: system-ui, sans-serif; margin: 16px; }
-    h1 { font-size: 18px; margin: 0 0 10px; }
-    textarea {
-      width: 100%;
-      min-height: 220px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      margin-bottom: 8px;
-      line-height: 1.25;
-    }
-    button { padding: 8px 14px; margin-right: 6px; cursor: pointer; }
-    .panel { border: 1px solid #ccc; padding: 12px; margin-top: 12px; }
-    .output { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-    .row { white-space: pre; line-height: 1.35; }
-    .lvl0 { padding-left: calc(var(--indent) * 0); font-weight: 700; }
-    .lvl1 { padding-left: calc(var(--indent) * 1); }
-    .lvl2 { padding-left: calc(var(--indent) * 2); }
-    .lvl3 { padding-left: calc(var(--indent) * 3); }
-    .lvl4 { padding-left: calc(var(--indent) * 4); }
-    .lvl5 { padding-left: calc(var(--indent) * 5); }
-    .lvl6 { padding-left: calc(var(--indent) * 6); }
-    .lvl7 { padding-left: calc(var(--indent) * 7); }
-    .log { font-size: 12px; white-space: pre-wrap; }
-    .muted { color: #666; }
-    .badge { font-size: 12px; color: #444; margin-left: 6px; }
-    .smallbtn { padding: 6px 10px; font-size: 12px; }
-  </style>
+<meta charset="UTF-8" />
+<title>6번 도구: TOC Check</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  body { font-family: system-ui, sans-serif; margin: 16px; }
+  h1 { font-size: 18px; }
+  textarea {
+    width: 100%;
+    min-height: 220px;
+    font-family: monospace;
+    margin-bottom: 8px;
+  }
+  button { padding: 8px 14px; margin-right: 6px; }
+  .panel { border: 1px solid #ccc; padding: 12px; margin-top: 12px; }
+  .output div { margin-left: 16px; line-height: 1.4; }
+  .top { margin-left: 0; font-weight: bold; }
+  .log { font-size: 12px; white-space: pre-wrap; }
+</style>
 </head>
 <body>
 
-<h1>6번 도구: TOC Check (C021 고정)<span class="badge" id="status">ready</span></h1>
+<h1>6번 도구: TOC Check (C021 고정)</h1>
 
 <div class="panel">
   <textarea id="input" placeholder="목차 원문 붙여넣기"></textarea>
   <button onclick="run()">분류 실행</button>
   <button onclick="clearAll()">초기화</button>
-  <button class="smallbtn" onclick="clearHistory()">이력삭제</button>
 </div>
 
 <div class="panel">
-  <strong>출력</strong>
   <div id="output" class="output"></div>
 </div>
 
@@ -55,91 +40,54 @@
 </div>
 
 <div class="panel">
-  <strong>이력</strong>
   <div id="history" class="log"></div>
 </div>
 
 <script>
 const KEY = "toc_check_history";
 
-/* ---------- helpers ---------- */
-function setStatus(text) {
-  document.getElementById("status").textContent = text;
-}
-
-function isOnlyNumberLine(line) {
-  // 페이지 번호처럼 "27" 한 줄만 있는 경우 제거
-  return /^\d{1,4}$/.test(line);
-}
-
-function normalize(line) {
-  return line.replace(/\s+/g, " ").trim();
-}
-
-function parseLine(line) {
-  // 1) Chapter 타입
-  const chap = line.match(/^(Chapter|CHAPTER)\s+\d+(\.|:)?\s*(.*)$/i);
-  if (chap) {
-    const title = chap[0].trim();
-    return { type: "chapter", level: 0, text: title };
-  }
-
-  // 2) 번호 계층: "5", "5.2", "5.2.1", "5.2.1.1" 등
-  // - 뒤에 제목이 없어도 번호만 출력하도록
-  const num = line.match(/^(\d+(?:\.\d+)*)\b(.*)$/);
-  if (num) {
-    const numPart = num[1];              // "5.2.1"
-    const rest = normalize(num[2] || ""); // 제목
-    const dots = (numPart.match(/\./g) || []).length;
-    const level = Math.min(dots, 7);     // 너무 깊으면 7까지만
-    const text = rest ? `${numPart} ${rest}` : `${numPart}`;
-    return { type: "num", level, text };
-  }
-
-  // 3) 대문자 섹션 (INTRODUCTION 등) - 최상위로 처리
-  if (/^[A-Z][A-Z0-9 \-&,/()]+$/.test(line) && line.length <= 60) {
-    return { type: "caps", level: 0, text: line };
-  }
-
-  // 4) 그 외: 출력하지 않음
-  return null;
-}
-
-function render(items) {
+/* =========================
+   규칙:
+   - Chapter / SECTION 유지
+   - 1, 2, 3 유지
+   - 1.1, 2.1 유지
+   - 1.1.1 이하 전부 제거
+========================= */
+function run() {
+  const text = document.getElementById("input").value;
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
   const out = document.getElementById("output");
   out.innerHTML = "";
 
-  if (!items.length) {
-    const div = document.createElement("div");
-    div.className = "row muted";
-    div.textContent = "(출력 없음)";
-    out.appendChild(div);
-    return;
+  lines.forEach(line => {
+
+    // CHAPTER / SECTION 유지
+    if (/^(chapter|section|CHAPTER|SECTION)\s+\w+/i.test(line)) {
+      add(line, "top");
+      return;
+    }
+
+    // 1 / 2 / 3 상위 유지
+    if (/^\d+\b/.test(line) && !/\./.test(line)) {
+      add(line, "top");
+      return;
+    }
+
+    // 1.1 / 2.1 하위만 유지
+    if (/^\d+\.\d+\b/.test(line)) {
+      add(line);
+      return;
+    }
+
+    // 그 아래 단계는 전부 제거
+  });
+
+  function add(txt, cls) {
+    const d = document.createElement("div");
+    d.textContent = txt;
+    if (cls) d.className = cls;
+    out.appendChild(d);
   }
-
-  for (const it of items) {
-    const div = document.createElement("div");
-    div.className = "row " + (it.level === 0 ? "lvl0" : ("lvl" + it.level));
-    div.textContent = it.text;
-    out.appendChild(div);
-  }
-}
-
-/* ---------- main ---------- */
-function run() {
-  setStatus("running...");
-  const raw = document.getElementById("input").value || "";
-  const lines = raw.split(/\n/).map(l => normalize(l)).filter(Boolean);
-
-  const items = [];
-  for (const line of lines) {
-    if (isOnlyNumberLine(line)) continue; // 단독 숫자 줄 제거
-    const parsed = parseLine(line);
-    if (parsed) items.push(parsed);
-  }
-
-  render(items);
-  setStatus("done");
 }
 
 function record(result) {
@@ -158,12 +106,6 @@ function renderHistory() {
 function clearAll() {
   document.getElementById("input").value = "";
   document.getElementById("output").innerHTML = "";
-  setStatus("ready");
-}
-
-function clearHistory() {
-  localStorage.removeItem(KEY);
-  renderHistory();
 }
 
 renderHistory();
