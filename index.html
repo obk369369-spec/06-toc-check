@@ -1,115 +1,115 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<title>6번 도구: TOC Check</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  body { font-family: system-ui, sans-serif; margin: 16px; }
-  h1 { font-size: 18px; }
-  textarea {
-    width: 100%;
-    min-height: 220px;
-    font-family: monospace;
-    margin-bottom: 8px;
-  }
-  button { padding: 8px 14px; margin-right: 6px; }
-  .panel { border: 1px solid #ccc; padding: 12px; margin-top: 12px; }
-  .output div { margin-left: 16px; line-height: 1.4; }
-  .top { margin-left: 0; font-weight: bold; }
-  .log { font-size: 12px; white-space: pre-wrap; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TOC Check</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; }
+    h3 { margin: 0 0 10px; }
+    textarea { width: 100%; height: 240px; box-sizing: border-box; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    pre { white-space: pre-wrap; background: #f5f5f5; padding: 12px; border: 1px solid #ddd; min-height: 220px; }
+    button { margin: 8px 6px 0 0; padding: 8px 12px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hint { color:#666; font-size: 12px; }
+  </style>
 </head>
 <body>
+  <h3>6번 도구: TOC Check (C021 고정)</h3>
 
-<h1>6번 도구: TOC Check (C021 고정)</h1>
+  <div class="hint">규칙: 상위(예: 1) + 하위(예: 1.1)만 남김 / 그 외 전부 제거 / 하위는 들여쓰기</div>
+  <textarea id="input" placeholder="여기에 목차를 붙여넣기"></textarea>
 
-<div class="panel">
-  <textarea id="input" placeholder="목차 원문 붙여넣기"></textarea>
-  <button onclick="run()">분류 실행</button>
-  <button onclick="clearAll()">초기화</button>
-</div>
+  <div class="row">
+    <button id="btnRun" type="button">분류 실행</button>
+    <button id="btnClear" type="button">초기화</button>
+  </div>
 
-<div class="panel">
-  <div id="output" class="output"></div>
-</div>
-
-<div class="panel">
-  <button onclick="record('PASS')">PASS</button>
-  <button onclick="record('X')">X</button>
-</div>
-
-<div class="panel">
-  <div id="history" class="log"></div>
-</div>
+  <h4>결과</h4>
+  <pre id="output"></pre>
 
 <script>
-const KEY = "toc_check_history";
+(() => {
+  const $in = document.getElementById("input");
+  const $out = document.getElementById("output");
+  const $run = document.getElementById("btnRun");
+  const $clear = document.getElementById("btnClear");
 
-/* =========================
-   규칙:
-   - Chapter / SECTION 유지
-   - 1, 2, 3 유지
-   - 1.1, 2.1 유지
-   - 1.1.1 이하 전부 제거
-========================= */
-function run() {
-  const text = document.getElementById("input").value;
-  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
-  const out = document.getElementById("output");
-  out.innerHTML = "";
-
-  lines.forEach(line => {
-
-    // CHAPTER / SECTION 유지
-    if (/^(chapter|section|CHAPTER|SECTION)\s+\w+/i.test(line)) {
-      add(line, "top");
-      return;
-    }
-
-    // 1 / 2 / 3 상위 유지
-    if (/^\d+\b/.test(line) && !/\./.test(line)) {
-      add(line, "top");
-      return;
-    }
-
-    // 1.1 / 2.1 하위만 유지
-    if (/^\d+\.\d+\b/.test(line)) {
-      add(line);
-      return;
-    }
-
-    // 그 아래 단계는 전부 제거
-  });
-
-  function add(txt, cls) {
-    const d = document.createElement("div");
-    d.textContent = txt;
-    if (cls) d.className = cls;
-    out.appendChild(d);
+  // (1) "1", "1.", "1 INTRODUCTION" / "1.1", "1.1." "1.1 Title" 만 인식
+  // (2) 1.1.1 이상(점이 2개 이상)은 제거
+  // (3) 페이지번호 같은 "27" "32" 단독 숫자 제거
+  // (4) Table of Contents / TOC / CONTENTS 같은 머릿글 제거
+  // (5) 불릿/대시로 시작하는 줄은 제거 (번호 없는 목록)
+  function isJunkHeader(line) {
+    const s = line.trim().toLowerCase();
+    if (!s) return true;
+    if (s === "table of contents" || s === "toc" || s === "contents") return true;
+    if (s.includes("table of content")) return true;
+    return false;
   }
-}
 
-function record(result) {
-  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
-  logs.push({ time: new Date().toLocaleString(), result });
-  localStorage.setItem(KEY, JSON.stringify(logs));
-  renderHistory();
-}
+  function run() {
+    const text = $in.value || "";
+    const lines = text.split(/\r?\n/);
 
-function renderHistory() {
-  const logs = JSON.parse(localStorage.getItem(KEY) || "[]");
-  document.getElementById("history").textContent =
-    logs.map(l => `[${l.time}] C021 ${l.result}`).join("\n");
-}
+    const result = [];
+    const seen = new Set();
 
-function clearAll() {
-  document.getElementById("input").value = "";
-  document.getElementById("output").innerHTML = "";
-}
+    for (let raw of lines) {
+      let line = raw.replace(/\u00A0/g, " ").trim(); // nbsp 제거
+      if (!line) continue;
 
-renderHistory();
+      // 쓸데없는 머릿글/라벨 제거
+      if (isJunkHeader(line)) continue;
+
+      // 불릿/대시 목록 제거 (번호 없는 잡목차)
+      if (/^[•\-\u2022]/.test(line)) continue;
+
+      // "27" 같은 페이지번호 단독 숫자 제거
+      if (/^\d{1,4}$/.test(line)) continue;
+
+      // 앞에 번호가 아닌 줄 제거
+      // 허용: "1", "1.", "1  TITLE", "1.1", "1.1.", "1.1  TITLE"
+      const m = line.match(/^(\d+(?:\.\d+)*)(?:\.)?\s*(.*)$/);
+      if (!m) continue;
+
+      const num = m[1];          // 1 / 1.1 / 1.1.1 ...
+      const title = (m[2] || "").trim();
+
+      // 점 개수로 깊이 계산: 0=상위(1), 1=하위(1.1), 2+=삭제(1.1.1...)
+      const dotCount = (num.match(/\./g) || []).length;
+
+      // 상위+하위만 남김
+      if (dotCount >= 2) continue;
+
+      // 출력 문자열 구성(원문 라인 유지하되 정돈)
+      // - 제목이 비어 있으면 번호만 출력
+      // - 중복 제거
+      let outLine = "";
+      if (title) outLine = `${num} ${title}`;
+      else outLine = `${num}`;
+
+      // 하위는 들여쓰기
+      if (dotCount === 1) outLine = "  " + outLine;
+
+      const key = outLine.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      result.push(outLine);
+    }
+
+    $out.textContent = result.join("\n");
+  }
+
+  function clearAll() {
+    $in.value = "";
+    $out.textContent = "";
+  }
+
+  $run.addEventListener("click", run);
+  $clear.addEventListener("click", clearAll);
+})();
 </script>
-
 </body>
 </html>
