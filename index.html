@@ -24,6 +24,12 @@
     h1{ margin:0 0 6px; font-size:22px; font-weight:800; }
     .sub{ margin:0 0 14px; color:var(--muted); font-size:13px; }
 
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+    }
+
     .panel{
       border:1px solid var(--bd);
       background:var(--bg);
@@ -44,7 +50,9 @@
       font-weight:700;
       font-size:14px;
     }
-    .panel .bd{ padding:10px; }
+    .panel .bd{
+      padding:10px;
+    }
 
     .btns{
       display:flex;
@@ -84,7 +92,7 @@
       resize:vertical;
       border:0;
       outline:none;
-      padding:44px 44px 10px 10px; /* ✅ 상단 버튼 공간 확보 */
+      padding:10px 44px 10px 10px; /* 오른쪽 버튼 공간 확보 */
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
       font-size:12.5px;
       line-height:1.35;
@@ -93,18 +101,11 @@
     }
     textarea[readonly]{ background:#fcfcfc; }
 
-    /* ✅ 상단으로 이동한 버튼 (위/아래) */
-    .floatBtns{
+    /* 입력/출력 박스별 위로가기 버튼 */
+    .toTop{
       position:absolute;
       right:8px;
-      top:8px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      z-index:2;
-      user-select:none;
-    }
-    .miniBtn{
+      bottom:8px;
       width:32px;
       height:32px;
       border-radius:8px;
@@ -114,11 +115,10 @@
       align-items:center;
       justify-content:center;
       box-shadow: var(--shadow);
-      cursor:pointer;
-      padding:0;
+      user-select:none;
     }
-    .miniBtn:hover{ background:#f7f7f7; }
-    .miniBtn span{ font-size:15px; line-height:1; }
+    .toTop:hover{ background:#f7f7f7; }
+    .toTop span{ font-size:15px; line-height:1; }
 
     .sectionTitle{
       margin:0 0 8px;
@@ -169,15 +169,15 @@
 <body>
   <div class="wrap">
     <h1>6번 도구: TOC Check (C021 고정)</h1>
-    <p class="sub">규칙: 상위(예: 1) + 하위(예: 1.1)만 남김 / 그 외 제거 / 하위는 들여쓰기</p>
+    <p class="sub">규칙: 상위(예: 1 / 1. / SECTION I / Executive Summary) + 하위(예: 1.1 / 14.6)만 남김 / 1.1.1 이상 제거 / 페이지번호 제거 / 하위는 들여쓰기</p>
 
     <div class="panel">
       <div class="hd">
         <div class="title">입력</div>
         <div class="btns">
-          <button id="runBtn" type="button">분류 실행</button>
-          <button id="clearBtn" type="button">초기화</button>
-          <button id="copyBtn" type="button">결과 복사</button>
+          <button id="runBtn">분류 실행</button>
+          <button id="clearBtn">초기화</button>
+          <button id="copyBtn">결과 복사</button>
         </div>
       </div>
 
@@ -187,15 +187,10 @@
           <div>
             <div class="sectionTitle">원문 TOC</div>
             <div class="boxWrap">
-              <div class="floatBtns">
-                <button class="miniBtn" type="button" id="inputTopBtn" title="입력 맨 위">
-                  <span>▲</span>
-                </button>
-                <button class="miniBtn" type="button" id="inputBottomBtn" title="입력 맨 아래">
-                  <span>▼</span>
-                </button>
-              </div>
               <textarea id="input" placeholder="여기에 목차를 붙여넣기"></textarea>
+              <button class="toTop" type="button" id="inputTopBtn" title="입력 위로">
+                <span>▲</span>
+              </button>
             </div>
           </div>
 
@@ -203,15 +198,10 @@
           <div>
             <div class="sectionTitle">결과</div>
             <div class="boxWrap">
-              <div class="floatBtns">
-                <button class="miniBtn" type="button" id="outputTopBtn" title="출력 맨 위">
-                  <span>▲</span>
-                </button>
-                <button class="miniBtn" type="button" id="outputBottomBtn" title="출력 맨 아래">
-                  <span>▼</span>
-                </button>
-              </div>
               <textarea id="output" readonly></textarea>
+              <button class="toTop" type="button" id="outputTopBtn" title="출력 위로">
+                <span>▲</span>
+              </button>
             </div>
           </div>
         </div>
@@ -222,9 +212,9 @@
           <div class="hd">
             <div class="title">이력 (PASS / X)</div>
             <div class="btns">
-              <button id="passBtn" type="button">PASS 기록</button>
-              <button id="xBtn" type="button">X 기록</button>
-              <button id="loadBtn" type="button">이력 불러오기</button>
+              <button id="passBtn">PASS 기록</button>
+              <button id="xBtn">X 기록</button>
+              <button id="loadBtn">이력 불러오기</button>
             </div>
           </div>
           <div class="bd">
@@ -288,11 +278,9 @@
       [...arr].reverse().forEach(item => {
         const div = document.createElement("div");
         div.className = "item";
-
         const tag = document.createElement("span");
         tag.className = "tag " + (item.status === "PASS" ? "pass" : "x");
         tag.textContent = item.status;
-
         const meta = document.createElement("span");
         meta.className = "meta";
         meta.textContent = `[${item.time}]`;
@@ -333,66 +321,166 @@
 
     /***********************
      * TOC 필터링 (상위 + 1.1만)
+     * - 1.1.1 이상 제거
+     * - 페이지번호(단독/말미) 제거
+     * - 한 줄로 붙은 목차도 줄로 쪼개기
      ************************/
+
+    // 자주 나오는 "번호 없는 상위 제목" 토큰(공백으로 붙어서 들어올 때 분리용)
+    const KNOWN_TOP_TOKENS = [
+      "Executive Summary",
+      "Scope and Definition",
+      "Scope & Definition",
+      "Introduction",
+      "Research Scope",
+      "Market Segmentation",
+      "Research Methodology",
+      "Methodology",
+      "Definitions & Assumptions",
+      "Key Insights",
+      "Market Dynamics",
+      "Market Drivers",
+      "Market Restraints",
+      "Market Opportunities",
+      "Appendix",
+      "List of Tables",
+      "List of Figures"
+    ];
+
     function normalizeLine(s){
-      return s.replace(/\u00A0/g, " ").replace(/\s+$/g,"").replace(/^\s+/g,"");
+      return s
+        .replace(/\u00A0/g, " ")
+        .replace(/[ \t]+/g, " ")
+        .replace(/\s+$/g,"")
+        .replace(/^\s+/g,"");
     }
 
-    function isTopLevelLine(line){
-      if(/^\d{1,3}$/.test(line)) return true;
-      if(/^(CHAPTER|SECTION|PART)\b/i.test(line)) return true;
-      if(/^\d{1,3}\s+\S+/.test(line) && !/^\d{1,3}\.\d+/.test(line)) return true;
-      if(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)$/.test(line)) return true;
-      return false;
+    function stripTrailingPage(line){
+      // 끝에 붙는 페이지번호 제거: "... 28" / "... 314"
+      return line.replace(/\s+\d{1,4}\s*$/,"").trim();
     }
 
-    function isSubLevelLine(line){
-      if(/^\d{1,3}\.\d{1,3}\b/.test(line) && !/^\d{1,3}\.\d{1,3}\.\d/.test(line)) return true;
-      if(/^\d{1,3}\.\d{1,3}\s+/.test(line) && !/^\d{1,3}\.\d{1,3}\.\d/.test(line)) return true;
-      return false;
+    function isPageOnly(line){
+      return /^\d{1,4}$/.test(line);
     }
 
     function isDeeperThanSub(line){
+      // 1.1.1 이상
       return /^\d{1,3}\.\d{1,3}\.\d/.test(line);
     }
 
+    function isSubLevelLine(line){
+      // 1.1 / 14.6 같은 1단계 하위(마지막에 점 있는 경우도 허용)
+      if(/^\d{1,3}\.\d{1,3}\.?\b/.test(line) && !/^\d{1,3}\.\d{1,3}\.\d/.test(line)) return true;
+      return false;
+    }
+
+    function isTopLevelLine(line){
+      // 01 / 1 / 2 / 10 같은 숫자 단독 (단, 페이지번호 단독은 위에서 제거됨)
+      if(/^\d{1,3}$/.test(line)) return true;
+
+      // "1." 단독
+      if(/^\d{1,3}\.$/.test(line)) return true;
+
+      // "1 Introduction" / "1 INTRODUCTION" / "1. Introduction" / "1. Introduction 28"
+      if(/^\d{1,3}\.?\s+\S+/.test(line) && !/^\d{1,3}\.\d+/.test(line)) return true;
+
+      // "SECTION I ..." / "CHAPTER 1 ..." / "PART 1 ..."
+      if(/^(CHAPTER|SECTION|PART)\b/i.test(line)) return true;
+
+      // 로마숫자 단독 (I, II, III 등)
+      if(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)$/.test(line)) return true;
+
+      // 번호 없는 상위 제목: 짧고, 너무 긴 문장/문장부호 과다 제외
+      // (실무 TOC 상위 제목이 자주 이런 형태)
+      if(
+        /^[A-Za-z][A-Za-z &\-\/]{2,60}$/.test(line) &&
+        !/^\d{1,4}\s*to\s*\d{1,4}\s*MW$/i.test(line) // "101 to 200 MW" 같은 분류값 단독은 제외
+      ){
+        return true;
+      }
+
+      return false;
+    }
+
+    function splitJoinedTextToLines(text){
+      let s = String(text || "");
+      s = s.replace(/\r/g, "\n");
+
+      // 탭/여러 공백 → 공백
+      s = s.replace(/[ \t]+/g, " ");
+
+      // 1) SECTION/CHAPTER/PART 앞에 줄바꿈
+      s = s.replace(/\s+(SECTION|CHAPTER|PART)\b/gi, "\n$1");
+
+      // 2) " 2 RESEARCH ..." 같은 패턴(숫자+대문자) 앞에 줄바꿈
+      //    (단, "1.1" 같은 소수점은 제외)
+      s = s.replace(/(\s)(\d{1,3})(?=\s+[A-Z])/g, "\n$2");
+
+      // 3) " 4. Market ..." 같은 패턴(숫자+점+공백) 앞에 줄바꿈
+      s = s.replace(/(\s)(\d{1,3}\.)(?=\s)/g, "\n$2");
+
+      // 4) " 5.1 " / " 14.6 " 같은 하위 앞에 줄바꿈
+      s = s.replace(/(\s)(\d{1,3}\.\d{1,3})(?=\s)/g, "\n$2");
+
+      // 5) 번호 없는 상위 토큰들도 줄로 분리(붙여넣기 한 줄일 때)
+      for(const tok of KNOWN_TOP_TOKENS){
+        const re = new RegExp("\\s+(" + tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")\\b", "g");
+        s = s.replace(re, "\n$1");
+      }
+
+      // 6) 줄바꿈 정리
+      s = s.replace(/\n{2,}/g, "\n").trim();
+      return s;
+    }
+
     function filterToc(text){
-      const lines = text.split(/\r?\n/).map(normalizeLine).filter(l => l.length>0);
+      const prepared = splitJoinedTextToLines(text);
+      const rawLines = prepared.split(/\n/);
+
       const kept = [];
+      const seen = new Set();
 
-      for(const raw of lines){
-        const line = raw;
+      for(let raw of rawLines){
+        let line = normalizeLine(raw);
+        if(!line) continue;
+
+        // 말미 페이지번호 제거
+        line = stripTrailingPage(line);
+        if(!line) continue;
+
+        // 페이지번호만 있는 줄 제거
+        if(isPageOnly(line)) continue;
+
+        // 1.1.1 이상 제거
         if(isDeeperThanSub(line)) continue;
-        if(isTopLevelLine(line)){ kept.push(line); continue; }
-        if(isSubLevelLine(line)){ kept.push("  " + line); continue; }
+
+        // 분류값(예: 101 to 200 MW) 같은 "숫자 범위" 단독은 제거
+        if(/^\d{1,4}\s*to\s*\d{1,4}\s*MW$/i.test(line)) continue;
+
+        // 상위/하위만 유지
+        if(isTopLevelLine(line)){
+          const key = "T:" + line.toLowerCase();
+          if(!seen.has(key)){
+            kept.push(line);
+            seen.add(key);
+          }
+          continue;
+        }
+
+        if(isSubLevelLine(line)){
+          const key = "S:" + line.toLowerCase();
+          if(!seen.has(key)){
+            kept.push("  " + line); // 하위는 들여쓰기
+            seen.add(key);
+          }
+          continue;
+        }
+
+        // 그 외 제거
       }
+
       return kept.join("\n");
-    }
-
-    /***********************
-     * ✅ 스크롤 이동 (커서 때문에 다시 아래로 튀는 문제 방지)
-     ************************/
-    function goTop(el){
-      try{
-        el.setSelectionRange(0,0);
-        el.focus({preventScroll:true});
-      }catch(e){
-        el.focus();
-      }
-      el.scrollTop = 0;
-      el.scrollLeft = 0;
-    }
-
-    function goBottom(el){
-      try{
-        const end = el.value.length;
-        el.setSelectionRange(end,end);
-        el.focus({preventScroll:true});
-      }catch(e){
-        el.focus();
-      }
-      el.scrollTop = el.scrollHeight;
-      el.scrollLeft = 0;
     }
 
     /***********************
@@ -413,8 +501,6 @@
       memoEl.value = "";
       localStorage.removeItem(KEY_LAST_INPUT);
       localStorage.removeItem(KEY_LAST_OUTPUT);
-      goTop(inputEl);
-      goTop(outputEl);
     });
 
     $("copyBtn").addEventListener("click", async () => {
@@ -432,15 +518,12 @@
 
     $("passBtn").addEventListener("click", () => addHistory("PASS"));
     $("xBtn").addEventListener("click", () => addHistory("X"));
+
     $("loadBtn").addEventListener("click", () => renderHistory());
 
-    // ✅ 입력/출력 상단 버튼
-    $("inputTopBtn").addEventListener("click", () => goTop(inputEl));
-    $("outputTopBtn").addEventListener("click", () => goTop(outputEl));
-    $("inputBottomBtn").addEventListener("click", () => goBottom(inputEl));
-    $("outputBottomBtn").addEventListener("click", () => goBottom(outputEl));
+    $("inputTopBtn").addEventListener("click", () => { inputEl.scrollTop = 0; inputEl.focus(); });
+    $("outputTopBtn").addEventListener("click", () => { outputEl.scrollTop = 0; outputEl.focus(); });
 
-    // 최초 로드: 마지막 입력/출력 복원 + 이력 표시
     (function init(){
       const lastIn = localStorage.getItem(KEY_LAST_INPUT);
       const lastOut = localStorage.getItem(KEY_LAST_OUTPUT);
