@@ -2,261 +2,352 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TOC 정리 (저장소 사용 안함)</title>
   <style>
-    :root{
-      --bd:#cfcfcf; --bg:#fafafa; --tx:#111; --mut:#666;
-      --btn:#f2f2f2; --btnbd:#bdbdbd;
-    }
-    body{margin:0;font-family:system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, sans-serif;color:var(--tx);background:#fff;}
-    .wrap{max-width:1200px;margin:0 auto;padding:14px;}
-    h1{font-size:18px;margin:0 0 10px 0;}
-    .topbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0 10px;}
+    :root { --bd:#d0d0d0; --bg:#fafafa; --fg:#111; --muted:#666; }
+    *{ box-sizing:border-box; }
+    body{ margin:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color:var(--fg); }
+    h1{ font-size:18px; margin:0 0 10px 0; }
+    .topbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
     .btn{
-      padding:7px 10px;border:1px solid var(--btnbd);background:var(--btn);
-      border-radius:8px;font-size:13px;cursor:pointer;user-select:none;
+      padding:6px 10px; border:1px solid var(--bd); background:#fff; border-radius:8px;
+      cursor:pointer; user-select:none; font-size:12px;
     }
-    .btn:active{transform:translateY(1px);}
-    .badge{
-      padding:6px 10px;border:1px solid var(--bd);background:var(--bg);
-      border-radius:999px;font-size:12px;color:var(--mut);
+    .btn:active{ transform: translateY(1px); }
+    .pill{
+      padding:6px 10px; border:1px solid var(--bd); background:var(--bg);
+      border-radius:999px; font-size:12px; color:var(--muted);
     }
-
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-    .panel{border:1px solid var(--bd);border-radius:12px;background:#fff;overflow:hidden;}
-    .ph{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--bg);border-bottom:1px solid var(--bd);}
-    .pt{font-size:13px;font-weight:700;}
-    .mini{padding:6px 10px;border:1px solid var(--btnbd);background:var(--btn);border-radius:8px;font-size:12px;cursor:pointer;}
+    .pill.ok{ font-weight:700; }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .panel{ border:1px solid var(--bd); border-radius:10px; overflow:hidden; background:#fff; }
+    .panelhead{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px; background:var(--bg); border-bottom:1px solid var(--bd);
+      font-size:12px; color:#222;
+    }
+    .panelhead .right{ display:flex; gap:6px; align-items:center; }
     textarea{
-      width:100%;height:340px;resize:vertical;border:0;outline:none;
-      padding:10px;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size:12px;line-height:1.35;white-space:pre;tab-size:2;
+      width:100%; height:260px; border:0; outline:none; resize:vertical;
+      padding:10px; font-size:12px; line-height:1.35; white-space:pre; overflow:auto;
     }
-    .hint{font-size:12px;color:var(--mut);padding:8px 10px;border-top:1px solid var(--bd);background:#fff;}
-    .history{margin-top:12px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;}
-    .hh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--bg);border-bottom:1px solid var(--bd);}
-    .hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .history{
+      margin-top:10px; border:1px solid var(--bd); border-radius:10px; overflow:hidden; background:#fff;
+    }
+    .historyhead{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:8px 10px; background:var(--bg); border-bottom:1px solid var(--bd);
+      font-size:12px;
+    }
+    .historytools{ display:flex; gap:6px; align-items:center; }
     .log{
-      padding:10px;min-height:120px;background:#fff;
-      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size:12px;line-height:1.35;white-space:pre-wrap;
+      max-height:320px; overflow:auto; padding:10px; font-size:12px; line-height:1.35; white-space:pre-wrap;
     }
-    .footnote{padding:8px 10px;border-top:1px solid var(--bd);font-size:12px;color:var(--mut);background:#fff;}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} textarea{height:300px;} }
+    .log .entry{ border:1px solid var(--bd); border-radius:10px; padding:8px; margin-bottom:8px; background:#fff; }
+    .log .meta{ color:#333; margin-bottom:6px; }
+    .log .label{ color:var(--muted); }
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+      textarea{ height:220px; }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>TOC 정리 (저장소 사용 안함)</h1>
+  <h1>TOC 정리 (저장소 사용 안함)</h1>
 
-    <div class="topbar">
-      <button class="btn" id="btnClean">정리</button>
-      <button class="btn" id="btnClearIn">입력 지우기</button>
-      <button class="btn" id="btnClearOut">출력 지우기</button>
-      <button class="btn" id="btnCopyOut">출력 복사</button>
+  <div class="topbar">
+    <button class="btn" id="btnRun">정리</button>
+    <button class="btn" id="btnClearIn">입력 지우기</button>
+    <button class="btn" id="btnClearOut">출력 지우기</button>
+    <button class="btn" id="btnCopyOut">출력 복사</button>
 
-      <span class="badge" id="badgeResidual">Residual State: 0</span>
-      <span class="badge" id="badgeStorage">storage-read: OFF / storage-write: OFF</span>
-      <span class="badge" id="badgeDone">DONE</span>
+    <span class="pill" id="pillResidual">Residual State: 0</span>
+    <span class="pill" id="pillStorage">storage-read: OFF / storage-write: OFF</span>
+    <span class="pill" id="pillDone">DONE</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panelhead">
+        <div>입력 (원문 TOC)</div>
+        <div class="right">
+          <button class="btn" id="btnTopIn">▲ 위로</button>
+        </div>
+      </div>
+      <textarea id="taIn" spellcheck="false" placeholder="여기에 목차를 붙여넣기"></textarea>
     </div>
 
-    <div class="grid">
-      <div class="panel">
-        <div class="ph">
-          <div class="pt">입력 (원문 TOC)</div>
-          <button class="mini" id="btnTopIn">▲ 위로</button>
-        </div>
-        <textarea id="taIn" spellcheck="false" placeholder="여기에 목차를 붙여 넣고 [정리]를 누르세요."></textarea>
-      </div>
-
-      <div class="panel">
-        <div class="ph">
-          <div class="pt">출력 (정리 결과)</div>
-          <button class="mini" id="btnTopOut">▲ 위로</button>
-        </div>
-        <textarea id="taOut" spellcheck="false" placeholder="정리 결과가 여기에 나옵니다."></textarea>
-        <div class="hint">※ 출력 복사는 스크롤 위치와 무관하게 전체가 복사됩니다.</div>
-      </div>
-    </div>
-
-    <div class="history">
-      <div class="hh">
-        <div class="pt">이력 (화면 전용 · 저장 안함)</div>
-        <div class="hbtns">
-          <button class="btn" id="btnPass">PASS</button>
-          <button class="btn" id="btnX">X</button>
-          <button class="btn" id="btnClearHist">이력 화면만 지우기</button>
+    <div class="panel">
+      <div class="panelhead">
+        <div>출력 (정리 결과)</div>
+        <div class="right">
+          <button class="btn" id="btnTopOut">▲ 위로</button>
         </div>
       </div>
-      <div class="log" id="log"></div>
-      <div class="footnote">※ 이 파일은 localStorage / sessionStorage / indexedDB 를 읽거나 쓰지 않습니다. (화면을 닫으면 이력은 사라짐)</div>
+      <textarea id="taOut" spellcheck="false" placeholder="정리 결과가 여기 표시됨" readonly></textarea>
     </div>
   </div>
 
+  <div class="history">
+    <div class="historyhead">
+      <div>이력 (화면 전용 · 저장 안함)</div>
+      <div class="historytools">
+        <button class="btn" id="btnPass">PASS</button>
+        <button class="btn" id="btnFail">X</button>
+        <button class="btn" id="btnClearLog">이력 화면만 지우기</button>
+      </div>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="hint">※ 이 파일은 localStorage / sessionStorage / indexedDB 등을 읽거나 쓰지 않습니다. (화면을 닫으면 이력은 사라짐)</div>
+
 <script>
 (() => {
-  "use strict";
-
-  // ====== 저장소 완전 차단(코드 레벨) ======
-  // (접근 자체를 사용하지 않지만, 실수 방지용으로 읽기/쓰기 시도도 막음)
-  const blockStorage = (objName) => {
-    try {
-      const obj = window[objName];
-      if (!obj) return;
-      const deny = () => { throw new Error(objName + " access blocked"); };
-      for (const k of ["getItem","setItem","removeItem","clear","key"]) {
-        if (typeof obj[k] === "function") obj[k] = deny;
-      }
-    } catch(_) {}
-  };
-  blockStorage("localStorage");
-  blockStorage("sessionStorage");
-  // indexedDB는 호출 자체를 안 함(필요 없음)
+  // ====== 저장소 완전 차단(의도적으로 접근 자체를 안함) ======
+  const STORAGE_READ_WRITE_OFF = true; // 표시용
 
   // ====== DOM ======
-  const taIn = document.getElementById("taIn");
-  const taOut = document.getElementById("taOut");
-  const logEl = document.getElementById("log");
-  const badgeResidual = document.getElementById("badgeResidual");
+  const taIn  = document.getElementById('taIn');
+  const taOut = document.getElementById('taOut');
+  const logEl = document.getElementById('log');
 
-  const btnClean = document.getElementById("btnClean");
-  const btnClearIn = document.getElementById("btnClearIn");
-  const btnClearOut = document.getElementById("btnClearOut");
-  const btnCopyOut = document.getElementById("btnCopyOut");
-  const btnTopIn = document.getElementById("btnTopIn");
-  const btnTopOut = document.getElementById("btnTopOut");
+  const pillResidual = document.getElementById('pillResidual');
+  const pillStorage  = document.getElementById('pillStorage');
+  const pillDone     = document.getElementById('pillDone');
 
-  const btnPass = document.getElementById("btnPass");
-  const btnX = document.getElementById("btnX");
-  const btnClearHist = document.getElementById("btnClearHist");
+  // ====== 상태(화면 전용) ======
+  let residualState = 0; // 디버그/표시용 (저장 안함)
+  let lastRun = { input:"", output:"" };
 
-  // ====== 이력(화면 전용 메모리) ======
-  let historyCount = 0;
-
-  const nowStamp = () => {
+  function nowStamp(){
     const d = new Date();
-    const p = (n)=> String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-  };
+    const pad = (n)=> String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
 
-  const addHistory = (tag) => {
-    historyCount++;
-    badgeResidual.textContent = `Residual State: ${historyCount}`;
+  function setPills(){
+    pillResidual.textContent = `Residual State: ${residualState}`;
+    pillStorage.textContent  = STORAGE_READ_WRITE_OFF ? `storage-read: OFF / storage-write: OFF` : `storage: ?`;
+    pillDone.textContent     = `DONE`;
+  }
+  setPills();
 
-    const inText = taIn.value || "";
-    const outText = taOut.value || "";
+  // ====== (1단계) 로직: 하하위 제거 + 페이지번호 제거 + 라인 정리 ======
+  // 규칙:
+  // - 빈줄 제거
+  // - 글머리(-, •)로 시작하면 제거(본문 설명/메모로 간주)
+  // - 끝의 페이지 숫자 제거 (예: "... 34", "... 34  " )
+  // - 번호 깊이:
+  //   * "5.2" => depth=2 (유지)
+  //   * "1.3.1" => depth=3 (제거)
+  //   * "1 INTRODUCTION" 같은 단일 숫자 토큰은 제목만 남김
+  // - "Chapter 1." / "SECTION I:" 같은 라인은 유지(depth=0)
+  function cleanLine(raw){
+    let s = raw.replace(/\u00A0/g, ' '); // NBSP -> space
+    s = s.replace(/\s+/g, ' ').trim();
+    return s;
+  }
 
-    // 너무 길면 화면만 보기 좋게 일부만
-    const clip = (s, max=1200) => s.length > max ? (s.slice(0, max) + "\n... (cut)") : s;
+  function stripTrailingPageNumber(s){
+    // 끝에 1~4자리 숫자가 "페이지 번호"로 붙는 패턴 제거
+    // (단, "1.1." 같은 번호 토큰은 이미 앞에서 처리)
+    return s.replace(/\s+(\d{1,4})\s*$/,'').trim();
+  }
 
-    const entry =
-`[${nowStamp()}]  ${tag}
-- 원문(일부):
-${clip(inText.trim())}
-
-- 결과(일부):
-${clip(outText.trim())}
-`;
-    logEl.textContent = (entry + "\n" + logEl.textContent).trimEnd();
-  };
-
-  // ====== 핵심 정리 로직 ======
-  const isOnlyNumberLine = (t) => /^\d+$/.test(t);
-  const isBulletExplainLine = (t) => /^[-–—•·]\s+/.test(t);      // - / – / — / • / · 로 시작하는 설명 줄 제거
-  const normalizeSpaces = (s) => s.replace(/\t/g, "  ");
-
-  // 번호 패턴: "1.", "1.2", "1.2.3", "5.1 INTRODUCTION"
-  const numPrefix = (t) => {
-    const m = t.match(/^(\d+(?:\.\d+)*)(?:\.)?\s+/);
-    return m ? m[1] : null;
-  };
-
-  const chapterPrefix = (t) => /^chapter\s+\d+(\.|:)?/i.test(t);
-
-  // 들여쓰기 계산: 번호 깊이 기반(안정적)
-  const buildIndent = (trimmed) => {
-    const n = numPrefix(trimmed);
-    if (n) {
-      const depth = n.split(".").length - 1;  // 1.2.3 => 2
-      return "  ".repeat(Math.max(0, depth)); // 2칸 * depth
+  function parseLeadingNumberToken(s){
+    // 반환: { token, rest, depth, kind }
+    // kind: 'dot' (1.2), 'int' (1), 'none'
+    const mDot = s.match(/^(\d+(?:\.\d+)+)\.?\s+(.*)$/);
+    if (mDot){
+      const token = mDot[1]; // 1.2.3
+      const rest  = mDot[2].trim();
+      const depth = token.split('.').length; // 2면 1.2
+      return { token, rest, depth, kind:'dot' };
     }
-    // Chapter 라인은 depth 0
-    if (chapterPrefix(trimmed)) return "";
-    // 기존에 앞 공백이 있었던 경우(복사본) 약간만 유지
-    return "";
-  };
+    const mInt = s.match(/^(\d{1,4})\s+(.*)$/);
+    if (mInt){
+      const token = mInt[1];
+      const rest  = mInt[2].trim();
+      return { token, rest, depth:1, kind:'int' };
+    }
+    return { token:'', rest:s, depth:0, kind:'none' };
+  }
 
-  const keepLine = (trimmed) => {
-    if (!trimmed) return false;              // 빈줄 제거
-    if (isOnlyNumberLine(trimmed)) return false; // "27" 같은 페이지번호 제거
-    if (isBulletExplainLine(trimmed)) return false; // "- Growing..." 같은 설명 줄 제거
-    return true;
-  };
+  function shouldDropLine(s){
+    if (!s) return true;
+    if (s.startsWith('-') || s.startsWith('•')) return true;
+    // 완전한 페이지 번호 라인(숫자만) 제거
+    if (/^\d{1,4}$/.test(s)) return true;
+    return false;
+  }
 
-  const cleanTOC = (raw) => {
-    const lines = normalizeSpaces(raw).split(/\r?\n/);
+  function formatWithIndent(depth, text, keepToken){
+    // 깊이별 들여쓰기(2단까지만 의미있게)
+    // depth 0: 0칸
+    // depth 1: 0칸
+    // depth 2: 2칸
+    const indent = (depth >= 2) ? '  ' : '';
+    return indent + text;
+  }
 
+  function normalizeToc(inputText){
+    residualState = 0;
+    const lines = inputText.split(/
+?
+/);
     const out = [];
-    for (let i = 0; i < lines.length; i++) {
-      const original = lines[i];
-      const trimmed = original.trim();
+    let lastDotDepth = 0; // 0/1/2
 
-      if (!keepLine(trimmed)) continue;
 
-      // 과도한 공백 정리(중간 공백은 1칸만)
-      const compact = trimmed.replace(/\s{2,}/g, " ");
+    for (let i=0;i<lines.length;i++){
+      let s = cleanLine(lines[i]);
+      if (shouldDropLine(s)) continue;
 
-      // 들여쓰기 생성
-      const indent = buildIndent(compact);
+      // 페이지 번호 제거
+      s = stripTrailingPageNumber(s);
 
-      out.push(indent + compact);
+      // Chapter/Section 라인은 그대로
+      if (/^Chapter\s+\d+/i.test(s) || /^SECTION\s+/i.test(s) || /^Part\s+/i.test(s)){
+        out.push(s);
+        lastDotDepth = 0;
+        continue;
+      }
+
+      const p = parseLeadingNumberToken(s);
+
+      // 번호 없는 대문자 소제목(대개 2단계 아래의 하하위) 제거: 직전이 1.2 같은 L2면 제거
+      if (p.kind === 'none' && lastDotDepth === 2){
+        const letters = s.replace(/[^A-Za-z]/g,'');
+        const caps = s.replace(/[^A-Z]/g,'');
+        if (letters.length >= 6 && (caps.length / Math.max(letters.length,1)) > 0.85){
+          continue;
+        }
+      }
+
+
+      // 하하위(depth>=3) 제거
+      if (p.kind === 'dot' && p.depth >= 3){
+        continue;
+      }
+
+      // 단일 숫자 "1 INTRODUCTION" 형태는 숫자 제거하고 제목만
+      if (p.kind === 'int'){
+        // 단, "2026 ..." 같은 연도형은 제목으로 보존 (대개 TOC 아님이지만 방어)
+        if (p.token.length === 4 && Number(p.token) >= 1900) {
+          out.push(s);
+        } else {
+          out.push(formatWithIndent(1, p.rest, false));
+        }
+        lastDotDepth = 0;
+        continue;
+      }
+
+      // 1.2 형태는 유지(번호+제목)
+      if (p.kind === 'dot'){
+        const composed = `${p.token}. ${p.rest}`.trim();
+        // depth 1=L1, depth 2=L2
+        lastDotDepth = Math.min(p.depth, 2);
+        out.push(formatWithIndent(p.depth, composed, true));
+        continue;
+      }
+
+      // 그 외 일반 라인
+      out.push(s);
+      lastDotDepth = 0;
     }
 
-    // 연속 중복 줄 제거(가끔 복사본에서 반복됨)
+    // 연속 중복 제거(같은 줄 반복 방지)
     const dedup = [];
-    for (const line of out) {
-      if (dedup.length && dedup[dedup.length - 1] === line) continue;
-      dedup.push(line);
+    for (const line of out){
+      if (dedup.length === 0 || dedup[dedup.length-1] !== line) dedup.push(line);
     }
 
-    return dedup.join("\n").trim() + (dedup.length ? "\n" : "");
-  };
+    residualState = 0;
+    return dedup.join('\n').trim();
+  }
 
-  // ====== UI 동작 ======
-  btnClean.addEventListener("click", () => {
-    taOut.value = cleanTOC(taIn.value || "");
-  });
+  // ====== 실행/버튼 ======
+  function internalAutoReset(){
+    // 내부 상태만 리셋 (입력/결과/이력 DOM은 그대로 유지)
+    residualState = 0;
+    // lastRun은 이력(PASS/X) 기록용으로만 유지 (로직에 영향 없음)
+    pillDone.textContent = "AUTO RESET: OK";
+    pillDone.classList.add('ok');
+    setPills();
+  }
 
-  btnClearIn.addEventListener("click", () => { taIn.value = ""; taIn.focus(); });
-  btnClearOut.addEventListener("click", () => { taOut.value = ""; taOut.focus(); });
+  function run(){
+    const input = taIn.value || '';
+    const output = normalizeToc(input);
+    taOut.value = output;
+    lastRun = { input, output };
+    // 실행 직후 내부 자동 리셋(강제 1사이클)
+    internalAutoReset();
+  }
 
-  btnCopyOut.addEventListener("click", async () => {
-    const text = taOut.value || "";
-    try {
+  document.getElementById('btnRun').addEventListener('click', run);
+
+  document.getElementById('btnClearIn').addEventListener('click', () => { taIn.value=''; });
+  document.getElementById('btnClearOut').addEventListener('click', () => { taOut.value=''; });
+
+  document.getElementById('btnCopyOut').addEventListener('click', async () => {
+    const text = taOut.value || '';
+    try{
       await navigator.clipboard.writeText(text);
-      // 조용히(알림 최소)
-    } catch (e) {
-      // clipboard 실패시 fallback
+    }catch(e){
+      // fallback
       taOut.focus();
       taOut.select();
-      document.execCommand("copy");
-      taOut.setSelectionRange(0, 0);
+      document.execCommand('copy');
+      taOut.setSelectionRange(0,0);
     }
   });
 
-  const scrollTopBox = (ta) => { ta.scrollTop = 0; ta.focus(); };
-  btnTopIn.addEventListener("click", () => scrollTopBox(taIn));
-  btnTopOut.addEventListener("click", () => scrollTopBox(taOut));
+  document.getElementById('btnTopIn').addEventListener('click', () => { window.scrollTo(0,0); taIn.scrollTop = 0; taIn.focus(); try{ taIn.setSelectionRange(0,0);}catch(e){} });
+  document.getElementById('btnTopOut').addEventListener('click', () => { window.scrollTo(0,0); taOut.scrollTop = 0; taOut.focus(); try{ taOut.setSelectionRange(0,0);}catch(e){} });
 
-  btnPass.addEventListener("click", () => addHistory("PASS"));
-  btnX.addEventListener("click", () => addHistory("X"));
+  // ====== 이력(화면 전용) ======
+  function addLog(mark){
+    const ts = nowStamp();
+    const input = (lastRun.input || taIn.value || '').trim();
+    const output = (lastRun.output || taOut.value || '').trim();
 
-  btnClearHist.addEventListener("click", () => {
-    logEl.textContent = "";
-    historyCount = 0;
-    badgeResidual.textContent = "Residual State: 0";
-  });
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = `[${ts}]  ${mark}`;
+    entry.appendChild(meta);
+
+    const b1 = document.createElement('div');
+    b1.innerHTML = `<span class="label">- 원문:</span>\n${escapeHtml(input)}\n`;
+    entry.appendChild(b1);
+
+    const b2 = document.createElement('div');
+    b2.innerHTML = `\n<span class="label">- 결과:</span>\n${escapeHtml(output)}\n`;
+    entry.appendChild(b2);
+
+    // 맨 위에 추가
+    logEl.prepend(entry);
+  }
+
+  function escapeHtml(s){
+    return (s || '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;')
+      .replace(/\n/g,'<br>');
+  }
+
+  document.getElementById('btnPass').addEventListener('click', () => addLog('PASS'));
+  document.getElementById('btnFail').addEventListener('click', () => addLog('X'));
+  document.getElementById('btnClearLog').addEventListener('click', () => { logEl.innerHTML = ''; });
 
 })();
 </script>
