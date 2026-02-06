@@ -3,534 +3,400 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>6번 도구: TOC Check (C021 고정)</title>
+  <title>TOC 정리 (vNext)</title>
   <style>
-    :root{
-      --bd:#cfcfcf;
-      --bg:#ffffff;
-      --muted:#666;
-      --btn:#f4f4f4;
-      --btnbd:#bdbdbd;
-      --shadow: 0 1px 0 rgba(0,0,0,.03);
+    :root { --b:#ddd; --bg:#f7f7f7; --txt:#111; --muted:#666; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--txt); background:var(--bg); }
+    .wrap { max-width:1200px; margin:0 auto; padding:14px; }
+    .topbar { display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px; background:#fff; border:1px solid var(--b); border-radius:10px; }
+    .leftTop { display:flex; gap:10px; align-items:center; }
+    button { cursor:pointer; border:1px solid var(--b); background:#fff; padding:10px 14px; border-radius:10px; font-weight:700; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .pill { border:1px solid var(--b); background:#fff; padding:8px 10px; border-radius:999px; font-size:12px; color:var(--muted); }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px; }
+    .panel { background:#fff; border:1px solid var(--b); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; min-height:340px; }
+    .ph { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 10px; border-bottom:1px solid var(--b); }
+    .ph .title { font-weight:800; }
+    .ph .mini { display:flex; gap:8px; align-items:center; }
+    textarea { width:100%; height:100%; min-height:320px; border:0; outline:0; padding:12px; font-size:13px; line-height:1.4; resize:vertical; }
+    .history { margin-top:12px; background:#fff; border:1px solid var(--b); border-radius:10px; overflow:hidden; }
+    .hh { padding:10px; border-bottom:1px solid var(--b); display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .hh b { font-size:14px; }
+    .cards { padding:10px; display:flex; flex-direction:column; gap:10px; }
+    .card { border:1px solid var(--b); border-radius:10px; padding:10px; background:#fff; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .tag { font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--b); background:#fafafa; }
+    .tag.pass { border-color:#9ad3a3; background:#effaf1; }
+    .tag.fail { border-color:#f3b1b1; background:#fff1f1; }
+    .tag.err { border-color:#f2d18b; background:#fff7e6; }
+    pre { margin:8px 0 0; background:#fafafa; border:1px solid var(--b); border-radius:10px; padding:10px; overflow:auto; font-size:12px; line-height:1.35; }
+    .muted { color:var(--muted); font-size:12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns:1fr; }
+      textarea { min-height:260px; }
     }
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, Arial, sans-serif;
-      background:#fff;
-      color:#111;
-    }
-    .wrap{ max-width:1100px; margin:18px auto; padding:0 14px 28px; }
-    h1{ margin:0 0 6px; font-size:22px; font-weight:800; }
-    .sub{ margin:0 0 14px; color:var(--muted); font-size:13px; }
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-    }
-
-    .panel{
-      border:1px solid var(--bd);
-      background:var(--bg);
-      border-radius:6px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .panel .hd{
-      padding:10px 10px;
-      border-bottom:1px solid var(--bd);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      background:#fafafa;
-    }
-    .panel .hd .title{
-      font-weight:700;
-      font-size:14px;
-    }
-    .panel .bd{
-      padding:10px;
-    }
-
-    .btns{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-    }
-    button{
-      border:1px solid var(--btnbd);
-      background:var(--btn);
-      padding:8px 10px;
-      border-radius:6px;
-      cursor:pointer;
-      font-size:13px;
-    }
-    button:active{ transform:translateY(1px); }
-
-    .ioRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-    @media (max-width: 900px){
-      .ioRow{ grid-template-columns: 1fr; }
-    }
-
-    .boxWrap{
-      position:relative;
-      border:1px solid var(--bd);
-      border-radius:6px;
-      overflow:hidden;
-      background:#fff;
-    }
-    textarea{
-      width:100%;
-      min-height:220px;
-      resize:vertical;
-      border:0;
-      outline:none;
-      padding:10px 44px 10px 10px; /* 오른쪽 버튼 공간 확보 */
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size:12.5px;
-      line-height:1.35;
-      white-space:pre;
-      overflow:auto;
-    }
-    textarea[readonly]{ background:#fcfcfc; }
-
-    /* 입력/출력 박스별 위로가기 버튼 */
-    .toTop{
-      position:absolute;
-      right:8px;
-      bottom:8px;
-      width:32px;
-      height:32px;
-      border-radius:8px;
-      border:1px solid var(--btnbd);
-      background:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow: var(--shadow);
-      user-select:none;
-    }
-    .toTop:hover{ background:#f7f7f7; }
-    .toTop span{ font-size:15px; line-height:1; }
-
-    .sectionTitle{
-      margin:0 0 8px;
-      font-weight:800;
-      font-size:14px;
-    }
-
-    .historyArea{
-      width:100%;
-      min-height:64px;
-      resize:vertical;
-      border:1px solid var(--bd);
-      border-radius:6px;
-      padding:8px 10px;
-      font-size:13px;
-      outline:none;
-    }
-    .hint{ color:var(--muted); font-size:12px; margin:6px 0 0; }
-    .saved{
-      margin-top:10px;
-      border:1px solid var(--bd);
-      border-radius:6px;
-      padding:10px;
-      background:#fff;
-      max-height:260px;
-      overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      line-height:1.35;
-      white-space:pre-wrap;
-    }
-    .saved .item{ padding:6px 0; border-bottom:1px dashed #ddd; }
-    .saved .item:last-child{ border-bottom:0; }
-    .tag{
-      display:inline-block;
-      padding:1px 6px;
-      border-radius:999px;
-      border:1px solid #bbb;
-      font-size:11px;
-      margin-right:6px;
-      background:#fff;
-    }
-    .tag.pass{ border-color:#7fbf7f; }
-    .tag.x{ border-color:#d28b8b; }
-    .meta{ color:#444; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>6번 도구: TOC Check (C021 고정)</h1>
-    <p class="sub">규칙: 상위(예: 1 / 1. / SECTION I / Executive Summary) + 하위(예: 1.1 / 14.6)만 남김 / 1.1.1 이상 제거 / 페이지번호 제거 / 하위는 들여쓰기</p>
+    <div class="topbar">
+      <div class="leftTop">
+        <button id="btnRun">정리</button>
+        <span class="pill" id="pillResidual">Residual State = 0</span>
+        <span class="pill" id="pillAutoReset">Auto Reset: -</span>
+      </div>
+      <div class="pill mono" id="pillVersion">vNext / storage-read: OFF</div>
+    </div>
 
-    <div class="panel">
-      <div class="hd">
-        <div class="title">입력</div>
-        <div class="btns">
-          <button id="runBtn">분류 실행</button>
-          <button id="clearBtn">초기화</button>
-          <button id="copyBtn">결과 복사</button>
+    <div class="grid">
+      <div class="panel">
+        <div class="ph">
+          <div class="title">입력 (원문 TOC)</div>
+          <div class="mini">
+            <button id="btnInTop" title="입력 맨 위로">▲ 위로</button>
+          </div>
         </div>
+        <textarea id="taIn" placeholder="여기에 목차(TOC) 텍스트를 붙여넣고 [정리]를 누르세요."></textarea>
       </div>
 
-      <div class="bd">
-        <div class="ioRow">
-          <!-- INPUT -->
-          <div>
-            <div class="sectionTitle">원문 TOC</div>
-            <div class="boxWrap">
-              <textarea id="input" placeholder="여기에 목차를 붙여넣기"></textarea>
-              <button class="toTop" type="button" id="inputTopBtn" title="입력 위로">
-                <span>▲</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- OUTPUT -->
-          <div>
-            <div class="sectionTitle">결과</div>
-            <div class="boxWrap">
-              <textarea id="output" readonly></textarea>
-              <button class="toTop" type="button" id="outputTopBtn" title="출력 위로">
-                <span>▲</span>
-              </button>
-            </div>
+      <div class="panel">
+        <div class="ph">
+          <div class="title">출력 (정리 결과)</div>
+          <div class="mini">
+            <button id="btnOutTop" title="출력 맨 위로">▲ 위로</button>
           </div>
         </div>
-
-        <div style="height:14px"></div>
-
-        <div class="panel" style="border-radius:6px;">
-          <div class="hd">
-            <div class="title">이력 (PASS / X)</div>
-            <div class="btns">
-              <button id="passBtn">PASS 기록</button>
-              <button id="xBtn">X 기록</button>
-              <button id="loadBtn">이력 불러오기</button>
-            </div>
-          </div>
-          <div class="bd">
-            <textarea id="memo" class="historyArea" placeholder="테스트 결과/메모를 적고 PASS 또는 X를 누르기"></textarea>
-            <div class="hint">저장 위치: 이 브라우저 localStorage (새로고침/재접속해도 유지)</div>
-            <div class="saved" id="savedBox" aria-label="저장된 이력"></div>
-          </div>
-        </div>
-
+        <textarea id="taOut" readonly placeholder="정리 결과가 여기에 표시됩니다."></textarea>
       </div>
+    </div>
+
+    <div class="history">
+      <div class="hh">
+        <b>이력 (화면에만 유지 · 저장소 사용 X)</b>
+        <div class="muted">새로고침하면 자연 삭제</div>
+      </div>
+      <div class="cards" id="historyCards"></div>
     </div>
   </div>
 
-  <script>
-    /***********************
-     * 저장 키 (파일 교체해도 유지)
-     ************************/
-    const KEY_HISTORY = "tocCheck_history_v1";
-    const KEY_LAST_INPUT = "tocCheck_lastInput_v1";
-    const KEY_LAST_OUTPUT = "tocCheck_lastOutput_v1";
+<script>
+(() => {
+  // =========================
+  // 절대 규칙: 저장소 READ 금지
+  // - localStorage/sessionStorage 값을 "읽는" 코드는 존재하지 않음
+  // - 실행 후: 저장소는 자동 삭제(자동 리셋)
+  // - 이력은 화면(메모리)만, 저장 없음
+  // =========================
 
-    const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-    const inputEl = $("input");
-    const outputEl = $("output");
-    const memoEl = $("memo");
-    const savedBox = $("savedBox");
+  const btnRun = $("btnRun");
+  const taIn = $("taIn");
+  const taOut = $("taOut");
+  const btnInTop = $("btnInTop");
+  const btnOutTop = $("btnOutTop");
 
-    function nowStamp(){
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const dd = String(d.getDate()).padStart(2,"0");
-      const hh = String(d.getHours()).padStart(2,"0");
-      const mi = String(d.getMinutes()).padStart(2,"0");
-      const ss = String(d.getSeconds()).padStart(2,"0");
-      return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
-    }
+  const pillResidual = $("pillResidual");
+  const pillAutoReset = $("pillAutoReset");
+  const historyCards = $("historyCards");
 
-    function safeJsonParse(s, fallback){
-      try{ return JSON.parse(s); }catch(e){ return fallback; }
-    }
+  // 화면 이력(메모리)만
+  const history = [];
 
-    function getHistory(){
-      const raw = localStorage.getItem(KEY_HISTORY);
-      const arr = safeJsonParse(raw, []);
-      return Array.isArray(arr) ? arr : [];
-    }
+  // 내부 상태(실행마다 재생성/리셋)
+  let _internal = null;
 
-    function setHistory(arr){
-      localStorage.setItem(KEY_HISTORY, JSON.stringify(arr));
-    }
+  function nowStamp() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
 
-    function renderHistory(){
-      const arr = getHistory();
-      if(arr.length === 0){
-        savedBox.textContent = "저장된 이력 없음";
-        return;
+  function setResidual(n) {
+    pillResidual.textContent = `Residual State = ${n}`;
+  }
+
+  function setAutoReset(msg) {
+    pillAutoReset.textContent = `Auto Reset: ${msg}`;
+  }
+
+  function clip(s, n=380) {
+    const t = (s ?? "").trim();
+    if (t.length <= n) return t;
+    return t.slice(0, n) + " …";
+  }
+
+  // 저장소는 "자동 삭제"만 수행 (읽기 없음)
+  function wipeStorage() {
+    // 사용자가 원천 차단을 원하므로, 가능한 저장소를 최대한 비움
+    try { localStorage.clear(); } catch (_) {}
+    try { sessionStorage.clear(); } catch (_) {}
+    // IndexedDB / Cache Storage는 환경에 따라 접근 가능
+    try {
+      if (window.indexedDB && indexedDB.databases) {
+        indexedDB.databases().then(dbs => {
+          dbs.forEach(db => {
+            if (db && db.name) {
+              try { indexedDB.deleteDatabase(db.name); } catch (_) {}
+            }
+          });
+        }).catch(()=>{});
       }
-      savedBox.innerHTML = "";
-      [...arr].reverse().forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
-        const tag = document.createElement("span");
-        tag.className = "tag " + (item.status === "PASS" ? "pass" : "x");
-        tag.textContent = item.status;
-        const meta = document.createElement("span");
-        meta.className = "meta";
-        meta.textContent = `[${item.time}]`;
+    } catch (_) {}
+    try {
+      if (window.caches && caches.keys) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
+      }
+    } catch (_) {}
+  }
 
-        const pre = document.createElement("div");
-        pre.style.marginTop = "6px";
-        pre.textContent =
-`- 메모: ${item.memo || "(없음)"}
-- 입력: ${item.inputPreview || "(없음)"}
-- 결과: ${item.outputPreview || "(없음)"}`;
+  // 내부 상태 완전 리셋 (입력/출력 텍스트는 유지)
+  function resetInternalAuto() {
+    _internal = null;
+    // 저장소는 자동으로 싹 지움
+    wipeStorage();
+    setResidual(0);
+    setAutoReset(nowStamp());
+  }
 
-        div.appendChild(tag);
-        div.appendChild(meta);
-        div.appendChild(pre);
-        savedBox.appendChild(div);
-      });
+  // =========================
+  // TOC 정리 로직
+  // - 목표: "번호 + 제목" 중심으로 목차만 남김
+  // - 페이지숫자/단독숫자/광고문/긴 본문문장 제거
+  // - L1/L2만 기본 유지, L3+는 제거(설정 고정)
+  // =========================
+
+  const RX_PAGE_TAIL = /\s+(\d{1,4})\s*$/;                 // 줄끝 페이지숫자
+  const RX_RANGE_TAIL = /\s+(\d{1,4}\s*[-–—]\s*\d{1,4})\s*$/; // 줄끝 범위
+  const RX_ONLY_NUM = /^\s*\d{1,4}\s*$/;                   // 숫자만
+  const RX_ONLY_DEC = /^\s*\d+(?:\.\d+)+\s*$/;             // 1.2.3 만
+  const RX_L1 = /^\s*(\d{1,2})\s+(.+?)\s*$/;               // "1 TITLE"
+  const RX_L2 = /^\s*(\d{1,2})\.(\d{1,2})\s+(.+?)\s*$/;    // "1.1 TITLE"
+  const RX_L3P = /^\s*(\d{1,2})(?:\.(\d{1,2})){2,}\s+(.+?)\s*$/; // "1.1.1 TITLE" 이상
+  const RX_CHAPTER = /^\s*(chapter|section|part)\s+([ivxlcdm]+|\d+)\b[.:]?\s*(.+)?$/i;
+
+  // 광고/버튼/쿠키/샘플 등 제거 키워드(목차와 무관)
+  const DROP_WORDS = [
+    "cookie", "privacy", "terms", "accept", "reject", "subscribe", "sign in", "login",
+    "request sample", "sample", "download", "buy now", "add to cart", "cart",
+    "contact us", "enquiry", "inquire", "call us", "chat", "share", "print"
+  ];
+
+  function isDropLine(line) {
+    const s = line.trim().toLowerCase();
+    if (!s) return true;
+    // 너무 긴 문장(본문/설명) 제거
+    if (s.length >= 120) return true;
+    // 동사 포함 긴 설명 제거(간단 휴리스틱)
+    const verbish = /\b(is|are|was|were|will|drives|driven|enable|enables|including|includes|increase|growing|surging)\b/i;
+    if (s.length >= 80 && verbish.test(s)) return true;
+    // 광고성/버튼 문구 제거
+    for (const w of DROP_WORDS) if (s.includes(w)) return true;
+    return false;
+  }
+
+  function normalizeLine(line) {
+    let s = line.replace(/\u00a0/g, " ");     // nbsp
+    s = s.replace(/[■●▌•▪▶►→…]+/g, " ");     // UI 기호
+    s = s.replace(/[|]+/g, " ");             // 분리선
+    s = s.replace(/\s+/g, " ").trim();       // 공백 정리
+    return s;
+  }
+
+  function stripTrailingPage(s) {
+    // 뒤에 범위/페이지 숫자 붙으면 제거
+    let t = s.replace(RX_RANGE_TAIL, "").trim();
+    t = t.replace(RX_PAGE_TAIL, "").trim();
+    return t;
+  }
+
+  function classifyToTOC(rawText) {
+    const lines = rawText.split(/\r?\n/);
+
+    // 내부 상태(이번 실행에만 사용)
+    _internal = {
+      kept: [],
+      dropped: 0,
+      reasons: { drop:0, num:0, l3:0, empty:0 }
+    };
+
+    for (let i=0; i<lines.length; i++) {
+      let line = normalizeLine(lines[i]);
+      if (!line) { _internal.reasons.empty++; continue; }
+      if (isDropLine(line)) { _internal.reasons.drop++; continue; }
+
+      line = stripTrailingPage(line);
+
+      // 숫자만 / 1.2.3만 같은 고아 숫자 제거
+      if (RX_ONLY_NUM.test(line)) { _internal.reasons.num++; continue; }
+      if (RX_ONLY_DEC.test(line)) { _internal.reasons.num++; continue; }
+
+      // Chapter/Section/Part 처리 (L1로 취급)
+      const mChap = line.match(RX_CHAPTER);
+      if (mChap) {
+        const kind = (mChap[1] || "").toUpperCase();
+        const no = (mChap[2] || "").toUpperCase();
+        const title = (mChap[3] || "").trim();
+        const out = title ? `${kind} ${no} ${title}` : `${kind} ${no}`;
+        _internal.kept.push(out);
+        continue;
+      }
+
+      // L3 이상은 기본 제거 (사용자 명시 없으므로 제거)
+      if (RX_L3P.test(line)) { _internal.reasons.l3++; continue; }
+
+      // L2
+      const m2 = line.match(RX_L2);
+      if (m2) {
+        const out = `${m2[1]}.${m2[2]} ${m2[3].trim()}`;
+        _internal.kept.push("  " + out); // 들여쓰기
+        continue;
+      }
+
+      // L1
+      const m1 = line.match(RX_L1);
+      if (m1) {
+        const out = `${m1[1]} ${m1[2].trim()}`;
+        _internal.kept.push(out);
+        continue;
+      }
+
+      // 번호 없는 제목: 아주 짧고(<=60), 대문자 비중 높으면 L1로 살림
+      const upper = line.replace(/[^A-Za-z]/g,"");
+      if (line.length <= 60 && upper.length >= 6) {
+        const upRatio = (upper.replace(/[^A-Z]/g,"").length) / Math.max(1, upper.length);
+        if (upRatio >= 0.75) {
+          _internal.kept.push(line.toUpperCase());
+          continue;
+        }
+      }
+
+      // 그 외는 목차로 확정하기 어려우니 제거
+      _internal.dropped++;
     }
 
-    function addHistory(status){
-      const memo = (memoEl.value || "").trim();
-      const inputText = (inputEl.value || "").trim();
-      const outputText = (outputEl.value || "").trim();
+    // L1 1개도 없으면 A형 오류(추정): PASS 불가
+    const hasL1 = _internal.kept.some(x => !x.startsWith("  "));
+    const textOut = _internal.kept.join("\n").trim();
 
-      const inputPreview = inputText.replace(/\s+/g," ").slice(0, 140);
-      const outputPreview = outputText.replace(/\s+/g," ").slice(0, 140);
+    return { textOut, hasL1 };
+  }
 
-      const arr = getHistory();
-      arr.push({
-        time: nowStamp(),
+  function renderHistory() {
+    historyCards.innerHTML = "";
+    if (history.length === 0) {
+      const div = document.createElement("div");
+      div.className = "muted";
+      div.textContent = "아직 이력이 없습니다. [정리]를 누르면 이력이 쌓입니다.";
+      historyCards.appendChild(div);
+      return;
+    }
+
+    for (let i = history.length - 1; i >= 0; i--) {
+      const h = history[i];
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const left = document.createElement("div");
+      left.className = "mono";
+      left.textContent = h.time;
+
+      const right = document.createElement("div");
+      const tag = document.createElement("span");
+      tag.className = "tag " + (h.status === "PASS" ? "pass" : (h.status === "X" ? "fail" : "err"));
+      tag.textContent = h.status;
+      right.appendChild(tag);
+
+      row.appendChild(left);
+      row.appendChild(right);
+
+      const preIn = document.createElement("pre");
+      preIn.innerHTML = `<b>원문(일부)</b>\n${escapeHtml(h.input)}`;
+
+      const preOut = document.createElement("pre");
+      preOut.innerHTML = `<b>결과(일부)</b>\n${escapeHtml(h.output)}`;
+
+      card.appendChild(row);
+      if (h.error) {
+        const preErr = document.createElement("pre");
+        preErr.innerHTML = `<b>오류</b>\n${escapeHtml(h.error)}`;
+        card.appendChild(preErr);
+      }
+      card.appendChild(preIn);
+      card.appendChild(preOut);
+
+      historyCards.appendChild(card);
+    }
+  }
+
+  function escapeHtml(s) {
+    return (s ?? "").replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  btnInTop.addEventListener("click", () => { taIn.scrollTop = 0; taIn.focus(); });
+  btnOutTop.addEventListener("click", () => { taOut.scrollTop = 0; taOut.focus(); });
+
+  btnRun.addEventListener("click", () => {
+    // 실행 중 중복 클릭 방지
+    btnRun.disabled = true;
+    setResidual(1);
+
+    const inputRaw = taIn.value || "";
+    const time = nowStamp();
+
+    try {
+      const { textOut, hasL1 } = classifyToTOC(inputRaw);
+
+      taOut.value = textOut;
+
+      // PASS/X 규칙(간단 고정): L1 1개 이상 + 결과 비어있지 않으면 PASS, 아니면 X
+      const status = (hasL1 && textOut.trim().length > 0) ? "PASS" : "X";
+
+      history.push({
+        time,
         status,
-        memo,
-        inputPreview,
-        outputPreview
+        input: clip(inputRaw, 520),
+        output: clip(textOut, 520),
+        error: status === "X" ? "A형/L1 누락 또는 결과 비어 있음(입력 오염 가능)" : ""
       });
-      setHistory(arr);
+
       renderHistory();
-    }
 
-    /***********************
-     * TOC 필터링 (상위 + 1.1만)
-     * - 1.1.1 이상 제거
-     * - 페이지번호(단독/말미) 제거
-     * - 한 줄로 붙은 목차도 줄로 쪼개기
-     ************************/
-
-    // 자주 나오는 "번호 없는 상위 제목" 토큰(공백으로 붙어서 들어올 때 분리용)
-    const KNOWN_TOP_TOKENS = [
-      "Executive Summary",
-      "Scope and Definition",
-      "Scope & Definition",
-      "Introduction",
-      "Research Scope",
-      "Market Segmentation",
-      "Research Methodology",
-      "Methodology",
-      "Definitions & Assumptions",
-      "Key Insights",
-      "Market Dynamics",
-      "Market Drivers",
-      "Market Restraints",
-      "Market Opportunities",
-      "Appendix",
-      "List of Tables",
-      "List of Figures"
-    ];
-
-    function normalizeLine(s){
-      return s
-        .replace(/\u00A0/g, " ")
-        .replace(/[ \t]+/g, " ")
-        .replace(/\s+$/g,"")
-        .replace(/^\s+/g,"");
-    }
-
-    function stripTrailingPage(line){
-      // 끝에 붙는 페이지번호 제거: "... 28" / "... 314"
-      return line.replace(/\s+\d{1,4}\s*$/,"").trim();
-    }
-
-    function isPageOnly(line){
-      return /^\d{1,4}$/.test(line);
-    }
-
-    function isDeeperThanSub(line){
-      // 1.1.1 이상
-      return /^\d{1,3}\.\d{1,3}\.\d/.test(line);
-    }
-
-    function isSubLevelLine(line){
-      // 1.1 / 14.6 같은 1단계 하위(마지막에 점 있는 경우도 허용)
-      if(/^\d{1,3}\.\d{1,3}\.?\b/.test(line) && !/^\d{1,3}\.\d{1,3}\.\d/.test(line)) return true;
-      return false;
-    }
-
-    function isTopLevelLine(line){
-      // 01 / 1 / 2 / 10 같은 숫자 단독 (단, 페이지번호 단독은 위에서 제거됨)
-      if(/^\d{1,3}$/.test(line)) return true;
-
-      // "1." 단독
-      if(/^\d{1,3}\.$/.test(line)) return true;
-
-      // "1 Introduction" / "1 INTRODUCTION" / "1. Introduction" / "1. Introduction 28"
-      if(/^\d{1,3}\.?\s+\S+/.test(line) && !/^\d{1,3}\.\d+/.test(line)) return true;
-
-      // "SECTION I ..." / "CHAPTER 1 ..." / "PART 1 ..."
-      if(/^(CHAPTER|SECTION|PART)\b/i.test(line)) return true;
-
-      // 로마숫자 단독 (I, II, III 등)
-      if(/^(I|II|III|IV|V|VI|VII|VIII|IX|X)$/.test(line)) return true;
-
-      // 번호 없는 상위 제목: 짧고, 너무 긴 문장/문장부호 과다 제외
-      // (실무 TOC 상위 제목이 자주 이런 형태)
-      if(
-        /^[A-Za-z][A-Za-z &\-\/]{2,60}$/.test(line) &&
-        !/^\d{1,4}\s*to\s*\d{1,4}\s*MW$/i.test(line) // "101 to 200 MW" 같은 분류값 단독은 제외
-      ){
-        return true;
-      }
-
-      return false;
-    }
-
-    function splitJoinedTextToLines(text){
-      let s = String(text || "");
-      s = s.replace(/\r/g, "\n");
-
-      // 탭/여러 공백 → 공백
-      s = s.replace(/[ \t]+/g, " ");
-
-      // 1) SECTION/CHAPTER/PART 앞에 줄바꿈
-      s = s.replace(/\s+(SECTION|CHAPTER|PART)\b/gi, "\n$1");
-
-      // 2) " 2 RESEARCH ..." 같은 패턴(숫자+대문자) 앞에 줄바꿈
-      //    (단, "1.1" 같은 소수점은 제외)
-      s = s.replace(/(\s)(\d{1,3})(?=\s+[A-Z])/g, "\n$2");
-
-      // 3) " 4. Market ..." 같은 패턴(숫자+점+공백) 앞에 줄바꿈
-      s = s.replace(/(\s)(\d{1,3}\.)(?=\s)/g, "\n$2");
-
-      // 4) " 5.1 " / " 14.6 " 같은 하위 앞에 줄바꿈
-      s = s.replace(/(\s)(\d{1,3}\.\d{1,3})(?=\s)/g, "\n$2");
-
-      // 5) 번호 없는 상위 토큰들도 줄로 분리(붙여넣기 한 줄일 때)
-      for(const tok of KNOWN_TOP_TOKENS){
-        const re = new RegExp("\\s+(" + tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")\\b", "g");
-        s = s.replace(re, "\n$1");
-      }
-
-      // 6) 줄바꿈 정리
-      s = s.replace(/\n{2,}/g, "\n").trim();
-      return s;
-    }
-
-    function filterToc(text){
-      const prepared = splitJoinedTextToLines(text);
-      const rawLines = prepared.split(/\n/);
-
-      const kept = [];
-      const seen = new Set();
-
-      for(let raw of rawLines){
-        let line = normalizeLine(raw);
-        if(!line) continue;
-
-        // 말미 페이지번호 제거
-        line = stripTrailingPage(line);
-        if(!line) continue;
-
-        // 페이지번호만 있는 줄 제거
-        if(isPageOnly(line)) continue;
-
-        // 1.1.1 이상 제거
-        if(isDeeperThanSub(line)) continue;
-
-        // 분류값(예: 101 to 200 MW) 같은 "숫자 범위" 단독은 제거
-        if(/^\d{1,4}\s*to\s*\d{1,4}\s*MW$/i.test(line)) continue;
-
-        // 상위/하위만 유지
-        if(isTopLevelLine(line)){
-          const key = "T:" + line.toLowerCase();
-          if(!seen.has(key)){
-            kept.push(line);
-            seen.add(key);
-          }
-          continue;
-        }
-
-        if(isSubLevelLine(line)){
-          const key = "S:" + line.toLowerCase();
-          if(!seen.has(key)){
-            kept.push("  " + line); // 하위는 들여쓰기
-            seen.add(key);
-          }
-          continue;
-        }
-
-        // 그 외 제거
-      }
-
-      return kept.join("\n");
-    }
-
-    /***********************
-     * 버튼 동작
-     ************************/
-    $("runBtn").addEventListener("click", () => {
-      const inText = inputEl.value || "";
-      const outText = filterToc(inText);
-      outputEl.value = outText;
-
-      localStorage.setItem(KEY_LAST_INPUT, inText);
-      localStorage.setItem(KEY_LAST_OUTPUT, outText);
-    });
-
-    $("clearBtn").addEventListener("click", () => {
-      inputEl.value = "";
-      outputEl.value = "";
-      memoEl.value = "";
-      localStorage.removeItem(KEY_LAST_INPUT);
-      localStorage.removeItem(KEY_LAST_OUTPUT);
-    });
-
-    $("copyBtn").addEventListener("click", async () => {
-      const t = outputEl.value || "";
-      if(!t.trim()) return;
-      try{
-        await navigator.clipboard.writeText(t);
-      }catch(e){
-        outputEl.focus();
-        outputEl.select();
-        document.execCommand("copy");
-        outputEl.setSelectionRange(0,0);
-      }
-    });
-
-    $("passBtn").addEventListener("click", () => addHistory("PASS"));
-    $("xBtn").addEventListener("click", () => addHistory("X"));
-
-    $("loadBtn").addEventListener("click", () => renderHistory());
-
-    $("inputTopBtn").addEventListener("click", () => { inputEl.scrollTop = 0; inputEl.focus(); });
-    $("outputTopBtn").addEventListener("click", () => { outputEl.scrollTop = 0; outputEl.focus(); });
-
-    (function init(){
-      const lastIn = localStorage.getItem(KEY_LAST_INPUT);
-      const lastOut = localStorage.getItem(KEY_LAST_OUTPUT);
-      if(lastIn) inputEl.value = lastIn;
-      if(lastOut) outputEl.value = lastOut;
+    } catch (e) {
+      const msg = (e && e.message) ? e.message : String(e);
+      history.push({
+        time,
+        status: "ERROR",
+        input: clip(inputRaw, 520),
+        output: clip(taOut.value || "", 520),
+        error: msg
+      });
       renderHistory();
-    })();
-  </script>
+    } finally {
+      // 결과 표시 후: 내부 자동 리셋 + 저장소 자동 삭제
+      // 입력/결과/이력(화면)은 유지
+      setTimeout(() => {
+        resetInternalAuto();
+        btnRun.disabled = false;
+      }, 0);
+    }
+  });
+
+  // 초기 상태
+  setResidual(0);
+  setAutoReset("-");
+  renderHistory();
+
+  // 안전장치: 페이지 로드 시에도 저장소는 자동 삭제(읽기 없음)
+  // 사용자가 번거롭게 누르지 않도록 기본 차단
+  try { wipeStorage(); } catch (_) {}
+})();
+</script>
 </body>
 </html>
