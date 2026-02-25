@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>6번 목차 정리 도구 (ENGINE-BOUND v10.0)</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#121823;--muted:#9bb0c6;--text:#eaf2ff;--bad:#ff5c5c;--ok:#57d38c;--warn:#ffd257;--line:#233042;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans KR",sans-serif;}
+    body{margin:0;background:var(--bg);color:var(--text);}
+    .wrap{max-width:1180px;margin:0 auto;padding:14px;}
+    .top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .badge{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,0.03);font-weight:700;font-size:12px;}
+    .ok{color:var(--ok);} .bad{color:var(--bad);} .warn{color:var(--warn);} .muted{color:var(--muted);} 
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr;}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+    .hd{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+    .hd h3{margin:0;font-size:13px;letter-spacing:.2px;}
+    .btns{display:flex;gap:8px;flex-wrap:wrap;}
+    button{background:#0f1520;border:1px solid var(--line);color:var(--text);padding:8px 10px;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;}
+    button:hover{filter:brightness(1.08);} 
+    textarea{width:100%;height:520px;resize:vertical;background:#0f1520;color:var(--text);border:0;outline:none;padding:12px;font-size:13px;line-height:1.35;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;}
+    .foot{padding:10px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);}
+    .diag{white-space:pre-wrap;word-break:break-word;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="badge">6번 목차 정리 도구 (ENGINE-BOUND v10.0)</div>
+    <div class="badge">HEALTH UI: <span id="uiHealth" class="ok">OK</span></div>
+    <div class="badge">HEALTH ENGINE: <span id="engHealth" class="warn">—</span></div>
+    <div class="badge">MODE: <span id="mode" class="muted">IDLE</span></div>
+    <div class="badge">DEPTH: <span id="depth" class="muted">2</span></div>
+    <div class="badge">INTERNAL_DB: <span id="dbState" class="muted">EMPTY</span></div>
+    <div class="badge">FULL_CODE: <span id="fullCode" class="muted">—</span></div>
+    <div class="badge">CAUSE: <span id="cause" class="muted">—</span></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="hd">
+        <h3>RAW (입력)</h3>
+        <div class="btns">
+          <button id="runBtn">실행(1회 빌드)</button>
+          <button id="scrollRaw">입력 위로</button>
+          <button id="clearRaw">입력 비우기</button>
+        </div>
+      </div>
+      <textarea id="raw" class="mono" placeholder="여기에 목차 RAW를 붙여넣기"></textarea>
+      <div class="foot">규칙: RAW가 바뀐 경우에만 DB 재생성. depth 변경은 VIEW만. (데모 depth=2 고정)</div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <h3>DISPLAY (결과 + 진단)</h3>
+        <div class="btns">
+          <button id="copyOut">결과 복사</button>
+          <button id="scrollOut">출력 위로</button>
+          <button id="resetAll">전체 초기화</button>
+        </div>
+      </div>
+      <textarea id="out" class="mono" readonly></textarea>
+      <div class="foot diag mono" id="diag"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== v4.0 Lockdown core (포인트별 고정 오류명 체계 100% 강제형) =====
+  const FLAGS = {
+    REMOVE_PAGE: true,
+    REMOVE_TABLE: true,
+    REMOVE_DESC: true,
+    REMOVE_BLOCK: true,
+    INDENT: true,
+    GOLDEN_COMPARE: false,
+    HIGHLIGHT: false,
+  };
+
+  const STATE = {
+    INTERNAL_DB: null,
+    FROZEN: false,
+    INTERNAL_HASH: null,
+    SNAPSHOT: null,
+    COUNTS: Object.create(null), // FULL_CODE -> n
+    CALL: Object.create(null),   // fnName -> n
+    lastGood: null,
+  };
+
+  // --- UI refs ---
+  const $ = (id) => document.getElementById(id);
+  const ui = {
+    uiHealth: $('uiHealth'),
+    engHealth: $('engHealth'),
+    mode: $('mode'),
+    depth: $('depth'),
+    dbState: $('dbState'),
+    fullCode: $('fullCode'),
+    cause: $('cause'),
+    raw: $('raw'),
+    out: $('out'),
+    diag: $('diag'),
+  };
+
+  function setBadge(el, text, cls){
+    el.textContent = text;
+    el.className = cls || 'muted';
+  }
+
+  function nowMs(){ return performance.now(); }
+
+  function hashString(str){
+    // fast non-crypto hash
+    let h = 2166136261;
+    for (let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16).padStart(8,'0');
+  }
+
+  function incCall(fn){
+    STATE.CALL[fn] = (STATE.CALL[fn]||0)+1;
+    // Watchdog: same fn 3 times in one run => STOP
+    if (STATE.CALL[fn] >= 3){
+      failStop(`WATCHDOG.REPEAT_CALL.${fn}.FAIL`, { severity:'BLOCK' });
+      throw new Error('WATCHDOG_STOP');
+    }
+  }
+
+  function incCode(code){
+    STATE.COUNTS[code] = (STATE.COUNTS[code]||0)+1;
+    return STATE.COUNTS[code];
+  }
+
+  function classifyCause(code, ctx){
+    // CAUSE mapping 강제 (1개만)
+    if (code.startsWith('DEPTH.FUNC_MISSING')) return 'DEPTH_RUNTIME_ERROR';
+    if (code.startsWith('FORMAT.STRICT_MISMATCH')) return 'INDENT_RULE_MISMATCH';
+    if (code.startsWith('FORMAT.DESC_LEFT')) return 'DESC_PATTERN_FAIL';
+    if (code.startsWith('FORMAT.BLOCK_LEFT')) return 'BLOCK_PATTERN_FAIL';
+    if (code.startsWith('WATCHDOG.REPEAT_CALL')) return 'REPEAT_CALL';
+    if (code.startsWith('DUP.SAME_RAW')) return 'DUP';
+
+    // numeric compare based
+    if (ctx && ctx.before && ctx.after){
+      const b = ctx.before, a = ctx.after;
+      if (a.db_bytes > b.db_bytes * 1.7 && a.toc_nodes === b.toc_nodes) return 'INDEX_DUP';
+      if (a.out_lines < b.out_lines * 0.5 && a.toc_nodes < b.toc_nodes * 0.7) return 'FILTER_OVERREMOVE';
+    }
+    return 'UNKNOWN';
+  }
+
+  function failStop(fullCodeBase, extra){
+    const n = incCode(fullCodeBase);
+    const full = `${fullCodeBase}(${n})`;
+    setBadge(ui.engHealth, 'FAIL', 'bad');
+    setBadge(ui.mode, 'STOP', 'bad');
+    setBadge(ui.fullCode, full, 'bad');
+    const cause = classifyCause(fullCodeBase, extra && extra.ctx);
+    setBadge(ui.cause, cause, cause==='UNKNOWN' ? 'warn' : 'bad');
+
+    // Circuit breaker: >=3 => lock flags minimal + rollback
+    if (n >= 3){
+      // Auto-OFF only related families
+      if (fullCodeBase.includes('FORMAT.STRICT_MISMATCH')) FLAGS.INDENT = false;
+      if (fullCodeBase.includes('DESC_LEFT')) FLAGS.REMOVE_DESC = false;
+      if (fullCodeBase.includes('BLOCK_LEFT')) FLAGS.REMOVE_BLOCK = false;
+      rollbackLastGood();
+    }
+  }
+
+  function snapshotIfGood(db, verify){
+    // Last Good Snapshot 조건: build+render+verify OK + no FAIL
+    STATE.lastGood = {
+      ts: Date.now(),
+      INTERNAL_HASH: STATE.INTERNAL_HASH,
+      db: JSON.parse(JSON.stringify(db)),
+      outText: ui.out.value,
+      diagText: ui.diag.textContent,
+      flags: JSON.parse(JSON.stringify(FLAGS))
+    };
+  }
+
+  function rollbackLastGood(){
+    if (!STATE.lastGood) return;
+    STATE.INTERNAL_HASH = STATE.lastGood.INTERNAL_HASH;
+    STATE.INTERNAL_DB = STATE.lastGood.db;
+    STATE.FROZEN = true;
+    setBadge(ui.dbState, 'FROZEN', 'ok');
+    ui.out.value = STATE.lastGood.outText || '';
+    ui.diag.textContent = STATE.lastGood.diagText || '';
+  }
+
+  // ===== Preflight Guard =====
+  function getDepth(){
+    // 현재 depth=2 고정 (나중에 3/4 확장)
+    return 2;
+  }
+
+  function preflight(){
+    const required = ['getDepth','reassemble','applyIndent','verifyIndent'];
+    for (const fn of required){
+      if (typeof api[fn] !== 'function'){
+        failStop('DEPTH.FUNC_MISSING.FAIL');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // ===== Parsing helpers =====
+  const RE_NUM = /^\d+(?:\.\d+)*\b/; // 5.11.3.1
+  const RE_PAGE_ONLY = /^\d{1,4}$/;
+  const RE_TABLE = /^(TABLE\b|FIGURE\b|LIST OF\b|LIST OF TABLES\b|LIST OF FIGURES\b)/i;
+  const RE_BULLET = /^[-•\u2022]\s+/;
+
+  function isAllCapsLike(s){
+    if (!s) return false;
+    const t = s.replace(/[^A-Z\s&()'’\-.,/]/g,'').trim();
+    if (t.length < 4) return false;
+    const letters = (s.match(/[A-Z]/g)||[]).length;
+    const lowers = (s.match(/[a-z]/g)||[]).length;
+    return letters >= 6 && lowers === 0;
+  }
+
+  function isSentenceLike(s){
+    // 설명문: 마침표/소문자 포함 + 길이 길다
+    const hasLower = /[a-z]/.test(s);
+    const hasDot = /\.[\s]*$/.test(s) || /\.[\s]+/.test(s);
+    return (hasLower && s.length >= 50) || (hasDot && s.length >= 50);
+  }
+
+  function normalize(raw){
+    incCall('normalize');
+    return raw
+      .replace(/\r\n?/g,'\n')
+      .split('\n')
+      .map(s => s.replace(/\s+/g,' ').trim())
+      .filter(s => s.length>0);
+  }
+
+  function removePages(lines, stats){
+    incCall('removePages');
+    if (!FLAGS.REMOVE_PAGE) return lines;
+    const out=[];
+    for (let i=0;i<lines.length;i++){
+      const s = lines[i];
+      if (RE_PAGE_ONLY.test(s)) { stats.pageRemoved++; continue; }
+      // "TITLE 25" 형태는 뒤 숫자 제거
+      const m = s.match(/^(.*?)(\s+\d{1,4})$/);
+      if (m && m[1] && m[2] && m[1].length>=3 && RE_PAGE_ONLY.test(m[2].trim())){
+        out.push(m[1].trim());
+        stats.pageRemoved++;
+        continue;
+      }
+      out.push(s);
+    }
+    return out;
+  }
+
+  function removeTables(lines, stats){
+    incCall('removeTables');
+    if (!FLAGS.REMOVE_TABLE) return lines;
+    const out=[];
+    for (const s of lines){
+      if (RE_TABLE.test(s)) { stats.tblRemoved++; continue; }
+      out.push(s);
+    }
+    return out;
+  }
+
+  function removeBullets(lines, stats){
+    incCall('removeBullets');
+    const out=[];
+    for (const s of lines){
+      if (RE_BULLET.test(s)) { stats.tblRemoved++; continue; }
+      out.push(s);
+    }
+    return out;
+  }
+
+  function removeDescAndBlocks(lines, stats){
+    incCall('removeDescAndBlocks');
+    const out=[];
+    const descLeftLines=[];
+    const blockLeftLines=[];
+
+    for (let i=0;i<lines.length;i++){
+      const s = lines[i];
+      const isNum = RE_NUM.test(s);
+      const isCaps = isAllCapsLike(s);
+      const isSent = isSentenceLike(s);
+
+      // keep numbered headings always
+      if (isNum){ out.push(s); continue; }
+
+      // remove sentence-like descriptions
+      if (FLAGS.REMOVE_DESC && isSent){
+        stats.descRemoved++;
+        descLeftLines.push(i+1);
+        continue;
+      }
+
+      // remove long all-caps blocks (사용자 지적: REGULATORY... / STANDARDS... / ASTM)
+      if (FLAGS.REMOVE_BLOCK && isCaps && s.length >= 28){
+        stats.blockRemoved++;
+        blockLeftLines.push(i+1);
+        continue;
+      }
+
+      // keep short caps as subheading candidates
+      if (isCaps && s.length <= 27){ out.push(s); continue; }
+
+      // drop other noise by default
+      stats.noiseRemoved++;
+    }
+
+    // strict: if any left candidates that are sentence-like after filtering -> FAIL later by verify
+    stats._descLeftLines = descLeftLines;
+    stats._blockLeftLines = blockLeftLines;
+    return out;
+  }
+
+  function classify(lines){
+    incCall('classify');
+    // build nodes: {text, level, kind}
+    const nodes=[];
+    let lastNumLevel = 0;
+    for (let idx=0; idx<lines.length; idx++){
+      const s = lines[idx];
+      const numMatch = s.match(RE_NUM);
+      if (numMatch){
+        const num = numMatch[0];
+        const dots = (num.match(/\./g)||[]).length;
+        const level = dots; // 0 for "5", 1 for "5.1" etc
+        lastNumLevel = level;
+        nodes.push({text:s, level, kind:'NUM', srcIndex:idx});
+      } else if (isAllCapsLike(s)){
+        // caps subheading under last numbered heading
+        nodes.push({text:s, level:lastNumLevel+1, kind:'CAPS', srcIndex:idx});
+      }
+    }
+    return nodes;
+  }
+
+  function reassemble(nodes){
+    incCall('reassemble');
+    return nodes; // already ordered
+  }
+
+  function applyIndent(nodes){
+    incCall('applyIndent');
+    if (!FLAGS.INDENT) return nodes.map(n=>n.text);
+    const depth = getDepth();
+    // depth=2: keep up to level 1 (and caps at level 2 as child)
+    const maxLevel = depth === 2 ? 2 : (depth+1);
+    const out=[];
+    for (const n of nodes){
+      if (n.level > maxLevel) continue;
+      const spaces = '  '.repeat(Math.max(0, n.level));
+      out.push(spaces + n.text);
+    }
+    return out;
+  }
+
+  function verifyIndent(nodes, outLines, stats){
+    incCall('verifyIndent');
+    // STRICT: expected vs actual
+    const expected_sub_count = nodes.filter(n=>n.level>=1).length;
+    const actual_sub_count = outLines.filter(s=>/^\s{2,}\S/.test(s)).length;
+
+    const detected_levels = new Set();
+    for (const s of outLines){
+      const m = s.match(/^(\s+)/);
+      const sp = m ? m[1].length : 0;
+      detected_levels.add(Math.floor(sp/2));
+    }
+    const detected_depth_levels = Math.max(...Array.from(detected_levels));
+    const expected_depth_levels = Math.max(...nodes.map(n=>n.level));
+
+    stats.expected_sub_count = expected_sub_count;
+    stats.actual_sub_count = actual_sub_count;
+    stats.expected_depth_levels = expected_depth_levels;
+    stats.detected_depth_levels = detected_depth_levels;
+
+    const ok = (expected_sub_count === actual_sub_count) && (expected_depth_levels === detected_depth_levels);
+    if (!ok){
+      const ctx = stats._ctx;
+      failStop('FORMAT.STRICT_MISMATCH.FAIL', { ctx });
+      return false;
+    }
+    return true;
+  }
+
+  function verifyLeftovers(rawLines, cleanedLines, stats){
+    incCall('verifyLeftovers');
+    // DESC_LEFT / BLOCK_LEFT strict: if we still see specific patterns in cleanedLines
+    const descLeft=[];
+    const blockLeft=[];
+    for (let i=0;i<cleanedLines.length;i++){
+      const s = cleanedLines[i];
+      if (isSentenceLike(s)) descLeft.push(i+1);
+      if (isAllCapsLike(s) && s.length>=28 && !RE_NUM.test(s)) blockLeft.push(i+1);
+    }
+    stats.descLeft = descLeft.length;
+    stats.blockLeft = blockLeft.length;
+    stats.descLeftLines = descLeft.slice(0, 20);
+    stats.blockLeftLines = blockLeft.slice(0, 20);
+
+    if (descLeft.length>0){
+      const ctx = stats._ctx;
+      failStop('FORMAT.DESC_LEFT.FAIL', { ctx });
+      return false;
+    }
+    if (blockLeft.length>0){
+      const ctx = stats._ctx;
+      failStop('FORMAT.BLOCK_LEFT.FAIL', { ctx });
+      return false;
+    }
+    return true;
+  }
+
+  function buildDiagnostic(stats){
+    const lines=[];
+    const depth = getDepth();
+    lines.push('자동 진단 로그');
+    lines.push(`DEPTH=${depth}`);
+    lines.push('PLUGIN=P_REASSEMBLY');
+
+    if (!STATE.INTERNAL_DB){
+      lines.push('SUCCESS=—');
+      return lines.join('\n');
+    }
+
+    const toc_nodes = stats.toc_nodes;
+    const removed_nodes = stats.removed;
+    const residual_nodes = stats.residual;
+    const denom = toc_nodes + removed_nodes + residual_nodes;
+    const success = denom>0 ? Math.round((toc_nodes/denom)*100) : 0;
+
+    lines.push(`SUCCESS=${success}% (DB 기준)`);
+    lines.push(`input_lines=${stats.input_lines}`);
+    lines.push(`out_lines=${stats.out_lines}`);
+    lines.push(`toc_nodes=${toc_nodes}`);
+    lines.push(`removed_nodes=${removed_nodes}`);
+    lines.push(`residual_nodes=${residual_nodes}`);
+
+    lines.push(`FORMAT: 페이지번호 제거=${FLAGS.REMOVE_PAGE ? 'ON' : 'OFF'} (removed ${stats.pageRemoved})`);
+    lines.push(`FORMAT: TABLE/LIST/FIGURE 제거=${FLAGS.REMOVE_TABLE ? 'ON' : 'OFF'} (removed ${stats.tblRemoved})`);
+    lines.push(`FORMAT: DESC 제거=${FLAGS.REMOVE_DESC ? 'ON' : 'OFF'} (removed ${stats.descRemoved})`);
+    lines.push(`FORMAT: BLOCK(CAPS) 제거=${FLAGS.REMOVE_BLOCK ? 'ON' : 'OFF'} (removed ${stats.blockRemoved})`);
+    lines.push(`FORMAT: 들여쓰기 적용=${FLAGS.INDENT ? 'ON' : 'OFF'}`);
+
+    lines.push('CHECKS');
+    lines.push(`- expected_sub_count=${stats.expected_sub_count ?? '—'}`);
+    lines.push(`- actual_sub_count=${stats.actual_sub_count ?? '—'}`);
+    lines.push(`- expected_depth_levels=${stats.expected_depth_levels ?? '—'}`);
+    lines.push(`- detected_depth_levels=${stats.detected_depth_levels ?? '—'}`);
+    lines.push(`- descLeft=${stats.descLeft ?? 0} lines=${(stats.descLeftLines||[]).slice(0,5).join(',')||'—'}`);
+    lines.push(`- blockLeft=${stats.blockLeft ?? 0} lines=${(stats.blockLeftLines||[]).slice(0,5).join(',')||'—'}`);
+
+    lines.push('DEBUG');
+    lines.push(`DB=${STATE.FROZEN ? 'FROZEN' : 'EMPTY'}`);
+    lines.push(`RAW_HASH=${STATE.INTERNAL_HASH || '—'}`);
+    lines.push(`CALLS=${Object.entries(STATE.CALL).map(([k,v])=>k+':'+v).join(' ')||'—'}`);
+
+    // show last FULL_CODE counter summary
+    const recent = Object.entries(STATE.COUNTS).slice(-8);
+    if (recent.length){
+      lines.push('CODES');
+      for (const [k,v] of recent) lines.push(`- ${k}(${v})`);
+    }
+
+    return lines.join('\n');
+  }
+
+  function buildDB(){
+    incCall('buildDB');
+
+    // reset per-run
+    STATE.CALL = Object.create(null);
+
+    setBadge(ui.mode, 'BUILD_DB', 'warn');
+    setBadge(ui.engHealth, 'OK', 'ok');
+    setBadge(ui.fullCode, '—', 'muted');
+    setBadge(ui.cause, '—', 'muted');
+
+    const raw = ui.raw.value || '';
+    if (!raw.trim()){
+      failStop('DATA.EMPTY_INPUT.FAIL');
+      return;
+    }
+
+    const rawHash = hashString(raw);
+    // idempotency
+    if (STATE.INTERNAL_HASH && rawHash === STATE.INTERNAL_HASH && STATE.FROZEN){
+      incCode('DUP.SAME_RAW.FAIL');
+      setBadge(ui.mode, 'IDEMPOTENT', 'ok');
+      return; // do nothing
+    }
+
+    // preflight
+    if (!preflight()) return;
+
+    const t0 = nowMs();
+
+    const stats = {
+      input_lines: 0,
+      out_lines: 0,
+      toc_nodes: 0,
+      removed: 0,
+      residual: 0,
+      pageRemoved: 0,
+      tblRemoved: 0,
+      descRemoved: 0,
+      blockRemoved: 0,
+      noiseRemoved: 0,
+      before: { input_lines:0, toc_nodes:0, db_bytes:0, out_lines:0 },
+      after:  { input_lines:0, toc_nodes:0, db_bytes:0, out_lines:0 },
+    };
+
+    // pipeline
+    const n0 = normalize(raw);
+    stats.input_lines = n0.length;
+
+    let lines = n0;
+    lines = removePages(lines, stats);
+    lines = removeTables(lines, stats);
+    lines = removeBullets(lines, stats);
+    lines = removeDescAndBlocks(lines, stats);
+
+    const nodes = classify(lines);
+    const assembled = reassemble(nodes);
+    const outLines = applyIndent(assembled);
+
+    // INTERNAL_DB
+    const db = {
+      plugin: 'P_REASSEMBLY',
+      raw_hash: rawHash,
+      input_lines: stats.input_lines,
+      nodes: assembled,
+      out_lines: outLines,
+      fmt: {
+        pageRemoved: stats.pageRemoved,
+        tblRemoved: stats.tblRemoved,
+        descRemoved: stats.descRemoved,
+        blockRemoved: stats.blockRemoved,
+        noiseRemoved: stats.noiseRemoved,
+      }
+    };
+
+    // compute removed/residual
+    stats.toc_nodes = assembled.length;
+    stats.out_lines = outLines.length;
+    stats.removed = stats.pageRemoved + stats.tblRemoved + stats.descRemoved + stats.blockRemoved + stats.noiseRemoved;
+    stats.residual = Math.max(0, stats.input_lines - (stats.toc_nodes + stats.removed));
+
+    // ctx for cause mapping
+    const dbBytes = JSON.stringify(db).length;
+    stats.before = { input_lines: stats.input_lines, toc_nodes: stats.toc_nodes, db_bytes: 0, out_lines: 0 };
+    stats.after  = { input_lines: stats.input_lines, toc_nodes: stats.toc_nodes, db_bytes: dbBytes, out_lines: stats.out_lines };
+    stats._ctx = { before: stats.before, after: stats.after };
+
+    // strict verifications
+    const okLeft = verifyLeftovers(n0, lines, stats);
+    const okIndent = verifyIndent(assembled, outLines, stats);
+    if (!okLeft || !okIndent) return;
+
+    // render
+    ui.out.value = outLines.join('\n');
+
+    // freeze
+    STATE.INTERNAL_DB = db;
+    STATE.INTERNAL_HASH = rawHash;
+    STATE.FROZEN = true;
+    setBadge(ui.dbState, 'FROZEN', 'ok');
+
+    // success
+    setBadge(ui.mode, 'NORMAL', 'ok');
+    setBadge(ui.engHealth, 'OK', 'ok');
+
+    const diag = buildDiagnostic(stats);
+    ui.diag.textContent = diag;
+
+    snapshotIfGood(db, { okLeft, okIndent });
+
+    const ms = Math.round(nowMs() - t0);
+    // append build time
+    ui.diag.textContent += `\nBUILD_MS=${ms}`;
+  }
+
+  const api = { getDepth, reassemble, applyIndent, verifyIndent };
+
+  // ===== UI actions =====
+  $('runBtn').addEventListener('click', () => {
+    try{
+      buildDB();
+    } catch(e){
+      if (String(e && e.message) === 'WATCHDOG_STOP') return;
+      // hard fail
+      setBadge(ui.engHealth, 'FAIL', 'bad');
+      setBadge(ui.mode, 'STOP', 'bad');
+      setBadge(ui.fullCode, `RUNTIME.UNCAUGHT.FAIL(${incCode('RUNTIME.UNCAUGHT.FAIL')})`, 'bad');
+      setBadge(ui.cause, 'UNKNOWN', 'warn');
+      ui.diag.textContent = `자동 진단 로그\nFULL_CODE=RUNTIME.UNCAUGHT.FAIL\nERR=${(e && e.message) ? e.message : String(e)}\nSTACK=${(e && e.stack) ? e.stack.split('\n').slice(0,3).join(' | ') : '—'}`;
+    }
+  });
+
+  $('copyOut').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(ui.out.value || '');
+      setBadge(ui.mode, 'COPIED', 'ok');
+      setTimeout(()=>setBadge(ui.mode, STATE.FROZEN?'NORMAL':'IDLE', STATE.FROZEN?'ok':'muted'), 700);
+    } catch {
+      // ignore
+    }
+  });
+
+  $('clearRaw').addEventListener('click', () => { ui.raw.value=''; });
+  $('scrollRaw').addEventListener('click', () => { ui.raw.scrollTop = 0; });
+  $('scrollOut').addEventListener('click', () => { ui.out.scrollTop = 0; });
+
+  $('resetAll').addEventListener('click', () => {
+    STATE.INTERNAL_DB = null;
+    STATE.FROZEN = false;
+    STATE.INTERNAL_HASH = null;
+    STATE.SNAPSHOT = null;
+    STATE.COUNTS = Object.create(null);
+    STATE.CALL = Object.create(null);
+    STATE.lastGood = null;
+
+    ui.raw.value='';
+    ui.out.value='';
+    ui.diag.textContent='';
+
+    setBadge(ui.mode, 'IDLE', 'muted');
+    setBadge(ui.engHealth, '—', 'warn');
+    setBadge(ui.dbState, 'EMPTY', 'muted');
+    setBadge(ui.fullCode, '—', 'muted');
+    setBadge(ui.cause, '—', 'muted');
+  });
+
+})();
+</script>
+</body>
+</html>
