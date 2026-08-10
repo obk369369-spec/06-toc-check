@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "publisher": "MarketsandMarkets",
+  "purpose": "Preserve historically observed failure classes so user corrections become reusable regression evidence.",
+  "source_notes": [
+    "Historical user records show repeated upper-level recognition and indentation failures.",
+    "Observed source variants include Table of Contents, Table of Contents 2, List Of Tables 2/3, List Of Figures.",
+    "Observed first_fail: 05 revalidation incomplete, state TESTED, reason recheck button not passed."
+  ],
+  "fixtures": [
+    {
+      "id": "T6-MNM-001-HIERARCHY",
+      "sample_input": "1 INTRODUCTION 28 1.1 STUDY OBJECTIVES 28 1.2 MARKET DEFINITION 28 1.3 STUDY SCOPE 29 1.3.1 MARKETS COVERED AND REGIONAL SCOPE 29",
+      "expected_invariants": ["preserve 1/1.1/1.3/1.3.1 hierarchy", "remove trailing page numbers from titles", "do not emit page numbers as standalone TOC entries"]
+    },
+    {
+      "id": "T6-MNM-002-COLUMN-VARIANTS",
+      "input_columns": ["Table of Contents", "Table of Contents 2", "List Of Tables", "List Of Tables 2", "List Of Tables 3", "List Of Figures"],
+      "expected_invariants": ["recognize source-column role", "do not silently merge List Of Tables/Figures into main TOC unless target rule requires it"]
+    },
+    {
+      "id": "T6-MNM-003-NO-NUMERIC-GARBAGE",
+      "sample_noise": ["29", "34", "45"],
+      "expected_invariants": ["numeric-only page lines removed", "numbered headings retained"]
+    },
+    {
+      "id": "T6-MNM-004-MERGE-SPLIT",
+      "expected_invariants": ["repair merged headings without title loss", "join split heading fragments only with structural evidence", "retain original semantic order"]
+    },
+    {
+      "id": "T6-MNM-005-REVALIDATION",
+      "known_first_fail": {"no":"05","name":"재검증 미완료","state":"TESTED","reason":"재검증 버튼 미통과"},
+      "expected_invariants": ["TESTED is not PASS", "PASS requires revalidation output to match expected normalized TOC", "known failure should not require user to repeat same manual proof"]
+    },
+    {
+      "id": "T6-MNM-006-GOLDEN-PAIR",
+      "status": "HOLD",
+      "expected_invariants": ["when original -> user-approved final pair is recovered, store it as golden fixture", "same pattern must be regression-tested automatically"]
+    }
+  ]
+}
