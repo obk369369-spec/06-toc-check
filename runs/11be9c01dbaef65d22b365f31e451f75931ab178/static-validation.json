@@ -1,0 +1,23 @@
+{
+  "schema": "wic.external-evidence.v1",
+  "repository": "obk369369-spec/06-toc-check",
+  "commit": "11be9c01dbaef65d22b365f31e451f75931ab178",
+  "checkedAt": "2026-08-10T02:52:52.756Z",
+  "entry": "index.html",
+  "htmlCandidates": [
+    "index.html",
+    "index _버전 1.html",
+    "index_ 그나마 안정 버전.html"
+  ],
+  "bytes": 22277,
+  "controls": {
+    "inputs": 2,
+    "buttons": 6
+  },
+  "scripts": {
+    "classic": 1,
+    "module": 0
+  },
+  "result": "STRUCTURE_PASS",
+  "failures": []
+}
