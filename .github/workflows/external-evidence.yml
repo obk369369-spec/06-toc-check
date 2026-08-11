@@ -1,4 +1,4 @@
-name: External collaboration evidence
+name: GitHub platform evidence (not independent)
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Independent validation
+    name: Internal platform validation
     runs-on: ubuntu-latest
     outputs:
       entry: ${{ steps.entry.outputs.path }}
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: "22"
       - id: check
-        name: Generate evidence from real source
+        name: Generate GitHub-platform evidence from real source
         continue-on-error: true
         run: node .github/scripts/validate-static-tool.mjs
       - id: entry
@@ -38,7 +38,7 @@ jobs:
             ENTRY=$(node -e "process.stdout.write(require('./external-evidence/static-validation.json').entry || '')")
             echo "path=$ENTRY" >> "$GITHUB_OUTPUT"
           fi
-      - name: Preserve run artifact
+      - name: Preserve GitHub run artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -46,13 +46,13 @@ jobs:
           path: external-evidence/
           retention-days: 90
           if-no-files-found: error
-      - name: Honest gate
+      - name: Honest internal gate
         if: always()
         shell: bash
         run: test "${{ steps.check.outcome }}" = "success"
 
   archive:
-    name: Permanent evidence archive
+    name: Permanent GitHub evidence archive
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && always()
     needs: validate
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
         with:
           name: external-evidence-${{ github.sha }}
           path: /tmp/wic-evidence
-      - name: Commit immutable evidence record
+      - name: Commit immutable GitHub evidence record
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
