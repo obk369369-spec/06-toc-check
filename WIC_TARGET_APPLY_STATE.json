@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "state_type": "target_apply_state_only_not_rules",
+  "target": "TOOL006",
+  "canonical_source": {
+    "repository": "obk369369-spec/20-operational-manual-viewer",
+    "path": "WIC_GLOBAL_OPERATING_RULES.md"
+  },
+  "feedback_id": "f2aeb4e8f5fac3c9618f",
+  "last_applied_canonical_revision": "fa09bcdec96669d97ef3a18f",
+  "classification": "PRIORITY_CHANGE",
+  "apply_mode": "CENTRAL_RULE_REFERENCE_REVISION_ACK",
+  "changed_scope": [
+    "GLOBAL_PRIORITY_AND_WORK_GATE"
+  ],
+  "local_rule_copy_created": false,
+  "functional_code_change_required": false,
+  "apply_status": "APPLIED_PENDING_TARGET_TEST",
+  "applied_at_utc": "2026-08-12T07:18:00Z",
+  "evidence": {
+    "canonical_manifest": "obk369369-spec/20-operational-manual-viewer/feedback_pipeline/target_apply_manifest.json",
+    "target_rule_pointer": "WIC_RULE_SOURCE.md",
+    "test_status": "PENDING"
+  }
+}
