@@ -15,11 +15,19 @@
   ],
   "local_rule_copy_created": false,
   "functional_code_change_required": false,
-  "apply_status": "APPLIED_PENDING_TARGET_TEST",
+  "apply_status": "APPLIED_TEST_PASS",
   "applied_at_utc": "2026-08-12T07:18:00Z",
   "evidence": {
     "canonical_manifest": "obk369369-spec/20-operational-manual-viewer/feedback_pipeline/target_apply_manifest.json",
     "target_rule_pointer": "WIC_RULE_SOURCE.md",
-    "test_status": "PENDING"
+    "target_apply_commit": "3961fd8c59b8dc08100204d4437e217460f292b2",
+    "target_read_back_blob": "cb508b04baf13bbdc3ae5c0ae0614a99ea591a0f",
+    "test_status": "PASS_INTERNAL_GITHUB",
+    "workflow_run_id": 31573547418,
+    "validation_job_id": 94040506272,
+    "validation_result": "completed/success",
+    "pages_job_id": 94040536319,
+    "archive_job_id": 94040536379,
+    "external_independent_verification": false
   }
 }
