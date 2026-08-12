@@ -1,4 +1,0 @@
-probe_id: WIC-XTARGET-ROLLBACK-20260813-0217
-stage: TARGET_REVISION_READ_APPLY
-expected_failure: true
-purpose: controlled cross-target rollback/read-back/restart E2E
