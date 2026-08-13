@@ -6,28 +6,26 @@
     "repository": "obk369369-spec/20-operational-manual-viewer",
     "path": "WIC_GLOBAL_OPERATING_RULES.md"
   },
-  "feedback_id": "f2aeb4e8f5fac3c9618f",
-  "last_applied_canonical_revision": "fa09bcdec96669d97ef3a18f",
-  "classification": "PRIORITY_CHANGE",
+  "feedback_id": "b6acdbfd3bc4d0de1b66",
+  "last_applied_canonical_revision": "11f7a751685aeaaf10cab428",
+  "classification": "CONSTRAINT",
   "apply_mode": "CENTRAL_RULE_REFERENCE_REVISION_ACK",
   "changed_scope": [
-    "GLOBAL_PRIORITY_AND_WORK_GATE"
+    "TOC_MAX_DEPTH_TWO",
+    "TOC_CHILD_INDENT_ONE_LEVEL",
+    "GLOBAL_REPORT_TITLE_SCOPE",
+    "TEXT_ONLY_REPORT_INFO_SOURCE"
   ],
   "local_rule_copy_created": false,
   "functional_code_change_required": false,
-  "apply_status": "APPLIED_TEST_PASS",
-  "applied_at_utc": "2026-08-12T07:18:00Z",
+  "apply_status": "APPLIED_READBACK_PENDING_TEST_EVIDENCE",
+  "applied_at_utc": "2026-08-13T03:24:00Z",
   "evidence": {
     "canonical_manifest": "obk369369-spec/20-operational-manual-viewer/feedback_pipeline/target_apply_manifest.json",
     "target_rule_pointer": "WIC_RULE_SOURCE.md",
-    "target_apply_commit": "3961fd8c59b8dc08100204d4437e217460f292b2",
-    "target_read_back_blob": "cb508b04baf13bbdc3ae5c0ae0614a99ea591a0f",
-    "test_status": "PASS_INTERNAL_GITHUB",
-    "workflow_run_id": 31573547418,
-    "validation_job_id": 94040506272,
-    "validation_result": "completed/success",
-    "pages_job_id": 94040536319,
-    "archive_job_id": 94040536379,
+    "source_feedback_commit": "177a3159816e090e2a3d94ef7a927e32c05ae455",
+    "canonical_apply_commit": "9f318a884f7def4d43870d89d762499ad7c5b623",
+    "test_status": "PENDING_GITHUB_RUN",
     "external_independent_verification": false
   }
 }
