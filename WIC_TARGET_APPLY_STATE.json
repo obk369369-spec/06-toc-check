@@ -18,14 +18,20 @@
   ],
   "local_rule_copy_created": false,
   "functional_code_change_required": false,
-  "apply_status": "APPLIED_READBACK_PENDING_TEST_EVIDENCE",
+  "apply_status": "APPLIED_TEST_PASS_INTERNAL_GITHUB",
   "applied_at_utc": "2026-08-13T03:24:00Z",
   "evidence": {
     "canonical_manifest": "obk369369-spec/20-operational-manual-viewer/feedback_pipeline/target_apply_manifest.json",
     "target_rule_pointer": "WIC_RULE_SOURCE.md",
     "source_feedback_commit": "177a3159816e090e2a3d94ef7a927e32c05ae455",
     "canonical_apply_commit": "9f318a884f7def4d43870d89d762499ad7c5b623",
-    "test_status": "PENDING_GITHUB_RUN",
+    "github_workflow_run_id": 31663710333,
+    "github_workflow_head_sha": "aa22334b89334d44946161074732322e1708234e",
+    "internal_validation_job_id": 94333736626,
+    "evidence_archive_job_id": 94333769001,
+    "pages_deployment_job_id": 94333769073,
+    "test_status": "PASS_INTERNAL_GITHUB",
     "external_independent_verification": false
-  }
+  },
+  "note": "Existing GitHub Actions evidence was successful; this update normalizes the stale pending state. It does not claim third-party independent verification."
 }
