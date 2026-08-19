@@ -5,10 +5,21 @@
 
 ## 실제 처리 흐름
 
-1. `CONTROL_TOWER/tool006_engine.ps1`이 입력을 읽어 목차를 정리합니다.
+1. `CONTROL_TOWER/tool006_engine.ps1` 단 하나가 입력을 읽고 모든 목차 판단을 수행합니다.
 2. 본체가 `TOOL006_TOC/tool_state.json`과 실행 증거를 직접 기록합니다.
 3. `observer_engine.ps1`이 최신 도구 상태만 읽어 snapshot을 만듭니다.
 4. 공통 타워 HTML은 snapshot에서 생성된 `tower_state.js`만 표시합니다.
+
+`CONTROL_TOWER/tool006_ui.ps1`은 판단 규칙이 없는 내부 UI 어댑터입니다. 단일 엔진을 숨김 실행하여 입력·출력·복사·의심줄 표시·오류유형·사용자 수정결과를 연결합니다.
+
+## Data recovery
+
+- 실제 원자료: `20260506_170107.jpg` 1건(원문과 과거 오출력 연결, 발행사 URL/사용자 정답 원문은 미복구)
+- 합성 보조자료: `T6-SIM1500-EVIDENCE-20260508011213` 오류유형 패턴
+- 상태: `PARTIAL`
+- 구조화 fixture: `fixtures/tool006_regression.json`
+
+합성 1500건 PASS는 실제 발행사 전체 PASS 근거로 사용하지 않습니다.
 
 ## 실행 예시
 

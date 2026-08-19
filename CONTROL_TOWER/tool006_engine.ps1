@@ -1,129 +1,104 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$Root,
     [string]$InputPath,
     [string]$InputText,
-    [string]$OutputPath
+    [string]$OutputPath,
+    [string]$Publisher = "UNKNOWN",
+    [string]$ReportId = "UNKNOWN",
+    [string]$ErrorType,
+    [string]$CorrectedOutput
 )
 
 $ErrorActionPreference = "Stop"
-$controlTower = Join-Path $Root "CONTROL_TOWER"
 $toolRoot = Join-Path $Root "TOOL006_TOC"
+$controlTower = Join-Path $Root "CONTROL_TOWER"
 $statePath = Join-Path $toolRoot "tool_state.json"
 $logPath = Join-Path $toolRoot "logs\progress.csv"
 $packetPath = Join-Path $controlTower "STATE_PACKET.json"
 $evidencePath = Join-Path $toolRoot "evidence\tool006_evidence.json"
+$candidateDir = Join-Path $toolRoot "evidence\error_candidates"
 if (-not $OutputPath) { $OutputPath = Join-Path $toolRoot "working\toc_result.txt" }
-$runId = "TOOL006-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+$runId = "TOOL006-" + (Get-Date -Format "yyyyMMdd-HHmmss-fff")
 $started = Get-Date
+$stageHistory = [System.Collections.Generic.List[object]]::new()
 
-foreach ($path in @((Split-Path $statePath), (Split-Path $logPath), (Split-Path $evidencePath), (Split-Path $OutputPath))) {
+foreach ($path in @((Split-Path $statePath),(Split-Path $logPath),(Split-Path $evidencePath),(Split-Path $OutputPath),$candidateDir,$controlTower)) {
     New-Item -ItemType Directory -Path $path -Force | Out-Null
 }
 
-$stageHistory = [System.Collections.Generic.List[object]]::new()
 function Write-ToolState {
-    param([string]$EngineStatus, [string]$FinalStatus, [int]$Progress, [string]$Step, [string]$Explain, [string]$NextAction)
+    param([string]$EngineStatus,[string]$FinalStatus,[int]$Progress,[string]$Step,[string]$Explain,[string]$NextAction)
     $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
-    $event = [ordered]@{ TIME=$now; PROGRESS=$Progress; STEP=$Step; STATUS=$FinalStatus }
-    $stageHistory.Add($event)
+    $stageHistory.Add([ordered]@{TIME=$now;PROGRESS=$Progress;STEP=$Step;STATUS=$FinalStatus})
     "$now,TOOL006_TOC,$Step,$EngineStatus,$Explain" | Add-Content -LiteralPath $logPath -Encoding UTF8
     [ordered]@{
-        CURRENT_TOOL="TOOL006_TOC"; ENGINE_STATUS=$EngineStatus; FINAL_STATUS=$FinalStatus
-        CURRENT_STEP=$Step; EASY_EXPLAIN=$Explain; PROGRESS=$Progress; NEXT_ACTION=$NextAction
-        USER_ACTION="없음"; DONE_ITEMS=@($stageHistory | ForEach-Object { $_.STEP })
-        RUN_ID=$runId; OUTPUT_PATH=$OutputPath; SOURCE_PACKET=$packetPath
-        VALIDATION_REASON=if($FinalStatus -eq "PASS"){"VERIFIED"}else{"IN_PROGRESS_OR_ERROR"}
-        MISSING_FIELDS=@(); BLACK_WINDOW_BLOCK="PASS"; TIME=$now
+        CURRENT_TOOL="TOOL006_TOC";ENGINE_STATUS=$EngineStatus;FINAL_STATUS=$FinalStatus
+        CURRENT_STEP=$Step;EASY_EXPLAIN=$Explain;PROGRESS=$Progress;NEXT_ACTION=$NextAction
+        USER_ACTION="NONE";DONE_ITEMS=@($stageHistory|ForEach-Object{$_.STEP});RUN_ID=$runId
+        OUTPUT_PATH=$OutputPath;SOURCE_PACKET=$packetPath
+        VALIDATION_REASON=if($FinalStatus -eq "PASS"){"VERIFIED"}else{"HOLD_OR_ERROR"}
+        MISSING_FIELDS=@();BLACK_WINDOW_BLOCK="PASS";TIME=$now
     } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $statePath -Encoding UTF8
 }
 
-Write-ToolState "RUNNING" "HOLD" 10 "입력 확인" "목차 입력을 읽고 있습니다." "입력 내용 정규화"
+function Clean-Line([string]$value) { return (($value -replace "`t"," " -replace [char]0xA0," " -replace ([char]0x2013),'-' -replace ([char]0x2014),'-' -replace '\s+',' ').Trim()) }
+function Test-Noise([string]$text) {
+    return $text -match '^(table of contents|contents|list of tables|list of figures|read more|read less|description|sample request|request sample|download sample|select license|buy now|enquire before buying)$' -or $text -match '^(table|figure|appendix table|appendix figure)\s+\d+' -or $text -match '^Page\s+No\.?\s*[-:]?\s*\d+$'
+}
+function New-ItemRecord([string]$text,[int]$depth,[string]$number,[bool]$hold,[string]$reason) { return [pscustomobject]@{Text=$text;Depth=$depth;Number=$number;Hold=$hold;Reason=$reason;Generated=[string]::IsNullOrWhiteSpace($number)} }
 
+function Classify-Line([string]$text,[hashtable]$context) {
+    $numbered = [regex]::Match($text,'^(\d+(?:\.\d+){0,8})[.)\s]+(.+)$')
+    if ($numbered.Success) { $number=$numbered.Groups[1].Value; return New-ItemRecord (Clean-Line $numbered.Groups[2].Value) ($number.Split('.').Count) $number $false "number_preserve" }
+    if ($text -match '^(SECTION\s+[IVXLC0-9]+|CHAPTER\s+\d+|PART\s+[IVXLC0-9]+)[:.]?\s*(.*)$') { $context.Parent=$text;$context.Group="";$context.Region="";return New-ItemRecord $text 1 "" $false "section_preserve" }
+    $top='^(Introduction|Executive Summary|Market Overview|Market Dynamics|Key Insights|Competitive Analysis|Competitive Landscape|Company Profiles|Strategic Recommendations|Appendix|Market Trends)$'
+    $longTop='(Global|North America|Europe|Asia Pacific|Latin America|Middle East|Africa).{3,140}(Market|Industry).{0,100}(Analysis|Insights|Forecast|Outlook)'
+    if ($text -match $top -or $text -match $longTop) { $context.Parent=$text;$context.Group="";$context.Region="";return New-ItemRecord $text 1 "" $false "top_detected" }
+    if ($text -match '^By\s+(Product|Application|Region|Country|Type|Material|End[- ]?use|Technology|Component|Distribution Channel|Service|Deployment|Industry|Source|Form|Grade|Process|Sales Channel|Offering|Function|Capacity|Packaging|Route|Class|Category)\b') { $context.Group=$Matches[1];$context.Region="";return New-ItemRecord $text 2 "" $false "by_group_head" }
+    $regions='^(North America|Europe|Asia Pacific|Latin America|Middle East\s*&\s*Africa|Middle East and Africa)$'
+    $countries='^(U\.S\.|United States|Canada|Germany|U\.K\.|United Kingdom|France|Italy|Spain|China|India|Japan|South Korea|Australia|Brazil|Mexico|GCC|South Africa|Rest of .+)$'
+    if ($text -match $regions) { $context.Region=$text;return New-ItemRecord $text $(if($context.Group -eq 'Region'){3}else{2}) "" $false "region" }
+    if ($text -match $countries) { return New-ItemRecord $text $(if($context.Region){4}elseif($context.Group){3}else{2}) "" $false "country" }
+    $companyDetail='^(Overview|Business Overview|Company Snapshot|Product Portfolio|Products Offered|Financials|Recent Developments|Recent News|Strategy|SWOT Analysis)$'
+    if ($text -match $companyDetail -and $context.Parent -match 'Company Profiles|Competitive Landscape') { return New-ItemRecord $text 3 "" $false "company_detail" }
+    $companyName='(Inc\.|Corporation|Corp\.|Ltd\.|Limited|LLC|PLC|AG$|GmbH|S\.A\.|Co\.,|Company|Group|Industries|Technologies|Systems|Solutions|Healthcare|Laboratories|BASF|DuPont|Merck|Thermo|Danaher|Siemens|Honeywell|3M|IBM|Microsoft|Google|Samsung|LG|Hitachi|Panasonic|Toyota|Bayer|Roche|Pfizer|TORAY|TEIJIN)'
+    if ($text -match $companyName -and $context.Parent -match 'Company Profiles|Competitive Landscape') { return New-ItemRecord $text 2 "" $false "company_name" }
+    $knownChild='^(Research Scope|Market Segmentation|Research Methodology|Definitions and Assumptions|Market Drivers|Market Restraints|Market Opportunities|Key Findings|Key Findings / Summary|Key Emerging Trends|Key Developments|Latest Technological|Insights on Sustainability|Porter''s Five Forces Analysis|Impact of Tariff|Price Trend Analysis|Regulatory Framework|Value Chain|Supply Chain|Patent Analysis|Import/Export|Production|Consumption|Revenue|Volume)'
+    if ($text -match $knownChild) { return New-ItemRecord $text 2 "" $false "known_child" }
+    if ($context.Group) { return New-ItemRecord $text 3 "" $false "by_group_child" }
+    if ($context.Parent -match 'Key Insights|Market Dynamics|Research Methodology|Introduction') { return New-ItemRecord $text 2 "" $false "parent_context_child" }
+    return New-ItemRecord $text 2 "" $true "ambiguous_hold"
+}
+
+function Apply-Numbers([object[]]$items) {
+    $counter=@(0,0,0,0,0,0,0,0,0)
+    foreach($item in $items) {
+        if ($item.Reason -eq 'section_preserve') { continue }
+        if ($item.Number) { $parts=@($item.Number.Split('.')|ForEach-Object{[int]$_});for($i=0;$i -lt $parts.Count;$i++){$counter[$i+1]=$parts[$i]};for($i=$parts.Count+1;$i -lt $counter.Count;$i++){$counter[$i]=0};continue }
+        $depth=[Math]::Max(1,[Math]::Min([int]$item.Depth,8))
+        if($depth -eq 1){$counter[1]++;for($i=2;$i -lt $counter.Count;$i++){$counter[$i]=0}}
+        else{if($counter[1] -eq 0){$counter[1]=1};for($i=2;$i -lt $depth;$i++){if($counter[$i] -eq 0){$counter[$i]=1}};$counter[$depth]++;for($i=$depth+1;$i -lt $counter.Count;$i++){$counter[$i]=0}}
+        $item.Number=(@($counter[1..$depth])-join '.')
+    }
+    return $items
+}
+
+Write-ToolState "RUNNING" "HOLD" 10 "READ_INPUT" "Reading TOC input and report metadata." "CLASSIFY_STRUCTURE"
 try {
-    if ($InputPath) {
-        if (-not (Test-Path -LiteralPath $InputPath -PathType Leaf)) { throw "Input file not found: $InputPath" }
-        $InputText = Get-Content -LiteralPath $InputPath -Raw -Encoding UTF8
-    }
-    if ([string]::IsNullOrWhiteSpace($InputText)) { throw "Input text is empty" }
-
-    Write-ToolState "RUNNING" "HOLD" 30 "입력 정규화" "빈 줄과 목차 잡음을 제거하고 있습니다." "목차 계층 정리"
-
-$noise = '^(table of contents|contents|table\b|figure\b|list of tables|list of figures|description|methodology|title|close|read more|read less)$'
-$lines = @($InputText -split "`r?`n" | ForEach-Object { ($_ -replace "`t", " " -replace '\s+', ' ').Trim() } | Where-Object { $_ -and $_ -notmatch $noise })
-$seen = @{}
-$output = [System.Collections.Generic.List[string]]::new()
-$top = 0
-$child = 0
-
-foreach ($line in $lines) {
-    $key = ($line -replace '^\d+(?:\.\d+){0,6}[\.\s]+', '').ToLowerInvariant()
-    if ($seen.ContainsKey($key)) { continue }
-    $seen[$key] = $true
-
-    if ($line -match '^(\d+(?:\.\d+){0,6})[\.\s]+(.+)$') {
-        $depth = $Matches[1].Split('.').Count
-        $output.Add((('  ' * ($depth - 1)) + $Matches[1] + ' ' + $Matches[2]))
-        continue
-    }
-
-    $isTop = $line -match '^(Introduction|Executive Summary|Market Dynamics|Key Insights|Competitive Analysis|Competitive Landscape|Strategic Recommendations|Appendix|Company Profiles|Market Trends)$' -or
-        $line -match 'Market Analysis, Insights and Forecast'
-    if ($isTop) {
-        $top++
-        $child = 0
-        $output.Add("$top $line")
-    } else {
-        if ($top -eq 0) { $top = 1 }
-        $child++
-        $output.Add("  $top.$child $line")
-    }
-}
-
-    Write-ToolState "RUNNING" "HOLD" 70 "목차 계층 정리" "중복을 제거하고 번호와 들여쓰기를 정리했습니다." "결과 파일 검증"
-
-    $status = if ($output.Count -gt 0) { "PASS" } else { "HOLD" }
-    $output | Set-Content -LiteralPath $OutputPath -Encoding UTF8
-    $outputExists = Test-Path -LiteralPath $OutputPath -PathType Leaf
-    $outputLength = if ($outputExists) { (Get-Item -LiteralPath $OutputPath).Length } else { 0 }
-
-    Write-ToolState "COMPLETED" $status 100 "목차 정리 완료" "실제 결과 파일을 만들고 검증했습니다." "Observer 상태 동기화"
-
-$evidence = [ordered]@{
-    RUN_ID = $runId
-    INPUT_SOURCE = if ($InputPath) { $InputPath } else { "INLINE_TEXT" }
-    INPUT_COUNT = $lines.Count
-    OUTPUT_COUNT = $output.Count
-    OUTPUT_PATH = $OutputPath
-    OUTPUT_LENGTH = $outputLength
-    STATUS = $status
-    STARTED = $started.ToString("yyyy-MM-dd HH:mm:ss")
-    FINISHED = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    STAGE_HISTORY = @($stageHistory)
-}
-$evidence | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $evidencePath -Encoding UTF8
-
-$packet = [ordered]@{
-    "34_RULES_LOADED" = "TRUE"
-    RUN_ID = $runId
-    STATUS = $status
-    CURRENT_STAGE = "TOOL006 목차 정리 완료"
-    TOTAL_COUNT = $lines.Count
-    PROCESSED_COUNT = $output.Count
-    SUCCESS_COUNT = if ($status -eq "PASS") { $output.Count } else { 0 }
-    HOLD_COUNT = if ($status -eq "HOLD") { 1 } else { 0 }
-    FAIL_COUNT = 0
-    LAST_RUN_TIME = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    LAST_OUTPUT = $OutputPath
-    NEXT_OUTPUT = "없음"
-    ERROR_TYPE = if ($status -eq "PASS") { "NONE" } else { "NO_OUTPUT" }
-    CHECKPOINT = "TOOL006_OUTPUT_WRITTEN"
-    RESTART_POINT = "NEXT_INPUT"
-    EVIDENCE_BUNDLE = $evidencePath
-    STOP_CARD = if ($status -eq "PASS") { "CLEAR" } else { "HOLD" }
-}
-$packet | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $packetPath -Encoding UTF8
-}
-catch {
-    Write-ToolState "FAILED" "HOLD" 0 "목차 정리 오류" $_.Exception.Message "입력과 오류 내용을 확인"
-    throw
-}
+    if($InputPath){if(-not(Test-Path -LiteralPath $InputPath -PathType Leaf)){throw "Input file not found: $InputPath"};$InputText=Get-Content -LiteralPath $InputPath -Raw -Encoding UTF8}
+    if([string]::IsNullOrWhiteSpace($InputText)){throw "Input text is empty"}
+    Write-ToolState "RUNNING" "HOLD" 30 "NORMALIZE_INPUT" "Removing empty lines and known noise." "CLASSIFY_DEPTH"
+    $lines=@($InputText -split "`r?`n"|ForEach-Object{Clean-Line $_}|Where-Object{$_ -and -not(Test-Noise $_)})
+    $seen=@{};$items=[System.Collections.Generic.List[object]]::new();$context=@{Parent="";Group="";Region=""}
+    foreach($line in $lines){$item=Classify-Line $line $context;$key=($item.Text -replace '^\d+(?:\.\d+)*\s+','').ToLowerInvariant();if($seen.ContainsKey($key)){continue};$seen[$key]=$true;$items.Add($item)}
+    $numbered=@(Apply-Numbers @($items))
+    Write-ToolState "RUNNING" "HOLD" 70 "ORGANIZE_HIERARCHY" "Preserved numbers and classified candidate depth and review lines." "VALIDATE_RESULT"
+    $output=@($numbered|ForEach-Object{(('  '*([Math]::Max(0,$_.Depth-1)))+$(if($_.Reason -eq 'section_preserve'){$_.Text}else{$_.Number+' '+$_.Text}))})
+    $holds=@($numbered|Where-Object{$_.Hold});$status=if($output.Count -gt 0 -and $holds.Count -eq 0){"PASS"}else{"HOLD"}
+    $output|Set-Content -LiteralPath $OutputPath -Encoding UTF8
+    Write-ToolState $(if($status -eq 'PASS'){'COMPLETED'}else{'REVIEW_REQUIRED'}) $status 100 "TOC_COMPLETE" $(if($status -eq 'PASS'){'Output created with no suspicious lines.'}else{"Output created; $($holds.Count) suspicious line(s) require review."}) "SYNC_OBSERVER"
+    $evidence=[ordered]@{RUN_ID=$runId;PUBLISHER=$Publisher;REPORT_ID=$ReportId;INPUT_SOURCE=if($InputPath){$InputPath}else{'INLINE_TEXT'};INPUT_COUNT=$lines.Count;OUTPUT_COUNT=$output.Count;OUTPUT_PATH=$OutputPath;STATUS=$status;HOLD_COUNT=$holds.Count;HOLD_LINES=@($holds|ForEach-Object{[ordered]@{text=$_.Text;number=$_.Number;depth=$_.Depth;reason=$_.Reason}});ITEMS=@($numbered);STAGE_HISTORY=@($stageHistory);STARTED=$started.ToString('yyyy-MM-dd HH:mm:ss');FINISHED=Get-Date -Format 'yyyy-MM-dd HH:mm:ss'}
+    $evidence|ConvertTo-Json -Depth 10|Set-Content -LiteralPath $evidencePath -Encoding UTF8
+    if($status -eq 'HOLD' -or $ErrorType -or $CorrectedOutput){[ordered]@{RUN_ID=$runId;PUBLISHER=$Publisher;REPORT_ID=$ReportId;ORIGINAL_TOC=$InputText;TOOL_OUTPUT=($output -join "`n");SUSPICIOUS_LINES=$evidence.HOLD_LINES;ERROR_TYPE=if($ErrorType){$ErrorType}else{'AMBIGUOUS_DEPTH'};USER_CORRECTED_OUTPUT=$CorrectedOutput;CREATED_AT=Get-Date -Format 'yyyy-MM-dd HH:mm:ss';FIXTURE_STATUS=if($CorrectedOutput){'CANDIDATE'}else{'HOLD'}}|ConvertTo-Json -Depth 10|Set-Content -LiteralPath (Join-Path $candidateDir ($runId+'.json')) -Encoding UTF8}
+    [ordered]@{'34_RULES_LOADED'='TRUE';RUN_ID=$runId;STATUS=$status;CURRENT_STAGE='TOOL006_COMPLETE';TOTAL_COUNT=$lines.Count;PROCESSED_COUNT=$output.Count;SUCCESS_COUNT=if($status -eq 'PASS'){$output.Count}else{0};HOLD_COUNT=$holds.Count;FAIL_COUNT=0;LAST_RUN_TIME=Get-Date -Format 'yyyy-MM-dd HH:mm:ss';LAST_OUTPUT=$OutputPath;NEXT_OUTPUT='NONE';ERROR_TYPE=if($status -eq 'PASS'){'NONE'}else{'AMBIGUOUS_DEPTH'};CHECKPOINT='TOOL006_OUTPUT_WRITTEN';RESTART_POINT='NEXT_INPUT';EVIDENCE_BUNDLE=$evidencePath;STOP_CARD=if($status -eq 'PASS'){'CLEAR'}else{'HOLD'}}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $packetPath -Encoding UTF8
+} catch { Write-ToolState "FAILED" "HOLD" 0 "TOC_ERROR" $_.Exception.Message "CHECK_INPUT_AND_ERROR";throw }
