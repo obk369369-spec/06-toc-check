@@ -1,0 +1,9 @@
+{
+  "tool": "TOOL006",
+  "status": "IN_PROGRESS",
+  "checkpoint": "FUNCTIONAL_E2E_WORKFLOW_PENDING",
+  "scope": "actual input file -> engine -> output file -> expected comparison",
+  "draft_pr": 6,
+  "main_merge": "HOLD",
+  "data_recovery": "PARTIAL"
+}

@@ -1,0 +1,27 @@
+name: TOOL006 functional E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [agent/tool006-active-baseline]
+    paths:
+      - 'TOOL006_TOC/**'
+      - 'fixtures/**'
+      - 'tests/**'
+      - '.github/workflows/tool006-functional-e2e.yml'
+  pull_request:
+    paths:
+      - 'TOOL006_TOC/**'
+      - 'fixtures/**'
+      - 'tests/**'
+      - '.github/workflows/tool006-functional-e2e.yml'
+
+jobs:
+  regression:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run actual input to expected output regression
+        shell: pwsh
+        run: ./tests/tool006_functional_e2e.ps1
