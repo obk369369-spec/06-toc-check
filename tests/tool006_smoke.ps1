@@ -7,9 +7,11 @@ foreach($case in $fixture.cases){
     $testRoot=Join-Path ([IO.Path]::GetTempPath()) ('tool006-fixture-'+[guid]::NewGuid().ToString('N'))
     try{
         $ct=Join-Path $testRoot 'CONTROL_TOWER';New-Item -ItemType Directory -Path $ct -Force|Out-Null
-        Copy-Item -LiteralPath (Join-Path $repoRoot 'CONTROL_TOWER\tool006_engine.ps1'),(Join-Path $repoRoot 'CONTROL_TOWER\observer_engine.ps1') -Destination $ct
+        $tool=Join-Path $testRoot 'TOOL006_TOC';New-Item -ItemType Directory -Path $tool -Force|Out-Null
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'TOOL006_TOC\tool006_engine.ps1') -Destination $tool
+        Copy-Item -LiteralPath (Join-Path $repoRoot 'CONTROL_TOWER\observer_engine.ps1') -Destination $ct
         $inputText=($case.input -join "`n")
-        & $powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $ct 'tool006_engine.ps1') -Root $testRoot -InputText $inputText -Publisher $case.publisher -ReportId $case.report_id
+        & $powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $tool 'tool006_engine.ps1') -Root $testRoot -InputText $inputText -Publisher $case.publisher -ReportId $case.report_id
         if($LASTEXITCODE -ne 0){throw "engine exit $LASTEXITCODE"}
         $env:WIC34_OBSERVER_ONCE='1';& $powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $ct 'observer_engine.ps1') -Root $testRoot
         if($LASTEXITCODE -ne 0){throw "observer exit $LASTEXITCODE"}

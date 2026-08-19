@@ -5,12 +5,12 @@
 
 ## 실제 처리 흐름
 
-1. `CONTROL_TOWER/tool006_engine.ps1` 단 하나가 입력을 읽고 모든 목차 판단을 수행합니다.
+1. `TOOL006_TOC/tool006_engine.ps1` 단 하나가 입력을 읽고 모든 목차 판단을 수행합니다.
 2. 본체가 `TOOL006_TOC/tool_state.json`과 실행 증거를 직접 기록합니다.
 3. `observer_engine.ps1`이 최신 도구 상태만 읽어 snapshot을 만듭니다.
 4. 공통 타워 HTML은 snapshot에서 생성된 `tower_state.js`만 표시합니다.
 
-`CONTROL_TOWER/tool006_ui.ps1`은 판단 규칙이 없는 내부 UI 어댑터입니다. 단일 엔진을 숨김 실행하여 입력·출력·복사·의심줄 표시·오류유형·사용자 수정결과를 연결합니다.
+`TOOL006_TOC/tool006_ui.ps1`은 판단 규칙이 없는 내부 UI 어댑터입니다. 단일 엔진을 숨김 실행하여 입력·출력·복사·의심줄 표시·오류유형·사용자 수정결과를 연결합니다.
 
 ## Data recovery
 
@@ -26,7 +26,7 @@
 ```powershell
 $root = (Get-Location).Path
 $input = "Introduction`nResearch Scope`nExecutive Summary"
-& .\CONTROL_TOWER\tool006_engine.ps1 -Root $root -InputText $input
+& .\TOOL006_TOC\tool006_engine.ps1 -Root $root -InputText $input
 ```
 
 사용자용 공통 타워 실행 파일은 루트의 `WIC34_공통타워_자동찾기.vbs` 하나입니다.
@@ -35,6 +35,7 @@ $input = "Introduction`nResearch Scope`nExecutive Summary"
 
 ```powershell
 & .\tests\tool006_smoke.ps1
+& .\tests\tool006_functional_e2e.ps1
 ```
 
 PASS 기준은 실제 결과 파일 생성, 본체 상태 PASS/100, 10→30→70→100 단계 증거,

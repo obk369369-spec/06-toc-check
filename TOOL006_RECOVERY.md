@@ -26,7 +26,7 @@ Confirmed publisher count is 0. The recovered rule artifacts name Fortune, Resea
 
 ## Integrated behavior
 
-The single decision engine preserves existing numbering, generates candidate numbering, classifies top/child/grandchild depth, handles By Product/Application/Region, region-country depth, Company Profiles and company details, long market headings, SECTION/CHAPTER/PART labels, and table/figure noise. Ambiguous lines cause HOLD and are recorded instead of being forced to PASS.
+The single decision engine at `TOOL006_TOC/tool006_engine.ps1` preserves existing numbering, generates candidate numbering, classifies top/child/grandchild depth, handles By Product/Application/Region, region-country depth, Company Profiles and company details, long market headings, SECTION/CHAPTER/PART labels, and table/figure noise. Ambiguous lines cause HOLD and are recorded instead of being forced to PASS.
 
 The internal UI adapter contains no TOC decision rules. It calls the one engine and retains input, output, copy, basic status, suspicious-line display, error type, publisher/report identifiers, and user-corrected output capture.
 
@@ -37,6 +37,7 @@ The internal UI adapter contains no TOC decision rules. It calls the one engine 
 - Complex By/Region/Country/Company regression: PASS
 - Ambiguous-line HOLD and error-candidate persistence: PASS
 - UI adapter self-test: PASS
+- Functional E2E (UI control -> hidden body engine -> output/state -> Observer): PASS
 - Active decision engine count: 1
 
 ## Current status
