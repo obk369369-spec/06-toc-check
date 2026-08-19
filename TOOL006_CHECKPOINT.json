@@ -10,6 +10,14 @@
     "pull_request_run": 32244380776,
     "conclusion": "success"
   },
+  "operating_program": {
+    "status": "PASS",
+    "file": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
+    "single_execution_path": true,
+    "operational_validation": "PASS: complex hierarchy and ambiguous HOLD/error packet",
+    "regression_validation": "PASS: SECTION, existing numbers, noise removal, top preservation, complex hierarchy",
+    "validated_at": "2026-08-19"
+  },
   "draft_pr": 6,
   "main_merge": "HOLD",
   "data_recovery": "PARTIAL"

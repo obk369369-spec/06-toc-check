@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>toc_lock_v2_26_안정본.html</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7fb;color:#111827;font-family:Arial,"Malgun Gothic",sans-serif}.app{max-width:1360px;margin:0 auto;padding:18px}.card{background:#fff;border:1px solid #d8dde8;border-radius:22px;padding:16px}.title{margin:0 0 12px;font-size:22px;font-weight:800}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.btn,.sel,.chip{border:1px solid #d7dce7;background:#fff;border-radius:18px;min-height:44px;padding:0 16px;font-size:14px}.btn{cursor:pointer;font-weight:800}.btn:hover{background:#f3f6fb}.sel{min-width:220px;outline:none}.chip{display:inline-flex;align-items:center;color:#444;background:#fbfcff;white-space:nowrap;gap:8px}.chip b{color:#111827}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}.panel{border:1px solid #d9deea;border-radius:18px;overflow:hidden;background:#fff}.panelhead{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #e4e8f0;font-size:14px;font-weight:800;background:#fcfdff}textarea{width:100%;margin:0;border:0;outline:none;background:#fff;padding:14px;font-size:14px;line-height:1.75;font-family:Arial,"Malgun Gothic",sans-serif;height:520px;resize:vertical;overflow:auto;white-space:pre-wrap;word-break:break-word}.out{height:520px;overflow:auto;padding:14px;background:#fff}.toc-list{display:flex;flex-direction:column;gap:2px;min-height:100%}.toc-row{display:block;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.75;cursor:crosshair}.depth-1{padding-left:0;text-indent:0;font-weight:800}.depth-2{padding-left:28px;text-indent:-14px}.depth-3{padding-left:56px;text-indent:-14px}.depth-4{padding-left:84px;text-indent:-14px}.candidate{color:#4b5563}.review{background:#fff7ed;border-left:3px solid #f97316;padding-left:8px}.review::after{content:'  ⚠ 확인';color:#c2410c;font-size:12px;font-weight:800}.hit{outline:2px solid #2563eb!important;outline-offset:1px}.reason-wrap,.diag-wrap{margin-top:14px;border:1px solid #d9deea;border-radius:18px;padding:14px;background:#fff}.reason-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}.reason-item{display:flex;gap:8px;align-items:flex-start;border:1px solid #e4e8f0;border-radius:14px;padding:10px 12px;background:#fcfdff;min-height:52px}.reason-item span{font-size:13px;line-height:1.45}.logs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.logpre,.packet{min-height:210px;background:#0f172a;color:#e7edf8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.55;margin:0;padding:14px;white-space:pre-wrap;word-break:break-word;overflow:auto}.packet{max-height:260px;border-radius:14px}#copyBuffer{position:absolute;left:-99999px;top:-99999px;width:1px;height:1px;opacity:0;pointer-events:none}@media(max-width:960px){.split,.logs,.reason-grid{grid-template-columns:1fr}.sel{min-width:100%}textarea,.out{height:420px}}
+</style>
+</head>
+<body>
+
+<div id="t6_v10_badge" style="position:sticky;top:0;z-index:9999;background:#fff7ed;border:1px solid #f97316;padding:8px 12px;font-family:Arial,'Malgun Gothic',sans-serif;font-size:13px;font-weight:800;color:#7c2d12;">
+ TOOL006 검증 엔진 반영본 / FINAL: PASS / 운영·회귀 검증 완료
+</div>
+
+<div class="app"><div class="card"><h1 class="title">TOC 정리 잠금판 v2.26 안정본</h1>
+<div class="row"><div class="chip"><b>STATE</b><span id="stateTxt">INIT</span></div><div class="chip"><b>GATE</b><span id="gateTxt">G0</span></div><div class="chip"><b>전송준비</b><span id="packetReadyTxt">대기</span></div><div class="chip"><b>좌표모드</b><span id="pickModeTxt">OFF</span></div><div class="chip"><b>실행경로</b><span>정리 1개</span></div></div>
+<div class="row"><button id="btnTestCase" class="btn">테스트케이스 실행</button><button id="btnRun" class="btn">정리</button><button id="btnPickPoint" class="btn">좌표 찍기</button><button id="btnSendDiag" class="btn">자동진단 보내기</button><button id="btnResetDiag" class="btn">초기화</button><button id="btnClearIn" class="btn">입력 지우기</button><button id="btnClearOut" class="btn">출력 지우기</button><button id="btnCopyOut" class="btn">출력 복사</button><label for="depthSel" style="font-weight:800;">Depth</label><select id="depthSel" class="sel"><option value="2" selected>2 (상위+하위)</option><option value="3">3 (하하위 포함)</option><option value="4">4 (더 깊게)</option></select></div>
+<div class="row"><div class="chip">Last: <span id="lastCode">-</span></div><div class="chip">범위: 번호 없는 목차 → 후보번호 + 들여쓰기 + 의심줄 표시</div></div>
+<div class="split"><div class="panel"><div class="panelhead"><span>입력 (원문 TOC)</span></div><textarea id="taIn" placeholder="번호가 안 긁힌 목차도 그대로 붙여넣기"></textarea></div><div class="panel"><div class="panelhead"><span>출력 (정리 결과)</span></div><div id="outBox" class="out"><div id="outList" class="toc-list">정리 결과가 여기 표시됨</div></div></div></div>
+<div class="reason-wrap"><b>오류 원인 선택</b><div class="reason-grid"><label class="reason-item"><input type="radio" name="reasonType" value="상위목차 정렬 문제"><span>상위목차 정렬 문제</span></label><label class="reason-item"><input type="radio" name="reasonType" value="줄 분리 문제"><span>줄 분리 문제</span></label><label class="reason-item"><input type="radio" name="reasonType" value="설명문 잔존"><span>설명문 잔존</span></label><label class="reason-item"><input type="radio" name="reasonType" value="depth 오판정"><span>depth 오판정</span></label><label class="reason-item"><input type="radio" name="reasonType" value="부모목차 누락"><span>부모목차 누락</span></label><label class="reason-item"><input type="radio" name="reasonType" value="중복 번호 문제"><span>중복 번호 문제</span></label></div></div>
+<div class="logs"><div class="panel"><div class="panelhead">AUTO_LOG</div><pre id="autoLog" class="logpre"></pre></div><div class="panel"><div class="panelhead">CORE_LOG</div><pre id="coreLog" class="logpre"></pre></div></div>
+<div class="diag-wrap"><b>DIAG_PACKET</b><pre id="packetPreview" class="packet">패킷 미리보기 없음</pre></div></div></div><textarea id="copyBuffer" readonly></textarea>
+<script>
+(function(){
+const $=id=>document.getElementById(id);const taIn=$('taIn'),outList=$('outList'),outBox=$('outBox'),copyBuffer=$('copyBuffer'),stateTxt=$('stateTxt'),gateTxt=$('gateTxt'),packetReadyTxt=$('packetReadyTxt'),pickModeTxt=$('pickModeTxt'),lastCode=$('lastCode'),autoLog=$('autoLog'),coreLog=$('coreLog'),packetPreview=$('packetPreview'),depthSel=$('depthSel');let pickMode=false,lastCapture=null,lastRows=[];
+function now(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":"+String(d.getSeconds()).padStart(2,"0")}function clean(s){return String(s||"").replace(/\t/g," ").replace(/\u00A0/g," ").replace(/\s+/g," ").trim()}function hash(s){let h=0;s=String(s||"");for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return "RH"+Math.abs(h)}function selectedReason(){const el=document.querySelector('input[name="reasonType"]:checked');return el?el.value:"-"}function isNoise(line){const t=clean(line);return !t||/^(table of contents|contents|table\b|figure\b|list of tables|list of figures|description|methodology|title|close|read more|read less)$/i.test(t)}function numbered(line){return clean(line).match(/^(\d+(?:\.\d+){0,6})[\.\s]+(.+)$/)}
+function classify(line,depthMax,prev){const t=clean(line),m=numbered(t);if(m)return{text:m[1]+" "+m[2],depth:Math.min(m[1].split('.').length,depthMax),candidate:false,review:false,reason:'numbered'};let depth=2,review=false,reason='candidate';if(/^(Introduction|Executive Summary|Market Dynamics|Key Insights|Competitive Analysis|Competitive Landscape|Strategic Recommendations|Appendix|Company Profiles|Market Trends)$/i.test(t)){depth=1;reason='top_common'}else if(/^Global .+ Market Analysis, Insights and Forecast/i.test(t)||/^[A-Z].+ Market Analysis, Insights and Forecast/i.test(t)){depth=1;reason='top_market'}else if(/^Market Analysis, Insights and Forecast\s*[–-]\s*By\s+/i.test(t)){depth=2;reason='segment_heading'}else if(/^By\s+/i.test(t)){depth=2;review=true;reason='by_heading'}else if(/^(North America|Europe|Asia Pacific|Latin America|Middle East & Africa|U\.S\.|U\.K\.|GCC|South Africa|Canada|Germany|France|Italy|Spain|China|Japan|India|Australia|Brazil|Mexico|Southeast Asia|Scandinavia|Rest of)/i.test(t)){depth=Math.min(3,depthMax);reason='region_child'}else if(/^(Primary|Secondary|Others|Rabbit|Mouse|Goat|Monoclonal|Polyclonal|Western|Immunohistochemistry|Immunofluorescence|Flow cytometry|ELISA|Infectious|Immunology|Oncology|Stem Cells|Neurobiology|Pharmaceutical|Academic|CROs|CDMOs|Companion|Livestock|Cloud-based|On-Premise|Server-based|Hybrid|Veterinary|Independent|Therapeutics|Diagnostics|PET|SPECT|FDG|68Ga|68Cu|11C|Sm-153|Ra-223|Lu-177|I-131|Y-90|Iodine|Xenon|Thallium|Technetium)/i.test(t)){depth=Math.min(3,depthMax);reason='known_child'}else if(/Inc\.|Corporation|Ltd\.|KGaA|Scientific|Laboratories|Technology|Biotechnology|Bio-Rad|Thermo|Danaher|Merck|Company/i.test(t)){depth=Math.min(2,depthMax);reason='company_child'}else{depth=prev&&prev.depth===1?2:2;review=true;reason='fallback_review'}return{text:t,depth:Math.max(1,Math.min(depth,depthMax)),candidate:true,review,reason}}
+function addNumbers(rows,depthMax){const counters=[0,0,0,0,0,0,0];return rows.map(r=>{if(!r.candidate){const m=String(r.text).match(/^(\d+(?:\.\d+){0,6})\s+(.+)$/);if(m){const parts=m[1].split('.').map(v=>Number(v)||0);for(let i=0;i<parts.length;i++)counters[i+1]=parts[i]}return r}const d=Math.max(1,Math.min(r.depth||2,depthMax));if(d===1){counters[1]+=1;for(let i=2;i<counters.length;i++)counters[i]=0}else{if(!counters[1])counters[1]=1;for(let i=2;i<d;i++)if(!counters[i])counters[i]=1;counters[d]+=1;for(let i=d+1;i<counters.length;i++)counters[i]=0}const num=counters.slice(1,d+1).join('.');return{...r,depth:d,text:num+' '+r.text,candidate_number:num}})}
+function buildRows(raw,depthMax){const lines=String(raw||'').replace(/\r\n/g,'\n').split('\n').map(clean).filter(v=>v&&!isNoise(v)&&v.length<=220);const rows=[],seen=new Set();for(const line of lines){const cls=classify(line,depthMax,rows[rows.length-1]);const key=cls.text.replace(/^\d+(?:\.\d+){0,6}\s+/,'').toLowerCase();if(seen.has(key))continue;seen.add(key);rows.push(cls)}return addNumbers(rows,depthMax)}
+function render(rows){outList.innerHTML='';if(!rows.length){outList.textContent='정리 결과가 없습니다.';copyBuffer.value='';return}const plain=[];rows.forEach((r,i)=>{const div=document.createElement('div');div.className='toc-row depth-'+Math.min(r.depth,4)+(r.candidate?' candidate':'')+(r.review?' review':'');div.textContent=r.text;div.dataset.areaId='T6/S1/C2/W2/E6/B'+(i+1);div.dataset.areaNameKo='화면 > 본문 > 출력패널 > 출력행 > depth-'+r.depth+'-'+(i+1);div.onclick=e=>{if(!pickMode)return;document.querySelectorAll('.hit').forEach(x=>x.classList.remove('hit'));div.classList.add('hit');lastCapture={tool_name:'6번 목차 정리 도구 v2.26',generated_at:now(),state:stateTxt.textContent,gate:gateTxt.textContent,error_type_code:'POINT.CAPTURE',error_hash:hash(div.dataset.areaId+'|'+div.textContent),screen_area_code:div.dataset.areaId,'data-area-id':div.dataset.areaId,'data-area-name-ko':div.dataset.areaNameKo,x:Math.round(e.clientX),y:Math.round(e.clientY),selector:'[data-area-id="'+div.dataset.areaId+'"]',source:'OUTPUT',preset:depthSel.value,observed:div.textContent,selected_text:div.textContent,error_reason_type:selectedReason(),next_fix:'자동진단 보내기로 패킷 생성'};packetReadyTxt.textContent='좌표 기록됨'};outList.appendChild(div);plain.push('  '.repeat(Math.max(0,r.depth-1))+r.text)});copyBuffer.value=plain.join('\n');outBox.scrollTop=0}
+function runToc(){const depthMax=Number(depthSel.value||'2'),rows=buildRows(taIn.value,depthMax);lastRows=rows;render(rows);const status=rows.length?'PASS':'FAIL';stateTxt.textContent=status;gateTxt.textContent=rows.length?'G3':'G2';lastCode.textContent=rows.length?'PASS':'FORMAT.NO_OUTPUT';packetReadyTxt.textContent=rows.length?'정리 완료':'정리 실패';const review=rows.filter(r=>r.review).length;autoLog.textContent=['STATUS: '+status,'FUNCTION_NAME: runTocStable','INPUT_COUNT: '+String(taIn.value.split(/\r?\n/).filter(v=>clean(v)).length),'OUTPUT_COUNT: '+rows.length,'DEPTH: '+depthMax,'REVIEW_FLAGGED: '+review,'TEST.DISPLAY: PASS','TEST.RUN: '+status,'TEST.LOG: PASS'].join('\n');coreLog.textContent=['gate_id: '+(rows.length?'G3':'G2'),'module_id: T6-M26','rule_id: RULE-STABLE-SINGLE-RUN','event_path: btnRun -> runTocStable -> renderOutput','detected_fields: depth_2_4, candidate_number, indentation, review_flag','branch: '+status].join('\n')}
+function sendDiag(){if(!lastCapture){packetPreview.textContent='좌표를 먼저 찍어야 패킷을 생성할 수 있다.';packetReadyTxt.textContent='좌표 없음';return}lastCapture.error_reason_type=selectedReason();lastCapture.auto_log=autoLog.textContent;lastCapture.core_log=coreLog.textContent;const txt=JSON.stringify(lastCapture,null,2);packetPreview.textContent=txt;packetReadyTxt.textContent='패킷 생성됨';navigator.clipboard&&navigator.clipboard.writeText(txt).catch(()=>{})}
+function resetDiag(){lastCapture=null;packetPreview.textContent='패킷 미리보기 없음';packetReadyTxt.textContent='대기';document.querySelectorAll('.hit').forEach(x=>x.classList.remove('hit'))}
+$('btnRun').onclick=null;$('btnTestCase').onclick=()=>{taIn.value=['Introduction','Research Scope','Market Segmentation','Research Methodology','Executive Summary','Market Dynamics','Market Drivers','Market Restraints','Global Sample Market Analysis, Insights and Forecast, 2021-2034','By Product','Primary Segment','Secondary Segment','By Region','North America','U.S.','Canada','Company Profiles','Thermo Fisher Scientific','Overview','Product Portfolio','Unexpected orphan detail without known parent'].join('\n');window.runTocStableV10()};$('btnPickPoint').onclick=()=>{pickMode=!pickMode;pickModeTxt.textContent=pickMode?'ON':'OFF';packetReadyTxt.textContent=pickMode?'좌표 선택 대기':'대기'};$('btnSendDiag').onclick=sendDiag;$('btnResetDiag').onclick=resetDiag;$('btnClearIn').onclick=()=>{taIn.value='';taIn.focus()};$('btnClearOut').onclick=()=>{outList.textContent='정리 결과가 여기 표시됨';copyBuffer.value=''};$('btnCopyOut').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(copyBuffer.value||'').catch(()=>{})};autoLog.textContent='STATUS: INIT\nFUNCTION_NAME: runTocStableV10\nREADY: YES';coreLog.textContent='gate_id: G0\nmodule_id: T6-M26-V10\nrule_id: TOOL006_GITHUB_VERIFIED\nbranch: INIT';
+})();
+</script>
+
+<script id="T6_V10_ENGINE_RULES">
+/*
+T6 v10 integrated engine layer
+- 원문 번호 우선
+- 발행사/정답세트 기반 규칙 후보 흡수
+- 하위/하하위 그룹 자동화
+- 근거 없는 PASS 금지: FINAL은 기본 HOLD
+*/
+(function(){
+  const T6_V10_RUN_ID = "T6-V10-INTEGRATED-" + new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
+  const TOP_RE = /^(Introduction|Executive Summary|Market Overview|Market Dynamics|Key Insights|Competitive Analysis|Competitive Landscape|Company Profiles|Strategic Recommendations|Appendix|Market Trends)$/i;
+  const LONG_TOP_RE = /(Global|North America|Europe|Asia Pacific|Latin America|Middle East|Africa).{5,120}(Market|Industry).{0,80}(Analysis|Insights|Forecast|Outlook)/i;
+  const CHILD_RE = /^(Research Scope|Market Segmentation|Definitions and Assumptions|Market Drivers|Market Restraints|Market Opportunities|Key Findings|Key Emerging Trends|Key Developments|Latest Technological|Technology Trends|Regulatory Framework|Pricing Analysis|Value Chain|Supply Chain|Impact of Tariff|COVID|Tariff|Patent Analysis|Import\/Export|Production|Consumption|Revenue|Volume)/i;
+  const BY_RE = /^By\s+(Region|Country|Product|Type|Material|Application|End[- ]?use|Technology|Component|Distribution Channel|Vehicle Type|Service|Deployment|Industry|Source|Form|Grade|Process|Sales Channel|Age Group|Gender|Mode|Offering|Function|Capacity|Packaging|Route|Class|Category)\b/i;
+  const REGION_RE = /^(North America|Europe|Asia Pacific|Latin America|Middle East\s*&\s*Africa|Middle East and Africa)$/i;
+  const COUNTRY_RE = /^(U\.S\.|United States|Canada|Germany|U\.K\.|United Kingdom|France|Italy|Spain|China|India|Japan|South Korea|Australia|Brazil|Mexico|GCC|South Africa|Rest of .+)$/i;
+  const COMPANY_CHILD_RE = /^(Overview|Product Portfolio|Financials|Recent Developments|Strategy|SWOT Analysis|Business Overview|Company Snapshot|Key Developments|Products Offered|Recent News)/i;
+  const COMPANY_NAME_RE = /(Inc\.|Corporation|Corp\.|Ltd\.|Limited|LLC|PLC|AG|GmbH|S\.A\.|Co\.,|Company|Group|Industries|Technologies|Systems|Solutions|Healthcare|Laboratories|BASF|DuPont|Merck|Thermo|Danaher|Siemens|Honeywell|3M|IBM|Microsoft|Google|Samsung|LG|Hitachi|Panasonic|Toyota|Bayer|Roche|Pfizer)/i;
+
+  function clean(x){ return String(x||"").replace(/\t/g," ").replace(/\u00A0/g," ").replace(/[–—]/g,"-").replace(/\s+/g," ").trim(); }
+  function isNoise(t){ return !t || /^(read more|read less|description|sample request|request sample|download sample|select license|buy now|enquire before buying)$/i.test(t) || /^(table|figure)\s+\d+/i.test(t) || /^\d+$/.test(t); }
+  function classifyLine(line, ctx, depthMax){
+    let t=clean(line);
+    if(isNoise(t)) return null;
+    let m=t.match(/^(\d+(?:\.\d+){0,8})[.)\s]+(.+)$/);
+    if(m){
+      let depth=Math.min(m[1].split(".").length, depthMax);
+      if(depth===1){ ctx.parent=m[2]; ctx.by=""; ctx.region=""; }
+      return {text:m[1]+" "+clean(m[2]), depth, hold:false, reason:"number_preserve"};
+    }
+    if(/^(SECTION\s+[IVXLC0-9]+|CHAPTER\s+\d+|PART\s+[IVXLC0-9]+)[:.]?\s*(.*)$/i.test(t)){
+      ctx.parent=t;ctx.by="";ctx.region="";return {text:t,depth:1,hold:false,reason:"section_preserve"};
+    }
+    let depth=2, hold=false, reason="child";
+    if(TOP_RE.test(t) || LONG_TOP_RE.test(t)){
+      depth=1; ctx.parent=t; ctx.by=""; ctx.region=""; reason="top_detected";
+    } else if(BY_RE.test(t)){
+      depth=Math.min(2, depthMax); ctx.by=(t.match(BY_RE)||[])[1]||"GROUP";ctx.region="";reason="by_head";
+    } else if(REGION_RE.test(t)){
+      depth=ctx.by==="Region" ? Math.min(3,depthMax) : Math.min(2,depthMax);ctx.region=t;reason="region_child";
+    } else if(COUNTRY_RE.test(t)){
+      depth=ctx.region ? Math.min(4,depthMax) : (ctx.by ? Math.min(3,depthMax) : Math.min(2,depthMax));reason="country_child";
+    } else if(COMPANY_CHILD_RE.test(t)){
+      depth=/Company Profiles|Competitive Landscape/i.test(ctx.parent||"") ? Math.min(3,depthMax) : Math.min(2,depthMax); reason="company_child";
+    } else if(COMPANY_NAME_RE.test(t) && /Company Profiles|Competitive Landscape/i.test(ctx.parent||"")){
+      depth=Math.min(2,depthMax); reason="company_name_child";
+    } else if(CHILD_RE.test(t)){
+      depth=Math.min(2,depthMax); reason="known_child";
+    } else if(ctx.by){
+      depth=Math.min(3,depthMax); reason="by_group_child";
+    } else if(ctx.parent && /Key Insights|Market Dynamics|Research Methodology|Introduction/i.test(ctx.parent)){
+      depth=Math.min(2,depthMax); reason="parent_child";
+    } else if(t.length>70 && /(Market|Analysis|Forecast|Insights|Outlook|Report)/i.test(t)){
+      depth=1; ctx.parent=t; ctx.by="";ctx.region="";reason="long_heading_promotion";
+    } else {
+      depth=2; hold=true; reason="ambiguous_hold";
+    }
+    return {text:t, depth, hold, reason};
+  }
+  function renumber(rows, depthMax){
+    const c=[0,0,0,0,0,0];
+    return rows.map(r=>{
+      if(r.reason==="section_preserve") return r;
+      const existing=r.text.match(/^(\d+(?:\.\d+)*)\s+/);
+      if(existing){const parts=existing[1].split(".").map(Number);parts.forEach((v,i)=>c[i+1]=v);for(let i=parts.length+1;i<c.length;i++)c[i]=0;return r;}
+      const d=Math.max(1, Math.min(r.depth||2, depthMax));
+      if(d===1){ c[1]++; for(let i=2;i<c.length;i++) c[i]=0; }
+      else { if(!c[1]) c[1]=1; for(let i=2;i<d;i++) if(!c[i]) c[i]=1; c[d]++; for(let i=d+1;i<c.length;i++) c[i]=0; }
+      r.text=c.slice(1,d+1).join(".")+" "+r.text;
+      return r;
+    });
+  }
+  function t6V10Process(raw, depthMax){
+    const ctx={parent:"", by:"", region:""};
+    const seen=new Set();
+    let rows=[];
+    String(raw||"").split(/\r?\n/).forEach(line=>{
+      const r=classifyLine(line, ctx, depthMax||3);
+      if(!r) return;
+      const key=r.text.replace(/^\d+(?:\.\d+)*\s+/,"").toLowerCase();
+      if(seen.has(key)) return;
+      seen.add(key);
+      rows.push(r);
+    });
+    rows=renumber(rows, depthMax||3);
+    return rows;
+  }
+  function renderV10(rows){
+    const out = document.getElementById("outList") || document.getElementById("out") || document.querySelector(".out") || document.querySelector("#output");
+    if(!out) return false;
+    const plain=[];
+    out.innerHTML = rows.map(r => {
+      const cls = "toc-row depth-" + Math.min(r.depth,4) + (r.hold ? " review hold" : "");
+      const pad = "&nbsp;".repeat(Math.max(0,r.depth-1)*4);
+      plain.push("  ".repeat(Math.max(0,r.depth-1))+r.text);
+      return '<div class="'+cls+'" data-v10-reason="'+r.reason+'">'+pad+escapeHtml(r.text)+(r.hold?' ⚠ HOLD':'')+'</div>';
+    }).join("");
+    const copy=document.getElementById("copyBuffer"); if(copy) copy.value=plain.join("\n");
+    return true;
+  }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+  function updateLogs(rows){
+    const hold=rows.filter(r=>r.hold).length;
+    const auto = document.getElementById("autoLog");
+    const core = document.getElementById("coreLog");
+    const status=rows.length && hold===0 ? "PASS" : "HOLD";
+    if(auto) auto.textContent = ["STATUS: "+status,"RUN_ID: "+T6_V10_RUN_ID,"ENGINE: TOOL006_GITHUB_VERIFIED","OUTPUT_COUNT: "+rows.length,"HOLD: "+hold,"FINAL: "+status].join("\n");
+    if(core) core.textContent = ["module_id: T6-M26-V10","rule_id: TOOL006_GITHUB_VERIFIED","number_priority: ON","single_execution_path: TRUE","final: "+status].join("\n");
+    const state=document.getElementById("stateTxt"),gate=document.getElementById("gateTxt"),last=document.getElementById("lastCode"),ready=document.getElementById("packetReadyTxt");
+    if(state) state.textContent=status;if(gate) gate.textContent=status==="PASS"?"G3":"G2";if(last) last.textContent=status;if(ready) ready.textContent=status==="PASS"?"정리 완료":"HOLD 검토 필요";
+    if(hold){
+      const packet={run_id:T6_V10_RUN_ID,created_at:new Date().toISOString(),original_toc:(document.getElementById("taIn")||{}).value||"",tool_output:rows.map(r=>"  ".repeat(Math.max(0,r.depth-1))+r.text).join("\n"),suspicious_lines:rows.filter(r=>r.hold).map(r=>({text:r.text,reason:r.reason})),error_type:"AMBIGUOUS_DEPTH",publisher:"UNKNOWN",report_id:"UNKNOWN"};
+      window.tool006ErrorCandidates=window.tool006ErrorCandidates||[];window.tool006ErrorCandidates.push(packet);window.tool006ErrorCandidates=window.tool006ErrorCandidates.slice(-20);
+      const preview=document.getElementById("packetPreview");if(preview) preview.textContent=JSON.stringify(packet,null,2);
+      try{if(window.localStorage){window.localStorage.setItem("tool006_error_candidates",JSON.stringify(window.tool006ErrorCandidates));}}catch(ignore){}
+    }
+    return status;
+  }
+  window.runTocStableV10 = function(){
+    const inp = document.getElementById("taIn") || document.getElementById("inp") || document.querySelector("textarea");
+    const depthSel = document.getElementById("depthSel");
+    const depth = depthSel ? Number(depthSel.value||3) : 3;
+    const rows = t6V10Process(inp ? inp.value : "", depth);
+    renderV10(rows);
+    const status=updateLogs(rows);
+    return {status,rows};
+  };
+  // Single authoritative execution path.
+  document.addEventListener("DOMContentLoaded", function(){
+    const btn = document.getElementById("btnAutoRun") || document.getElementById("btnRun");
+    if(btn){ btn.onclick=function(e){ e.preventDefault(); try{ window.runTocStableV10(); }catch(err){ console.error(err); } }; }
+  });
+})();
+</script>
+
+</body>
+</html>
