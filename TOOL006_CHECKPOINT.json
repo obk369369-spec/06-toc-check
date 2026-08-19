@@ -1,8 +1,15 @@
 {
   "tool": "TOOL006",
-  "status": "IN_PROGRESS",
-  "checkpoint": "FUNCTIONAL_E2E_WORKFLOW_PENDING",
+  "status": "PASS",
+  "checkpoint": "FUNCTIONAL_E2E_VERIFIED",
   "scope": "actual input file -> engine -> output file -> expected comparison",
+  "verified_commit": "f56a066dbf27af8a106994d1957091b27367929f",
+  "local_result": "5/5 PASS",
+  "github_actions": {
+    "push_run": 32244377815,
+    "pull_request_run": 32244380776,
+    "conclusion": "success"
+  },
   "draft_pr": 6,
   "main_merge": "HOLD",
   "data_recovery": "PARTIAL"
