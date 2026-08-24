@@ -1,7 +1,9 @@
 $ErrorActionPreference="Stop"
 $repoRoot=Split-Path $PSScriptRoot -Parent
 $fixture=Get-Content -LiteralPath (Join-Path $repoRoot 'fixtures\tool006_regression.json') -Raw -Encoding UTF8|ConvertFrom-Json
-$powershell=Join-Path $PSHOME 'powershell.exe'
+$powershellCommand=Get-Command powershell.exe,pwsh.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+if(-not $powershellCommand){throw 'No PowerShell runtime found for non-interactive engine fixture'}
+$powershell=$powershellCommand.Source
 $passed=0;$failed=0;$results=@()
 foreach($case in $fixture.cases){
     $testRoot=Join-Path ([IO.Path]::GetTempPath()) ('tool006-fixture-'+[guid]::NewGuid().ToString('N'))
