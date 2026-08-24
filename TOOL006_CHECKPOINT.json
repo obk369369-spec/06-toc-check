@@ -1,0 +1,24 @@
+{
+  "tool": "TOOL006",
+  "status": "PASS",
+  "checkpoint": "FUNCTIONAL_E2E_VERIFIED",
+  "scope": "actual input file -> engine -> output file -> expected comparison",
+  "verified_commit": "f56a066dbf27af8a106994d1957091b27367929f",
+  "local_result": "5/5 PASS",
+  "github_actions": {
+    "push_run": 32244377815,
+    "pull_request_run": 32244380776,
+    "conclusion": "success"
+  },
+  "operating_program": {
+    "status": "PASS",
+    "file": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
+    "single_execution_path": true,
+    "operational_validation": "PASS: complex hierarchy and ambiguous HOLD/error packet",
+    "regression_validation": "PASS: SECTION, existing numbers, noise removal, top preservation, complex hierarchy",
+    "validated_at": "2026-08-19"
+  },
+  "draft_pr": 6,
+  "main_merge": "HOLD",
+  "data_recovery": "PARTIAL"
+}

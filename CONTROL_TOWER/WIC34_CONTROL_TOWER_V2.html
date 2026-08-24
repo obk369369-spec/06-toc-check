@@ -1,0 +1,110 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>WIC34 CONTROL TOWER V2</title>
+<style>
+body{font-family:"Malgun Gothic",Arial,sans-serif;background:#f5f7fb;margin:30px}
+.card{background:#fff;border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 2px 10px #ddd}
+.pass{color:#078a30;font-weight:bold}
+.hold{color:#c27a00;font-weight:bold}
+.fail{color:#c00000;font-weight:bold}
+table{border-collapse:collapse;width:100%}
+td,th{border:1px solid #ddd;padding:9px;text-align:left}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h1>🚦 WIC34 CONTROL TOWER V2</h1>
+<h2>현재 작업: <span id="CURRENT_TOOL">상태 확인 중</span></h2>
+<p><b>현재시각:</b> <span id="LIVE_TIME">계산 중</span></p>
+<p><b>마지막 본체 갱신:</b> <span id="LAST_BODY_UPDATE">없음</span></p>
+<p><b>Observer 갱신:</b> <span id="OBSERVER_TIME">상태 확인 중</span></p>
+<p><b>CURRENT_ROOT:</b> <span id="CURRENT_ROOT">상태 확인 중</span></p>
+<p><b>OBSERVER_ENGINE:</b> <span id="OBSERVER_ENGINE">상태 확인 중</span></p>
+<p><b>STATUS_SYNC:</b> <span id="STATUS_SYNC">상태 확인 중</span></p>
+<p><b>TOOL_ENGINE:</b> <span id="TOOL_ENGINE">상태 확인 중</span></p>
+<p><b>FINAL_STATUS:</b> <span id="FINAL_STATUS">HOLD</span></p>
+</div>
+
+<div class="card">
+<h2>🚦 지금 어디까지 왔나요?</h2>
+<p><b>현재 위치:</b> <span id="CURRENT_STEP">상태 확인 중</span></p>
+<p><b>아주 쉬운 설명:</b> <span id="EASY_EXPLAIN">상태 확인 중</span></p>
+<p><b>진행률:</b> <span id="PROGRESS">0</span>%</p>
+<p><b>다음 작업:</b> <span id="NEXT_ACTION">상태 확인 중</span></p>
+<p><b>사용자 할 일:</b> <span id="USER_ACTION">없음</span></p>
+</div>
+
+<div class="card">
+<h2>완료된 작업</h2>
+<ul id="DONE_ITEMS"><li>상태 확인 중</li></ul>
+</div>
+
+<div class="card">
+<h2>시스템 상태</h2>
+<table>
+<tr><th>키</th><th>상태</th></tr>
+<tr><td>RECENT_EVENT</td><td id="RECENT_EVENT">상태 확인 중</td></tr>
+<tr><td>SOURCE_PACKET</td><td id="SOURCE_PACKET">상태 확인 중</td></tr>
+<tr><td>VALIDATION_REASON</td><td id="VALIDATION_REASON">상태 확인 중</td></tr>
+<tr><td>MISSING_FIELDS</td><td id="MISSING_FIELDS">상태 확인 중</td></tr>
+<tr><td>SNAPSHOT</td><td id="SNAPSHOT">상태 확인 중</td></tr>
+<tr><td>BLACK_WINDOW_BLOCK</td><td id="BLACK_WINDOW_BLOCK">상태 확인 중</td></tr>
+</table>
+</div>
+
+<script>
+function liveClock(){
+    document.getElementById("LIVE_TIME").textContent=
+        new Date().toLocaleString("ko-KR",{hour12:false});
+}
+
+function applyState(d){
+    Object.keys(d||{}).forEach(function(k){
+        if(k==="DONE_ITEMS") return;
+        const el=document.getElementById(k);
+        if(el) el.textContent=d[k];
+    });
+
+    const list=document.getElementById("DONE_ITEMS");
+    list.innerHTML="";
+    const items=Array.isArray(d.DONE_ITEMS)&&d.DONE_ITEMS.length
+        ?d.DONE_ITEMS:["완료 항목 없음"];
+
+    items.forEach(function(x){
+        const li=document.createElement("li");
+        li.textContent=x;
+        list.appendChild(li);
+    });
+
+    const fs=document.getElementById("FINAL_STATUS");
+    fs.className=
+        fs.textContent==="PASS"?"pass":
+        fs.textContent==="FAIL"?"fail":"hold";
+}
+
+function refreshState(){
+    const old=document.getElementById("state-loader");
+    if(old) old.remove();
+
+    const s=document.createElement("script");
+    s.id="state-loader";
+    s.src="tower_state.js?t="+Date.now();
+    s.onload=function(){applyState(window.WIC34_STATE||{});}
+    s.onerror=function(){
+        document.getElementById("STATUS_SYNC").textContent="FAIL";
+        document.getElementById("EASY_EXPLAIN").textContent="상태파일을 읽지 못했습니다.";
+    };
+    document.body.appendChild(s);
+}
+
+liveClock();
+refreshState();
+setInterval(liveClock,1000);
+setInterval(refreshState,5000);
+</script>
+
+</body>
+</html>

@@ -1,11 +1,33 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "publisher": "MarketsandMarkets",
   "purpose": "Preserve historically observed failure classes so user corrections become reusable regression evidence.",
   "source_notes": [
     "Historical user records show repeated upper-level recognition and indentation failures.",
     "Observed source variants include Table of Contents, Table of Contents 2, List Of Tables 2/3, List Of Figures.",
     "Observed first_fail: 05 revalidation incomplete, state TESTED, reason recheck button not passed."
+  ],
+  "functional_cases": [
+    {
+      "id": "T6-MNM-001-HIERARCHY-E2E",
+      "source_fixture": "T6-MNM-001-HIERARCHY",
+      "report_id": "historical-hierarchy-001",
+      "input": [
+        "1 INTRODUCTION",
+        "1.1 STUDY OBJECTIVES",
+        "1.2 MARKET DEFINITION",
+        "1.3 STUDY SCOPE",
+        "1.3.1 MARKETS COVERED AND REGIONAL SCOPE"
+      ],
+      "expected": [
+        "1 INTRODUCTION",
+        "  1.1 STUDY OBJECTIVES",
+        "  1.2 MARKET DEFINITION",
+        "  1.3 STUDY SCOPE",
+        "    1.3.1 MARKETS COVERED AND REGIONAL SCOPE"
+      ],
+      "expected_status": "PASS"
+    }
   ],
   "fixtures": [
     {

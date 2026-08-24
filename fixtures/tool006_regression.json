@@ -1,0 +1,59 @@
+{
+  "data_recovery": {
+    "status": "PARTIAL",
+    "actual_source_count": 1,
+    "synthetic_family_source_count": 1,
+    "notes": "One screenshot links a publisher TOC to a wrong TOOL006 output. Publisher URL and user-corrected text were not recovered. The 1500-case bundle is explicitly synthetic."
+  },
+  "cases": [
+    {
+      "id": "actual-screenshot-parent-preserve-20260506",
+      "origin": "I:/GPT 도구 작업/6번 목차 정리 도구/보관폴더/20260506_170107.jpg",
+      "source_kind": "actual_screenshot",
+      "recovery_status": "PARTIAL",
+      "publisher": "Fortune/FBI-pattern candidate",
+      "report_id": "unknown-market-report-150-pages",
+      "structures": ["unnumbered_input", "parent_context", "key_insights"],
+      "input": ["Introduction", "Research Scope", "Market Segmentation", "Research Methodology", "Definitions and Assumptions", "Executive Summary", "Market Dynamics", "Market Drivers", "Market Restraints", "Market Opportunities", "Key Insights", "Key Emerging Trends - For Major Regions", "Key Developments: Mergers, Acquisitions, Partnerships, and Others", "Latest Technological Advancements", "Insights on Sustainability"],
+      "historical_wrong_output": ["1 Introduction", "2 Research Scope", "3 Market Segmentation", "4 Research Methodology", "4.1 Definitions and Assumptions", "5 Executive Summary", "6 Market Dynamics", "7 Market Drivers", "8 Market Restraints", "9 Market Opportunities", "10 Key Insights", "10.1 Key Emerging Trends - For Major Regions"],
+      "expected": ["1 Introduction", "  1.1 Research Scope", "  1.2 Market Segmentation", "  1.3 Research Methodology", "  1.4 Definitions and Assumptions", "2 Executive Summary", "3 Market Dynamics", "  3.1 Market Drivers", "  3.2 Market Restraints", "  3.3 Market Opportunities", "4 Key Insights", "  4.1 Key Emerging Trends - For Major Regions", "  4.2 Key Developments: Mergers, Acquisitions, Partnerships, and Others", "  4.3 Latest Technological Advancements", "  4.4 Insights on Sustainability"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "synthetic-complex-by-region-company",
+      "origin": "synthetic_pattern_from_T6-SIM1500-EVIDENCE-20260508011213",
+      "source_kind": "synthetic_representative",
+      "recovery_status": "PARTIAL",
+      "publisher": "mixed-publisher-pattern",
+      "report_id": "fixture-complex-001",
+      "structures": ["long_top", "by_product", "by_application", "by_region", "country", "company_profiles", "company_detail"],
+      "input": ["Global Sample Market Analysis, Insights and Forecast, 2021-2034", "By Product", "Primary Segment", "Secondary Segment", "By Application", "Diagnostics", "Therapeutics", "By Region", "North America", "U.S.", "Canada", "Europe", "Germany", "Company Profiles", "Thermo Fisher Scientific", "Overview", "Product Portfolio", "Recent Developments"],
+      "expected": ["1 Global Sample Market Analysis, Insights and Forecast, 2021-2034", "  1.1 By Product", "    1.1.1 Primary Segment", "    1.1.2 Secondary Segment", "  1.2 By Application", "    1.2.1 Diagnostics", "    1.2.2 Therapeutics", "  1.3 By Region", "    1.3.1 North America", "      1.3.1.1 U.S.", "      1.3.1.2 Canada", "    1.3.2 Europe", "      1.3.2.1 Germany", "2 Company Profiles", "  2.1 Thermo Fisher Scientific", "    2.1.1 Overview", "    2.1.2 Product Portfolio", "    2.1.3 Recent Developments"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "synthetic-numbered-section-noise",
+      "origin": "derived_from_simple_html_and_synthetic_error_families",
+      "source_kind": "synthetic_representative",
+      "recovery_status": "PARTIAL",
+      "publisher": "section-publisher-pattern",
+      "report_id": "fixture-section-001",
+      "structures": ["section", "existing_numbers", "table_figure_noise"],
+      "input": ["SECTION I: INTRODUCTION", "1 Introduction", "1.1 Research Scope", "Table 1 Market Size", "Figure 2 Growth", "1.2 Market Segmentation", "2 Executive Summary"],
+      "expected": ["SECTION I: INTRODUCTION", "1 Introduction", "  1.1 Research Scope", "  1.2 Market Segmentation", "2 Executive Summary"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "synthetic-ambiguous-hold",
+      "origin": "complex_html_ambiguous_hold_rule",
+      "source_kind": "synthetic_representative",
+      "recovery_status": "PARTIAL",
+      "publisher": "unknown",
+      "report_id": "fixture-hold-001",
+      "structures": ["ambiguous_line", "hold"],
+      "input": ["Executive Summary", "Unexpected orphan detail without known parent"],
+      "expected": ["1 Executive Summary", "  1.1 Unexpected orphan detail without known parent"],
+      "expected_status": "HOLD"
+    }
+  ]
+}
