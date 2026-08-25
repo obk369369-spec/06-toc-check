@@ -20,8 +20,10 @@ $corrected=New-Object Windows.Forms.TextBox;$corrected.Multiline=$true;$correcte
 $status=New-Object Windows.Forms.Label;$status.Text='READY';$status.SetBounds(960,25,240,30)
 $leftLabel=New-Object Windows.Forms.Label;$leftLabel.Text='Original TOC';$leftLabel.SetBounds(20,70,200,20)
 $rightLabel=New-Object Windows.Forms.Label;$rightLabel.Text='Organized output (orange = review)';$rightLabel.SetBounds(620,70,300,20)
+$inputTop=New-Object Windows.Forms.Button;$inputTop.Name='inputTopButton';$inputTop.Text='위로가기';$inputTop.SetBounds(490,60,100,28)
+$outputTop=New-Object Windows.Forms.Button;$outputTop.Name='outputTopButton';$outputTop.Text='위로가기';$outputTop.SetBounds(1100,60,100,28)
 $fixLabel=New-Object Windows.Forms.Label;$fixLabel.Text='User-corrected output (optional; saved as next fixture candidate)';$fixLabel.SetBounds(20,660,500,20)
-$form.Controls.AddRange(@($inputBox,$output,$run,$clear,$copy,$publisher,$report,$errorType,$corrected,$status,$leftLabel,$rightLabel,$fixLabel))
+$form.Controls.AddRange(@($inputBox,$output,$run,$clear,$copy,$publisher,$report,$errorType,$corrected,$status,$leftLabel,$rightLabel,$inputTop,$outputTop,$fixLabel))
 
 $executeEngine={
     try{
@@ -44,8 +46,16 @@ $executeEngine={
 $run.Add_Click($executeEngine)
 $clear.Add_Click({$inputBox.Clear();$output.Clear();$corrected.Clear();$status.Text='READY'})
 $copy.Add_Click({if($output.Text){[Windows.Forms.Clipboard]::SetText($output.Text);$status.Text='OUTPUT COPIED'}})
+$scrollInputTop={$inputBox.Select(0,0);$inputBox.ScrollToCaret()}
+$scrollOutputTop={$output.Select(0,0);$output.ScrollToCaret()}
+$inputTop.Add_Click($scrollInputTop)
+$outputTop.Add_Click($scrollOutputTop)
 
-if($SelfTest){[pscustomobject]@{status='PASS';engine=$engine;control_count=$form.Controls.Count;decision_engine_count=1}|ConvertTo-Json;return}
+if($SelfTest){
+    $inputBox.Text=(1..100|ForEach-Object{"input $_"})-join "`r`n";$inputBox.Select($inputBox.TextLength,0);&$scrollInputTop
+    $output.Text=(1..100|ForEach-Object{"output $_"})-join "`r`n";$output.Select($output.TextLength,0);&$scrollOutputTop
+    [pscustomobject]@{status='PASS';engine=$engine;control_count=$form.Controls.Count;decision_engine_count=1;input_top_button=($inputTop.Name-eq'inputTopButton');output_top_button=($outputTop.Name-eq'outputTopButton');input_selection_start=$inputBox.SelectionStart;output_selection_start=$output.SelectionStart}|ConvertTo-Json;return
+}
 if($E2EInput){
     $inputBox.Text=$E2EInput
     &$executeEngine

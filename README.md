@@ -16,10 +16,12 @@
 
 - 실제 원자료: `20260506_170107.jpg` 1건(원문과 과거 오출력 연결, 발행사 URL/사용자 정답 원문은 미복구)
 - 합성 보조자료: `T6-SIM1500-EVIDENCE-20260508011213` 오류유형 패턴
-- 상태: `PARTIAL`
+- 상태: `EXTERNAL_EVIDENCE_REQUIRED` — 확인된 실제 자료만으로는 발행사별 golden pair와 투입 횟수 기준을 확정할 수 없음
 - 구조화 fixture: `fixtures/tool006_regression.json`
 
 합성 1500건 PASS는 실제 발행사 전체 PASS 근거로 사용하지 않습니다.
+
+입력·출력 패널에는 각각 독립적인 `위로가기` 버튼이 있으며 각 영역 자체의 scroll/caret을 최상단으로 이동합니다.
 
 ## 실행 예시
 

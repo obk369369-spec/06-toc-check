@@ -20,5 +20,10 @@
   },
   "draft_pr": 6,
   "main_merge": "HOLD",
-  "data_recovery": "PARTIAL"
+    "data_recovery": "EXTERNAL_EVIDENCE_REQUIRED",
+    "publisher_scope": "EXTERNAL_EVIDENCE_REQUIRED",
+    "insertion_timing_scope": "EXTERNAL_EVIDENCE_REQUIRED",
+    "input_top_button": "PASS",
+    "output_top_button": "PASS",
+    "internal_deferred": 0
 }

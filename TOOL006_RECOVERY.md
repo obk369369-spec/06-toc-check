@@ -44,4 +44,4 @@ The internal UI adapter contains no TOC decision rules. It calls the one engine 
 
 `TOOL006 DATA RECOVERY = PARTIAL`
 
-Remaining HOLD items are confirmed publisher identity, complete user-authored corrected outputs for historical failures, and additional real-publisher complex fixtures. Synthetic simulation results must not be used to claim global TOOL006 PASS.
+EXTERNAL_EVIDENCE_REQUIRED items are confirmed publisher identity, complete user-authored corrected outputs for historical failures, publisher-specific insertion timing/count, and additional real-publisher complex fixtures. No internally executable work remains for these evidence-dependent items. Synthetic simulation results must not be used to claim global TOOL006 PASS.
