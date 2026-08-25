@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "active_profiles": [],
+  "candidate_publishers": ["MarketsandMarkets","Fortune/FBI-pattern candidate","ResearchReportsWorld","Precision","BusinessGrowth"],
+  "status": "HOLD_EVIDENCE",
+  "reason": "No complete publisher identity + raw TOC + wrong output + user-approved corrected output pair is available. Common engine only is active."
+}

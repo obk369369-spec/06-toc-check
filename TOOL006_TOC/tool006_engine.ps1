@@ -43,7 +43,13 @@ function Write-ToolState {
 
 function Clean-Line([string]$value) { return (($value -replace "`t"," " -replace [char]0xA0," " -replace ([char]0x2013),'-' -replace ([char]0x2014),'-' -replace '\s+',' ').Trim()) }
 function Test-Noise([string]$text) {
-    return $text -match '^(table of contents|contents|list of tables|list of figures|read more|read less|description|sample request|request sample|download sample|select license|buy now|enquire before buying)$' -or $text -match '^(table|figure|appendix table|appendix figure)\s+\d+' -or $text -match '^Page\s+No\.?\s*[-:]?\s*\d+$'
+    return $text -match '^\(?\s*(table of contents|contents|list\s+of\s+(tables|figures))(?:\s*[-:./]?\s*\d+)?\s*\)?$' -or
+        $text -match '^(table|figure|appendix table|appendix figure)\s+\d+' -or
+        $text -match '^Page\s+No\.?\s*[-:]?\s*\d+$' -or
+        $text -match '^\d+$' -or
+        $text -match '^\*+' -or
+        $text -match '^\([^)]{3,}\)$' -or
+        $text -match '^(read more|read less|description|sample request|request sample|download sample|select license|buy now|enquire before buying)$'
 }
 function New-ItemRecord([string]$text,[int]$depth,[string]$number,[bool]$hold,[string]$reason) { return [pscustomobject]@{Text=$text;Depth=$depth;Number=$number;Hold=$hold;Reason=$reason;Generated=[string]::IsNullOrWhiteSpace($number)} }
 
@@ -74,6 +80,7 @@ function Apply-Numbers([object[]]$items) {
     $counter=@(0,0,0,0,0,0,0,0,0)
     foreach($item in $items) {
         if ($item.Reason -eq 'section_preserve') { continue }
+        if ($item.Hold) { $item.Number=''; continue }
         if ($item.Number) { $parts=@($item.Number.Split('.')|ForEach-Object{[int]$_});for($i=0;$i -lt $parts.Count;$i++){$counter[$i+1]=$parts[$i]};for($i=$parts.Count+1;$i -lt $counter.Count;$i++){$counter[$i]=0};continue }
         $depth=[Math]::Max(1,[Math]::Min([int]$item.Depth,8))
         if($depth -eq 1){$counter[1]++;for($i=2;$i -lt $counter.Count;$i++){$counter[$i]=0}}
@@ -93,7 +100,7 @@ try {
     foreach($line in $lines){$item=Classify-Line $line $context;$key=($item.Text -replace '^\d+(?:\.\d+)*\s+','').ToLowerInvariant();if($seen.ContainsKey($key)){continue};$seen[$key]=$true;$items.Add($item)}
     $numbered=@(Apply-Numbers @($items))
     Write-ToolState "RUNNING" "HOLD" 70 "ORGANIZE_HIERARCHY" "Preserved numbers and classified candidate depth and review lines." "VALIDATE_RESULT"
-    $output=@($numbered|ForEach-Object{(('  '*([Math]::Max(0,$_.Depth-1)))+$(if($_.Reason -eq 'section_preserve'){$_.Text}else{$_.Number+' '+$_.Text}))})
+    $output=@($numbered|Where-Object{-not $_.Hold}|ForEach-Object{(('  '*([Math]::Max(0,$_.Depth-1)))+$(if($_.Reason -eq 'section_preserve'){$_.Text}else{$_.Number+' '+$_.Text}))})
     $holds=@($numbered|Where-Object{$_.Hold});$status=if($output.Count -gt 0 -and $holds.Count -eq 0){"PASS"}else{"HOLD"}
     $output|Set-Content -LiteralPath $OutputPath -Encoding UTF8
     Write-ToolState $(if($status -eq 'PASS'){'COMPLETED'}else{'REVIEW_REQUIRED'}) $status 100 "TOC_COMPLETE" $(if($status -eq 'PASS'){'Output created with no suspicious lines.'}else{"Output created; $($holds.Count) suspicious line(s) require review."}) "SYNC_OBSERVER"

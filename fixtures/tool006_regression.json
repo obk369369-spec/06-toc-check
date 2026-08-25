@@ -52,7 +52,7 @@
       "report_id": "fixture-hold-001",
       "structures": ["ambiguous_line", "hold"],
       "input": ["Executive Summary", "Unexpected orphan detail without known parent"],
-      "expected": ["1 Executive Summary", "  1.1 Unexpected orphan detail without known parent"],
+      "expected": ["1 Executive Summary"],
       "expected_status": "HOLD"
     }
   ]

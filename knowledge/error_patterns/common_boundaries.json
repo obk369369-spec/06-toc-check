@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "engine_order": ["noise", "heading", "hierarchy_depth", "numbering", "hold", "final_output"],
+  "fail_closed": {"ambiguous_line":"HOLD_WITHOUT_NUMBER","include_in_customer_output":false},
+  "root_types": ["T6-RC-01","T6-RC-02","T6-RC-03","T6-RC-04"]
+}

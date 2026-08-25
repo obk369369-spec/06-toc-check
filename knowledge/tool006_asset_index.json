@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lookup_order": ["error_patterns", "publisher_profiles", "regression_fixtures", "golden_pairs"],
+  "common_engine": "TOOL006_TOC/tool006_engine.ps1",
+  "assets": [
+    {"publisher":"COMMON","root_type":"T6-RC-01","rule":"preserve numeric hierarchy and depth indentation","source":"actual user feedback 2026-08-25","fixture":"tests/tool006_chronic_error_fixtures.json#T6-RC-01-HIERARCHY-INDENT","golden_pair":false,"validation_status":"ACTIVE_VERIFIED","last_verified_revision":"PENDING_COMMIT"},
+    {"publisher":"COMMON","root_type":"T6-RC-02","rule":"parenthetical explanatory-only lines are noise, not headings","source":"actual user feedback 2026-08-25","fixture":"tests/tool006_chronic_error_fixtures.json#T6-RC-02-PARENTHESIS-NOTE","golden_pair":false,"validation_status":"ACTIVE_VERIFIED","last_verified_revision":"PENDING_COMMIT"},
+    {"publisher":"COMMON","root_type":"T6-RC-03","rule":"asterisk footnotes are noise, not headings","source":"actual user feedback 2026-08-25","fixture":"tests/tool006_chronic_error_fixtures.json#T6-RC-03-ASTERISK-FOOTNOTE","golden_pair":false,"validation_status":"ACTIVE_VERIFIED","last_verified_revision":"PENDING_COMMIT"},
+    {"publisher":"COMMON","root_type":"T6-RC-04","rule":"List of Tables/Figures variants are noise and ambiguous appendix text is HOLD without numbering","source":"actual user feedback 2026-08-25","fixture":"tests/tool006_chronic_error_fixtures.json#T6-RC-04-TABLE-FIGURE-APPENDIX","golden_pair":false,"validation_status":"ACTIVE_VERIFIED","last_verified_revision":"PENDING_COMMIT"}
+  ]
+}

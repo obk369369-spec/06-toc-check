@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "scope": "TOOL006_ONLY_SELECTIVE_MIGRATION",
+  "sources": [
+    {"source":"fixtures/tool006_regression.json","classification":"SKIP_REUSE","reason":"already inside verified GitHub repository"},
+    {"source":"tests/marketsandmarkets_historical_fixtures.json","classification":"SKIP_REUSE","reason":"already inside verified GitHub repository"},
+    {"source":"TOOL006_RECOVERY.md publisher names","classification":"HOLD_EVIDENCE","reason":"publisher-specific ground truth incomplete"},
+    {"source":"historical 1500-case simulation","classification":"RETIRED_CANDIDATE","reason":"metadata identifies it as synthetic simulation"},
+    {"source":"actual user feedback 2026-08-25 T6-RC-01..04","classification":"ACTIVE_VERIFIED","reason":"direct current evidence with executable engine fixtures"}
+  ],
+  "external_full_rescan_required": false
+}

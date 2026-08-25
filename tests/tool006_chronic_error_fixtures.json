@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "source": "actual user feedback 2026-08-25",
+  "cases": [
+    {
+      "id": "T6-RC-01-HIERARCHY-INDENT",
+      "publisher": "COMMON",
+      "report_id": "rc01",
+      "input": ["1 Market Overview", "1.1 Market Dynamics", "1.1.1 Market Drivers"],
+      "expected": ["1 Market Overview", "  1.1 Market Dynamics", "    1.1.1 Market Drivers"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "T6-RC-02-PARENTHESIS-NOTE",
+      "publisher": "COMMON",
+      "report_id": "rc02",
+      "input": ["Market Overview", "(This section explains the study assumptions)"],
+      "expected": ["1 Market Overview"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "T6-RC-03-ASTERISK-FOOTNOTE",
+      "publisher": "COMMON",
+      "report_id": "rc03",
+      "input": ["Executive Summary", "** Values are preliminary and subject to revision"],
+      "expected": ["1 Executive Summary"],
+      "expected_status": "PASS"
+    },
+    {
+      "id": "T6-RC-04-TABLE-FIGURE-APPENDIX",
+      "publisher": "COMMON",
+      "report_id": "rc04",
+      "input": ["Appendix", "List Of Tables 2", "List of Figures", "Unexpected appendix explanation"],
+      "expected": ["1 Appendix"],
+      "expected_status": "HOLD"
+    }
+  ]
+}
