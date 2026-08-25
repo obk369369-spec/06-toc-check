@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "pipeline_id": "cd9b9ebb44c1938a9f7a",
+  "target": "TOOL006",
+  "source_ref": "CURRENT_CHAT#20260825-actual-transport-tool006",
+  "root_cause_id": "GLOBAL-PIPELINE-ACTUAL-TRANSPORT",
+  "adapter": "REPOSITORY_DIFF_ONLY",
+  "pre_apply_commit": "64bf3acf17709b351059c34ce46992866b53ee79",
+  "mutation_scope": "PIPELINE_EVIDENCE_ONLY",
+  "customer_data_mutated": false
+}
