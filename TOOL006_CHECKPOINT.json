@@ -1,29 +1,61 @@
 {
   "tool": "TOOL006",
-  "status": "PASS",
-  "checkpoint": "FUNCTIONAL_E2E_VERIFIED",
-  "scope": "actual input file -> engine -> output file -> expected comparison",
-  "verified_commit": "f56a066dbf27af8a106994d1957091b27367929f",
-  "local_result": "5/5 PASS",
-  "github_actions": {
-    "push_run": 32244377815,
-    "pull_request_run": 32244380776,
-    "conclusion": "success"
+  "status": "IN_PROGRESS",
+  "checkpoint": "SELF_IMPROVEMENT_GATE_VERIFIED_RUNTIME_LINK_PENDING",
+  "scope": "existing verified assets reused; verified-root gate added; automatic operating-engine invocation remains pending",
+  "verified_commit": "c177b82b288242bbcbe28e77ec6b876986df72ee",
+  "first_validation": {
+    "run": 33250754262,
+    "conclusion": "success",
+    "repeat_validation": false
   },
+  "skip_reuse": [
+    "SELF_ANALYZE",
+    "ERROR_CLASSIFY",
+    "HISTORICAL_REGRESSION",
+    "PASS_ONLY_PROMOTION",
+    "REPEAT_FAIL_NEGATIVE_TEST",
+    "NO_VALUE_REPEAT_BLOCK",
+    "UNVERIFIED_ROOT_BLOCK",
+    "existing smoke",
+    "existing functional E2E"
+  ],
   "operating_program": {
     "status": "PASS",
     "file": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
     "single_execution_path": true,
-    "operational_validation": "PASS: complex hierarchy and ambiguous HOLD/error packet",
-    "regression_validation": "PASS: SECTION, existing numbers, noise removal, top preservation, complex hierarchy",
-    "validated_at": "2026-08-19"
+    "usb_git_blob": "392600b921911c757fe13c902cba88f789993c1b",
+    "github_git_blob": "392600b921911c757fe13c902cba88f789993c1b",
+    "canonical_classification": "CANONICAL_NORMAL",
+    "archive_status": "REMOTE_VERIFIED"
   },
-  "draft_pr": 6,
-  "main_merge": "HOLD",
-    "data_recovery": "EXTERNAL_EVIDENCE_REQUIRED",
-    "publisher_scope": "EXTERNAL_EVIDENCE_REQUIRED",
-    "insertion_timing_scope": "EXTERNAL_EVIDENCE_REQUIRED",
-    "input_top_button": "PASS",
-    "output_top_button": "PASS",
-    "internal_deferred": 0
+  "usb_incremental_canonicalization": {
+    "legacy_html": "SHELL_OR_STALE_NOT_PROMOTED",
+    "sim1500_scope": "SYNTHETIC_REGRESSION_ONLY_NOT_REAL_PUBLISHER_COMPLETE",
+    "unverified_large_manifest_and_logs": "HOLD_UNKNOWN",
+    "usb_delete_ready": false,
+    "usb_deleted": false
+  },
+  "self_improvement": {
+    "gate": "TOOL006_TOC/tool006_self_improvement_gate.py",
+    "gate_validation": "PASS",
+    "runtime_auto_invocation": "NOT_CONNECTED",
+    "overall_completion": "NOT_COMPLETE",
+    "deployment_judgment": "LIMITED_REAL_USE"
+  },
+  "user_action_contract": {
+    "normal_user_action_max": 1,
+    "error_recovery_additional_action_max": 1,
+    "repeated_clicks_forbidden": true,
+    "one_failed_improvement_result": "HOLD_WITH_REASON",
+    "simple_toc_pass_does_not_complete_tool": true
+  },
+  "pending_safe_archive": {
+    "status": "WAIT_WRITE_APPROVAL",
+    "not_promoted": true,
+    "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
+  },
+  "next_start": "기존 검증 자산 재사용 → 복잡 목차 취약점을 대상으로 자가분석·자가개선 최소 확장 1회 → 정상 1클릭 / 오류 시 추가 1클릭 구조 → 변경범위 FIRST_VALIDATION 1회 → 실패 시 반복하지 않고 원인 보고",
+  "next_work_first_task": "Connect the verified self-improvement gate to the existing operating path without changing the verified engine, then run one changed-scope validation.",
+  "current_working_state_runnable": true
 }
