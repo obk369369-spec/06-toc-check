@@ -3,7 +3,7 @@ name: TOOL006 functional E2E
 on:
   workflow_dispatch:
   push:
-    branches: [agent/tool006-active-baseline]
+    branches: [main, agent/tool006-active-baseline]
     paths:
       - 'TOOL006_TOC/**'
       - 'fixtures/**'
@@ -22,6 +22,15 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Run actual input to expected output regression
+      - uses: actions/setup-python@v5
+        if: github.ref == 'refs/heads/main'
+        with:
+          python-version: '3.12'
+      - name: Run unchanged actual input to expected output regression
+        if: github.ref != 'refs/heads/main'
         shell: pwsh
         run: ./tests/tool006_functional_e2e.ps1
+      - name: FIRST_VALIDATION verified-root self-improvement gate
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: python ./tests/tool006_self_improvement_first_validation.py
