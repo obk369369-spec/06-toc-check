@@ -54,6 +54,23 @@
       "unverified_runtime_change_promoted": false,
       "same_condition_retry": "FORBIDDEN",
       "next_design_direction": "Define one shared anomaly-result contract consumed by both the operating engine and the verified gate before reconnecting the one-action recovery path"
+    },
+    "anomaly_contract_attempt": {
+      "status": "HOLD_FOR_REDESIGN",
+      "implementation_attempts": 1,
+      "first_validation": "FAIL",
+      "passed_within_run": [
+        "known verified noise changed the normal-run decision from PASS to HOLD",
+        "known verified roots were safely removed",
+        "internal recheck returned PASS",
+        "unknown root remained HOLD"
+      ],
+      "failed_assertion": "a second recovery click after successful correction returned NO_ANOMALY_TO_IMPROVE instead of REPEATED_AUTO_REPAIR_FORBIDDEN",
+      "safety_judgment": "SAFE_HOLD_BUT_CONTRACT_MISMATCH",
+      "product_change_promoted": false,
+      "operating_html_restored_blob": "392600b921911c757fe13c902cba88f789993c1b",
+      "same_condition_retry": "FORBIDDEN",
+      "structural_root": "recovery attempt identity is keyed to mutable corrected input instead of the immutable original run identity"
     }
   },
   "user_action_contract": {
@@ -68,7 +85,7 @@
     "not_promoted": true,
     "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
   },
-  "next_start": "TOOL006 operating engine과 verified self-improvement gate가 동일한 PASS/HOLD anomaly contract를 사용하도록 단일 계약을 먼저 설계한 뒤 runtime 연결을 다시 판단",
-  "next_work_first_task": "Unify the operating-engine anomaly result with the verified gate input contract; do not add another UI wrapper before that contract exists.",
+  "next_start": "TOOL006 재설계 시 immutable original_run_id 기준으로 normal run과 recovery 1회를 묶는 anomaly transaction contract부터 정의; 현재 HTML wrapper 방식은 반복하지 않음",
+  "next_work_first_task": "Design an immutable run/recovery transaction identity shared by the operating engine and verified gate before another implementation attempt.",
   "current_working_state_runnable": true
 }
