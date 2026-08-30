@@ -39,9 +39,22 @@
   "self_improvement": {
     "gate": "TOOL006_TOC/tool006_self_improvement_gate.py",
     "gate_validation": "PASS",
-    "runtime_auto_invocation": "NOT_CONNECTED",
+    "runtime_auto_invocation": "HOLD_FOR_REDESIGN",
     "overall_completion": "NOT_COMPLETE",
-    "deployment_judgment": "LIMITED_REAL_USE"
+    "deployment_judgment": "LIMITED_REAL_USE",
+    "runtime_link_attempt": {
+      "status": "HOLD_FOR_REDESIGN",
+      "implementation_attempts": 1,
+      "product_first_validation": "FAIL",
+      "expected": "known verified noise is detected after the normal run, then one self-improvement action safely corrects and rechecks it",
+      "actual": "the existing operating engine returned PASS for the known-noise input, so the recovery gate received NO_ERROR_DETECTED and ended HOLD",
+      "failure_location": "operating runtime anomaly detection -> self-improvement handoff",
+      "root_cause": "the verified Python gate and the browser operating engine do not share one anomaly contract; runtime PASS/HOLD semantics differ",
+      "existing_structure_preserved": true,
+      "unverified_runtime_change_promoted": false,
+      "same_condition_retry": "FORBIDDEN",
+      "next_design_direction": "Define one shared anomaly-result contract consumed by both the operating engine and the verified gate before reconnecting the one-action recovery path"
+    }
   },
   "user_action_contract": {
     "normal_user_action_max": 1,
@@ -51,11 +64,11 @@
     "simple_toc_pass_does_not_complete_tool": true
   },
   "pending_safe_archive": {
-    "status": "WAIT_WRITE_APPROVAL",
+    "status": "NO_PRODUCT_CHANGE_TO_PROMOTE",
     "not_promoted": true,
     "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
   },
-  "next_start": "기존 검증 자산 재사용 → 복잡 목차 취약점을 대상으로 자가분석·자가개선 최소 확장 1회 → 정상 1클릭 / 오류 시 추가 1클릭 구조 → 변경범위 FIRST_VALIDATION 1회 → 실패 시 반복하지 않고 원인 보고",
-  "next_work_first_task": "Connect the verified self-improvement gate to the existing operating path without changing the verified engine, then run one changed-scope validation.",
+  "next_start": "TOOL006 operating engine과 verified self-improvement gate가 동일한 PASS/HOLD anomaly contract를 사용하도록 단일 계약을 먼저 설계한 뒤 runtime 연결을 다시 판단",
+  "next_work_first_task": "Unify the operating-engine anomaly result with the verified gate input contract; do not add another UI wrapper before that contract exists.",
   "current_working_state_runnable": true
 }
