@@ -44,3 +44,15 @@ assert r4["promotion_allowed"] is False
 assert r4["user_repeated_testing_required"] is False
 
 print("PASS: verified roots autocorrect; unknown type remains HOLD")
+
+# Same contract and immutable original identity: a successful correction must
+# not grant a new recovery attempt when the corrected text is displayed.
+tx = {"original_run_id": "actual-run-transaction-1", "original_input": hierarchy["input"], "recovery_attempts": 0}
+payload = {"transaction": tx, "original_run_id": tx["original_run_id"], "original_input": hierarchy["input"], "engine_output": hierarchy["input"]}
+assert evaluate(payload)["status"] == "PASS"
+assert tx["recovery_attempts"] == 1
+assert evaluate(payload)["reason"] == "REPEATED_AUTO_REPAIR_FORBIDDEN"
+assert evaluate({**payload, "original_run_id": "different"})["reason"] == "ORIGINAL_RUN_ID_MISMATCH"
+mixed_input = {"original_input": ["1 Overview", "Research Scope"], "engine_output": ["1 Overview", "  1.1 Research Scope"]}
+assert evaluate(mixed_input)["corrected_output"] == mixed_input["engine_output"]
+print("PASS: shared immutable transaction; repeat blocked; mixed source not truncated")

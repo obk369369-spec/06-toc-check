@@ -1,8 +1,8 @@
 # TOOL006 MASTER — 6번 목차 정리 도구
 
 상태: ACTIVE / TOOL-SPECIFIC SINGLE SOURCE
-현재 개발상태: HOLD_FOR_REDESIGN / LIMITED_REAL_USE
-기준일: 2026-08-30
+현재 개발상태: IMMUTABLE_TRANSACTION_VALIDATED / LIMITED_REAL_USE
+기준일: 2026-08-31
 
 이 문서는 6번 도구 고유 운영규칙을 보관한다. 현재 실제 상태는 `TOOL006_CHECKPOINT.json`과 `TOOL006_RECOVERY.md`를 함께 읽고 판단한다. WIC 공통 운영규칙은 중앙 글로벌 원본을 우선하며 공통 규칙을 중복 복제하지 않는다.
 
@@ -57,10 +57,13 @@
 - 현재 정상 범위는 제한적 실제 사용으로 유지하고, 복잡·다양한 목차까지 전체 자동화가 완료됐다고 주장하지 않는다.
 
 ## 9. 현재 HOLD root
-- 최근 자가복구 transaction 검증에서 `원본 실행을 끝까지 고정하는 immutable original_run_id` 계약이 부족한 것이 구조적 원인으로 확인된 상태다.
-- 동일 문제를 또 패치하지 않는다.
-- 재개점은 `immutable original_run_id / original transaction identity` 구조가 검증된 재사용 컴포넌트로 생기거나 사용자가 6번을 명시적으로 우선순위로 올렸을 때다.
-- 그 전에는 현재 canonical 안정판을 보존한다.
+- `immutable original_run_id`와 원문은 실행 시작 시 고정한다. 정상 실행/복구/재검사는 같은 transaction을 사용하며 보정문으로 ID를 다시 만들지 않는다.
+- 동일 원문·Depth의 정리 재클릭은 기존 transaction을 재사용한다. 복구 시도는 결과가 HOLD여도 1회로 소진되고 두 번째 시도는 `REPEATED_AUTO_REPAIR_FORBIDDEN`이다.
+- 공유 anomaly contract는 portable HTML 안의 `T6_ANOMALY_CONTRACT` 하나이며 Python gate도 이를 읽는다. 브라우저는 Python을 직접 실행하지 않는다.
+- 원문 행 위치를 보존하며 다른 절의 동일 제목을 삭제하지 않는다. 원문 번호의 실제 depth는 선택된 Depth 때문에 축소하지 않는다.
+- 출력 전 원문 행 대응·순서·번호·제목·깊이를 검증하고, 복사 직전 화면/복사문/원문 일치를 다시 확인한다. 실패 시 화면·로그·packet을 HOLD로 맞추고 복사를 차단한다.
+- 근거: `tests/tool006_anomaly_transaction_evidence.json`. 실제 스크린샷 회수 입력 15행의 화면/클립보드 일치와 복구·차단 검증. 발행사별 완전한 원본/사용자 확정 golden pair는 여전히 HOLD다.
+- 범위는 현재 페이지의 실행 transaction이다. 페이지 종료 후 transaction 자동복원과 다른 USB launcher의 배포 완료는 이번 PASS에 포함하지 않는다.
 
 ## 10. 2026-08-30 대화기록 catch-up
 - 제공된 6번 과거 기록에서 `새 최소 틀`, 자동/수동 전환, 오류위치 분류, 반복 차단, 안정판 보존의 지속 규칙을 현재 상태와 충돌하지 않게 통합했다.

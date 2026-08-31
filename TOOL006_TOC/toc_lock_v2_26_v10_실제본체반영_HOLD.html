@@ -11,7 +11,7 @@
 <body>
 
 <div id="t6_v10_badge" style="position:sticky;top:0;z-index:9999;background:#fff7ed;border:1px solid #f97316;padding:8px 12px;font-family:Arial,'Malgun Gothic',sans-serif;font-size:13px;font-weight:800;color:#7c2d12;">
- TOOL006 검증 엔진 반영본 / FINAL: PASS / 운영·회귀 검증 완료
+ TOOL006 / 출력 전 검증 대기 — 현재 실행 결과는 STATE에서 확인
 </div>
 
 <div class="app"><div class="card"><h1 class="title">TOC 정리 잠금판 v2.26 안정본</h1>
@@ -37,6 +37,9 @@ $('btnRun').onclick=null;inputTopButton.onclick=scrollInputTop;outputTopButton.o
 })();
 </script>
 
+<script id="T6_ANOMALY_CONTRACT" type="application/json">
+{"schema_version":1,"identity":"original_run_id","recovery_limit":1,"repeat_code":"REPEATED_AUTO_REPAIR_FORBIDDEN","noise_rules":[{"root":"T6-RC-02","pattern":"^\\([^)]{3,}\\)$"},{"root":"T6-RC-03","pattern":"^\\*+"},{"root":"T6-RC-04","pattern":"^(list\\s+of\\s+(tables|figures))(?:\\s*[-:./]?\\s*\\d+)?$"}]}
+</script>
 <script id="T6_V10_ENGINE_RULES">
 /*
 T6 v10 integrated engine layer
@@ -46,7 +49,13 @@ T6 v10 integrated engine layer
 - 근거 없는 PASS 금지: FINAL은 기본 HOLD
 */
 (function(){
-  const T6_V10_RUN_ID = "T6-V10-INTEGRATED-" + new Date().toISOString().replace(/[-:.TZ]/g,"").slice(0,14);
+  const contract = JSON.parse(document.getElementById("T6_ANOMALY_CONTRACT").textContent);
+  let transaction = null;
+  function knownRoot(text){
+    const rule=contract.noise_rules.find(r=>new RegExp(r.pattern,"i").test(clean(text)));
+    return rule ? rule.root : null;
+  }
+  function plainText(rows){return rows.map(r=>"  ".repeat(Math.max(0,r.depth-1))+r.text).join("\n");}
   const TOP_RE = /^(Introduction|Executive Summary|Market Overview|Market Dynamics|Key Insights|Competitive Analysis|Competitive Landscape|Company Profiles|Strategic Recommendations|Appendix|Market Trends)$/i;
   const LONG_TOP_RE = /(Global|North America|Europe|Asia Pacific|Latin America|Middle East|Africa).{5,120}(Market|Industry).{0,80}(Analysis|Insights|Forecast|Outlook)/i;
   const CHILD_RE = /^(Research Scope|Market Segmentation|Definitions and Assumptions|Market Drivers|Market Restraints|Market Opportunities|Key Findings|Key Emerging Trends|Key Developments|Latest Technological|Technology Trends|Regulatory Framework|Pricing Analysis|Value Chain|Supply Chain|Impact of Tariff|COVID|Tariff|Patent Analysis|Import\/Export|Production|Consumption|Revenue|Volume)/i;
@@ -63,7 +72,7 @@ T6 v10 integrated engine layer
     if(isNoise(t)) return null;
     let m=t.match(/^(\d+(?:\.\d+){0,8})[.)\s]+(.+)$/);
     if(m){
-      let depth=Math.min(m[1].split(".").length, depthMax);
+      let depth=m[1].split(".").length;
       if(depth===1){ ctx.parent=m[2]; ctx.by=""; ctx.region=""; }
       return {text:m[1]+" "+clean(m[2]), depth, hold:false, reason:"number_preserve"};
     }
@@ -109,20 +118,41 @@ T6 v10 integrated engine layer
       return r;
     });
   }
-  function t6V10Process(raw, depthMax){
+  function t6V10Process(raw, depthMax, recovering=false){
     const ctx={parent:"", by:"", region:""};
-    const seen=new Set();
     let rows=[];
-    String(raw||"").split(/\r?\n/).forEach(line=>{
+    String(raw||"").split(/\r?\n/).forEach((line,source_index)=>{
+      const root=knownRoot(line);
+      if(root && recovering) return;
+      if(root){rows.push({text:clean(line),depth:1,hold:true,reason:"verified_noise",root,source_index});return;}
       const r=classifyLine(line, ctx, depthMax||3);
       if(!r) return;
-      const key=r.text.replace(/^\d+(?:\.\d+)*\s+/,"").toLowerCase();
-      if(seen.has(key)) return;
-      seen.add(key);
+      r.source_index=source_index;
       rows.push(r);
     });
     rows=renumber(rows, depthMax||3);
     return rows;
+  }
+  function validateOutput(tx,rows){
+    const issues=[];
+    const wanted=tx.original_input.split(/\r?\n/).map((text,index)=>({text:clean(text),index}))
+      .filter(x=>!isNoise(x.text) && !(tx.recovery_attempts && knownRoot(x.text)));
+    if(!rows.length) issues.push("NO_OUTPUT");
+    if(rows.length!==wanted.length || rows.some((r,i)=>!wanted[i] || r.source_index!==wanted[i].index)) issues.push("SOURCE_COVERAGE_MISMATCH");
+    const numbers=new Set();
+    rows.forEach((r,i)=>{
+      if(r.hold) issues.push(r.root||"UNKNOWN_ROOT");
+      const src=wanted[i] && wanted[i].text;
+      if(!src) return;
+      const n=src.match(/^(\d+(?:\.\d+){0,8})[.)\s]+(.+)$/);
+      const outputNumber=r.text.match(/^(\d+(?:\.\d+)*)\s+/);
+      if(outputNumber){if(numbers.has(outputNumber[1]))issues.push("NUMBER_CONFLICT");numbers.add(outputNumber[1]);}
+      if(n){
+        if(r.text!==n[1]+" "+clean(n[2])) issues.push("NUMBER_OR_TITLE_CHANGED");
+        if(r.depth!==n[1].split(".").length) issues.push("DEPTH_CHANGED");
+      }else if(r.text.replace(/^\d+(?:\.\d+)*\s+/,"")!==src) issues.push("TITLE_CHANGED");
+    });
+    return {status:issues.length?"HOLD":"PASS",issues:[...new Set(issues)]};
   }
   function renderV10(rows){
     const out = document.getElementById("outList") || document.getElementById("out") || document.querySelector(".out") || document.querySelector("#output");
@@ -130,44 +160,96 @@ T6 v10 integrated engine layer
     const plain=[];
     out.innerHTML = rows.map(r => {
       const cls = "toc-row depth-" + Math.min(r.depth,4) + (r.hold ? " review hold" : "");
-      const pad = "&nbsp;".repeat(Math.max(0,r.depth-1)*4);
+      const pad = "&nbsp;".repeat(Math.max(0,r.depth-1)*2);
       plain.push("  ".repeat(Math.max(0,r.depth-1))+r.text);
-      return '<div class="'+cls+'" data-v10-reason="'+r.reason+'">'+pad+escapeHtml(r.text)+(r.hold?' ⚠ HOLD':'')+'</div>';
+      return '<div class="'+cls+'" style="padding-left:0;text-indent:0" data-source-index="'+r.source_index+'" data-v10-reason="'+r.reason+'">'+pad+escapeHtml(r.text)+(r.hold?' ⚠ HOLD':'')+'</div>';
     }).join("");
     const copy=document.getElementById("copyBuffer"); if(copy) copy.value=plain.join("\n");
     return true;
   }
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-  function updateLogs(rows){
+  function updateLogs(rows,validation){
     const hold=rows.filter(r=>r.hold).length;
     const auto = document.getElementById("autoLog");
     const core = document.getElementById("coreLog");
-    const status=rows.length && hold===0 ? "PASS" : "HOLD";
-    if(auto) auto.textContent = ["STATUS: "+status,"RUN_ID: "+T6_V10_RUN_ID,"ENGINE: TOOL006_GITHUB_VERIFIED","OUTPUT_COUNT: "+rows.length,"HOLD: "+hold,"FINAL: "+status].join("\n");
+    const status=validation.status;
+    if(auto) auto.textContent = ["STATUS: "+status,"ORIGINAL_RUN_ID: "+transaction.original_run_id,"RECOVERY_ATTEMPTS: "+transaction.recovery_attempts,"ENGINE: TOOL006_GITHUB_VERIFIED","OUTPUT_COUNT: "+rows.length,"HOLD: "+hold,"ISSUES: "+validation.issues.join(","),"FINAL: "+status].join("\n");
     if(core) core.textContent = ["module_id: T6-M26-V10","rule_id: TOOL006_GITHUB_VERIFIED","number_priority: ON","single_execution_path: TRUE","final: "+status].join("\n");
     const state=document.getElementById("stateTxt"),gate=document.getElementById("gateTxt"),last=document.getElementById("lastCode"),ready=document.getElementById("packetReadyTxt");
     if(state) state.textContent=status;if(gate) gate.textContent=status==="PASS"?"G3":"G2";if(last) last.textContent=status;if(ready) ready.textContent=status==="PASS"?"정리 완료":"HOLD 검토 필요";
     if(hold){
-      const packet={run_id:T6_V10_RUN_ID,created_at:new Date().toISOString(),original_toc:(document.getElementById("taIn")||{}).value||"",tool_output:rows.map(r=>"  ".repeat(Math.max(0,r.depth-1))+r.text).join("\n"),suspicious_lines:rows.filter(r=>r.hold).map(r=>({text:r.text,reason:r.reason})),error_type:"AMBIGUOUS_DEPTH",publisher:"UNKNOWN",report_id:"UNKNOWN"};
+      const packet={run_id:transaction.original_run_id,created_at:new Date().toISOString(),original_toc:transaction.original_input,tool_output:plainText(rows),suspicious_lines:rows.filter(r=>r.hold).map(r=>({text:r.text,reason:r.reason})),error_type:"ANOMALY_TRANSACTION",publisher:"UNKNOWN",report_id:"UNKNOWN"};
       window.tool006ErrorCandidates=window.tool006ErrorCandidates||[];window.tool006ErrorCandidates.push(packet);window.tool006ErrorCandidates=window.tool006ErrorCandidates.slice(-20);
       const preview=document.getElementById("packetPreview");if(preview) preview.textContent=JSON.stringify(packet,null,2);
       try{if(window.localStorage){window.localStorage.setItem("tool006_error_candidates",JSON.stringify(window.tool006ErrorCandidates));}}catch(ignore){}
     }
     return status;
   }
+  function publish(){
+    const validation=validateOutput(transaction,transaction.rows);
+    transaction.status=validation.status;
+    transaction.issues=validation.issues;
+    renderV10(transaction.rows);
+    updateLogs(transaction.rows,validation);
+    document.getElementById("btnCopyOut").disabled=transaction.status!=="PASS";
+    if(transaction.status!=="PASS") document.getElementById("copyBuffer").value="";
+    document.getElementById("packetPreview").textContent=JSON.stringify(transaction,null,2);
+    return {status:transaction.status,rows:transaction.rows,original_run_id:transaction.original_run_id};
+  }
   window.runTocStableV10 = function(){
     const inp = document.getElementById("taIn") || document.getElementById("inp") || document.querySelector("textarea");
     const depthSel = document.getElementById("depthSel");
     const depth = depthSel ? Number(depthSel.value||3) : 3;
-    const rows = t6V10Process(inp ? inp.value : "", depth);
-    renderV10(rows);
-    const status=updateLogs(rows);
-    return {status,rows};
+    const raw=inp ? inp.value : "";
+    if(transaction && transaction.original_input===raw && transaction.depth===depth) return publish();
+    transaction={schema_version:contract.schema_version,recovery_attempts:0,depth,rows:[],status:"HOLD"};
+    Object.defineProperties(transaction,{
+      original_run_id:{value:"T6-"+crypto.randomUUID(),enumerable:true},
+      original_input:{value:raw,enumerable:true}
+    });
+    transaction.rows=t6V10Process(raw,depth);
+    return publish();
   };
+  function recover(){
+    if(!transaction){document.getElementById("lastCode").textContent="RUN_REQUIRED";return;}
+    // Attempt budget belongs to the original transaction, never the corrected text.
+    if(transaction.recovery_attempts>=contract.recovery_limit){document.getElementById("lastCode").textContent=contract.repeat_code;return;}
+    if(document.getElementById("taIn").value!==transaction.original_input || Number(document.getElementById("depthSel").value)!==transaction.depth){document.getElementById("lastCode").textContent="INPUT_CHANGED_RUN_REQUIRED";return;}
+    if(transaction.status==="PASS"){document.getElementById("lastCode").textContent="NO_ANOMALY_TO_IMPROVE";return;}
+    transaction.recovery_attempts++;
+    transaction.rows=t6V10Process(transaction.original_input,transaction.depth,true);
+    publish();
+  }
+  function blockOutput(reason){
+    document.getElementById("btnCopyOut").disabled=true;
+    document.getElementById("copyBuffer").value="";
+    if(transaction){
+      transaction.status="HOLD";transaction.issues=[reason];
+      updateLogs(transaction.rows,{status:"HOLD",issues:[reason]});
+      document.getElementById("packetPreview").textContent=JSON.stringify(transaction,null,2);
+    }else{document.getElementById("stateTxt").textContent="HOLD";}
+    document.getElementById("lastCode").textContent=reason;
+  }
   // Single authoritative execution path.
   document.addEventListener("DOMContentLoaded", function(){
     const btn = document.getElementById("btnAutoRun") || document.getElementById("btnRun");
-    if(btn){ btn.onclick=function(e){ e.preventDefault(); try{ window.runTocStableV10(); }catch(err){ console.error(err); } }; }
+    if(btn){ btn.onclick=function(e){ e.preventDefault(); try{ window.runTocStableV10(); }catch(err){blockOutput("RUNTIME_EXCEPTION"); console.error(err); } }; }
+    const recovery=document.getElementById("btnSendDiag");
+    recovery.textContent="자가분석·개선";recovery.onclick=recover;
+    const copy=document.getElementById("btnCopyOut");copy.disabled=true;
+    copy.onclick=async function(){
+      if(!transaction) return;
+      const validation=validateOutput(transaction,transaction.rows);
+      const visible=[...document.querySelectorAll("#outList .toc-row")].map(el=>el.textContent.replace(/\u00a0/g," ")).join("\n");
+      if(document.getElementById("taIn").value!==transaction.original_input || Number(document.getElementById("depthSel").value)!==transaction.depth || validation.status!=="PASS" || visible!==plainText(transaction.rows) || document.getElementById("copyBuffer").value!==plainText(transaction.rows)){
+        blockOutput("OUTPUT_GATE_BLOCKED");return;
+      }
+      try{await navigator.clipboard.writeText(plainText(transaction.rows));document.getElementById("lastCode").textContent="COPY_PASS";}
+      catch(err){document.getElementById("lastCode").textContent="COPY_HOLD";}
+    };
+    const invalidate=()=>blockOutput("INPUT_CHANGED_RUN_REQUIRED");
+    document.getElementById("taIn").addEventListener("input",invalidate);
+    document.getElementById("depthSel").addEventListener("change",invalidate);
   });
 })();
 </script>

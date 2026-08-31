@@ -34,3 +34,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         shell: pwsh
         run: python ./tests/tool006_self_improvement_first_validation.py
+      - name: Immutable original-run transaction and output gate regression
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: node ./tests/tool006_anomaly_transaction.cjs

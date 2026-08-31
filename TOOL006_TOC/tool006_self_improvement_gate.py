@@ -8,6 +8,15 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "knowledge" / "tool006_asset_index.json"
+HTML = ROOT / "TOOL006_TOC" / "toc_lock_v2_26_v10_실제본체반영_HOLD.html"
+
+
+def anomaly_contract() -> dict[str, Any]:
+    """One data contract, embedded for portable file:// browser operation."""
+    match = re.search(r'<script id="T6_ANOMALY_CONTRACT" type="application/json">\s*(.*?)\s*</script>', HTML.read_text(encoding="utf-8"), re.S)
+    if not match:
+        raise ValueError("ANOMALY_CONTRACT_MISSING")
+    return json.loads(match.group(1))
 
 ROOT_HIERARCHY = "T6-RC-01"
 ROOT_PAREN = "T6-RC-02"
@@ -26,12 +35,9 @@ def active_roots() -> set[str]:
 
 def classify_known(text: str) -> str | None:
     value = " ".join(text.replace("\u00a0", " ").split())
-    if re.fullmatch(r"\([^)]{3,}\)", value):
-        return ROOT_PAREN
-    if re.match(r"^\*+", value):
-        return ROOT_ASTERISK
-    if re.fullmatch(r"(?i)(list\s+of\s+(tables|figures))(?:\s*[-:./]?\s*\d+)?", value):
-        return ROOT_LISTS
+    for rule in anomaly_contract()["noise_rules"]:
+        if re.search(rule["pattern"], value, re.I):
+            return rule["root"]
     return None
 
 
@@ -44,6 +50,20 @@ def indent_numbered(text: str) -> str | None:
 
 
 def evaluate(payload: dict[str, Any]) -> dict[str, Any]:
+    transaction = payload.get("transaction")
+    if transaction is not None:
+        contract = anomaly_contract()
+        if not transaction.get("original_run_id") or transaction.get("original_run_id") != payload.get("original_run_id"):
+            return {"status": "HOLD", "reason": "ORIGINAL_RUN_ID_MISMATCH", "promotion_allowed": False}
+        attempts = transaction.get("recovery_attempts")
+        if type(attempts) is not int or attempts < 0:
+            return {"status": "HOLD", "reason": "INVALID_ATTEMPT_STATE", "promotion_allowed": False}
+        if attempts >= contract["recovery_limit"]:
+            return {"status": "HOLD", "reason": contract["repeat_code"], "promotion_allowed": False}
+        if transaction.get("original_input") != payload.get("original_input"):
+            return {"status": "HOLD", "reason": "ORIGINAL_INPUT_MISMATCH", "promotion_allowed": False}
+        # Consume before classification, even if the outcome is HOLD.
+        transaction["recovery_attempts"] = attempts + 1
     allowed = active_roots()
     detected: list[dict[str, str]] = []
     corrected = list(payload.get("engine_output", []))
@@ -51,10 +71,13 @@ def evaluate(payload: dict[str, Any]) -> dict[str, Any]:
 
     numbered = [indent_numbered(line) for line in payload.get("original_input", [])]
     numbered = [line for line in numbered if line]
-    if numbered and ROOT_HIERARCHY in allowed:
+    content = [line for line in payload.get("original_input", []) if str(line).strip() and not classify_known(str(line))]
+    if numbered and len(numbered) == len(content) and ROOT_HIERARCHY in allowed:
         if corrected != numbered:
             corrected = numbered
             detected.append({"root": ROOT_HIERARCHY, "action": "RESTORE_VERIFIED_HIERARCHY"})
+    elif numbered and any(line.strip() not in [str(x).strip() for x in corrected] for line in numbered):
+        unresolved.append({"reason": "MIXED_INPUT_RECONSTRUCTION_UNVERIFIED"})
 
     for item in payload.get("hold_lines", []):
         text = str(item.get("text", ""))

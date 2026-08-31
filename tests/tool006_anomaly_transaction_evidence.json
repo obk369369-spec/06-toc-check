@@ -1,0 +1,32 @@
+{
+  "date": "2026-08-31",
+  "base_remote_sha": "e937b9ffa658032c57db4e3072b93941b1288733",
+  "scope": "immutable original_run_id normal/recovery transaction + source coverage/indent/copy output gates",
+  "engine": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
+  "engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
+  "contract": "T6_ANOMALY_CONTRACT embedded JSON, read by browser engine and Python gate; browser does not launch Python",
+  "module_validation": {"python_shared_contract": "PASS", "vm_contract_cases": 7, "vm_is_browser_e2e": false},
+  "browser": "Codex In-app Chromium; actual HTML served on localhost; UI buttons + actual clipboard read",
+  "actual_case": {
+    "fixture": "fixtures/tool006_regression.json#actual-screenshot-parent-preserve-20260506",
+    "source_kind": "actual_screenshot",
+    "recovery_status": "PARTIAL",
+    "publisher_golden_pair": false,
+    "original_run_id": "T6-77d37926-f59e-4f92-b0d7-cb7f1f75e218",
+    "input_rows": 15,
+    "output_rows": 15,
+    "actual_clipboard": "1 Introduction\n  1.1 Research Scope\n  1.2 Market Segmentation\n  1.3 Research Methodology\n  1.4 Definitions and Assumptions\n2 Executive Summary\n3 Market Dynamics\n  3.1 Market Drivers\n  3.2 Market Restraints\n  3.3 Market Opportunities\n4 Key Insights\n  4.1 Key Emerging Trends - For Major Regions\n  4.2 Key Developments: Mergers, Acquisitions, Partnerships, and Others\n  4.3 Latest Technological Advancements\n  4.4 Insights on Sustainability",
+    "exact_expected_comparison": "PASS"
+  },
+  "browser_contract_cases": [
+    {"case": "known_noise_recovery", "original_run_id": "T6-f13ff5b4-2cca-4035-a2e9-2d45b2afe77e", "input": "1 Market Overview\n(This section explains the study assumptions)", "before": "HOLD", "after": "PASS", "recovery_attempts": 1, "original_id_unchanged": true, "second_action": "REPEATED_AUTO_REPAIR_FORBIDDEN"},
+    {"case": "duplicate_titles_and_depth", "actual_clipboard": "1 Overview\n  1.1 Scope\n    1.1.1 Detail\n2 Overview\n  2.1 Scope", "depth_selector": 2, "exact_expected_comparison": "PASS", "source_kind": "targeted_regression"},
+    {"case": "removed_output_copy", "result": "OUTPUT_GATE_BLOCKED"},
+    {"case": "unknown_root", "result": "HOLD", "recovery_attempts": 1, "copy_enabled": false},
+    {"case": "hold_log_sync", "original_run_id": "T6-b905d22b-11d5-4047-bc00-cf7fab0260da", "state": "HOLD", "auto_log_final": "HOLD", "core_log_final": "HOLD", "packet_status": "HOLD", "issue": "OUTPUT_GATE_BLOCKED"}
+  ],
+  "validation_sequence": ["changed transaction/coverage scope: first module + browser validation", "follow-up gate log consistency change: affected contract regression and first browser log-sync validation"],
+  "same_failed_approach_retried": false,
+  "skip_reuse": ["unaffected PowerShell engine functional E2E", "existing verified rules", "publisher golden pair HOLD"],
+  "not_claimed": ["all publishers complete", "fresh user-authored publisher golden pair", "all USB launchers deployed", "cross-chat automation complete", "transaction persistence across page reload"]
+}

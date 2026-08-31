@@ -1,8 +1,8 @@
 {
   "tool": "TOOL006",
   "status": "IN_PROGRESS",
-  "checkpoint": "SELF_IMPROVEMENT_GATE_VERIFIED_RUNTIME_LINK_PENDING",
-  "scope": "existing verified assets reused; verified-root gate added; automatic operating-engine invocation remains pending",
+  "checkpoint": "IMMUTABLE_ANOMALY_TRANSACTION_RUNTIME_VALIDATED",
+  "scope": "original run/recovery contract and source/number/depth/copy gates validated; publisher golden-pair and external deployment remain separate",
   "verified_commit": "c177b82b288242bbcbe28e77ec6b876986df72ee",
   "first_validation": {
     "run": 33250754262,
@@ -24,8 +24,9 @@
     "status": "PASS",
     "file": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
     "single_execution_path": true,
-    "usb_git_blob": "392600b921911c757fe13c902cba88f789993c1b",
-    "github_git_blob": "392600b921911c757fe13c902cba88f789993c1b",
+    "previous_verified_blob": "392600b921911c757fe13c902cba88f789993c1b",
+    "current_engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
+    "usb_deployment": "NOT_VERIFIED_FOR_THIS_REVISION",
     "canonical_classification": "CANONICAL_NORMAL",
     "archive_status": "REMOTE_VERIFIED"
   },
@@ -39,7 +40,10 @@
   "self_improvement": {
     "gate": "TOOL006_TOC/tool006_self_improvement_gate.py",
     "gate_validation": "PASS",
-    "runtime_auto_invocation": "HOLD_FOR_REDESIGN",
+    "runtime_auto_invocation": "ANOMALY_DETECTION_AND_OUTPUT_GATE_PASS",
+    "runtime_recovery": "ONE_ACTION_IMMUTABLE_TRANSACTION_PASS",
+    "current_evidence": "tests/tool006_anomaly_transaction_evidence.json",
+    "previous_attempt_records_are_historical": true,
     "overall_completion": "NOT_COMPLETE",
     "deployment_judgment": "LIMITED_REAL_USE",
     "runtime_link_attempt": {
@@ -81,11 +85,11 @@
     "simple_toc_pass_does_not_complete_tool": true
   },
   "pending_safe_archive": {
-    "status": "NO_PRODUCT_CHANGE_TO_PROMOTE",
-    "not_promoted": true,
+    "status": "VALIDATED_CHANGE_COMMIT_REQUIRES_REMOTE_READBACK",
+    "readback_rule": "Checkpoint containing commit is safe only after remote SHA and file content equality are confirmed; see Work final receipt.",
     "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
   },
-  "next_start": "TOOL006 재설계 시 immutable original_run_id 기준으로 normal run과 recovery 1회를 묶는 anomaly transaction contract부터 정의; 현재 HTML wrapper 방식은 반복하지 않음",
-  "next_work_first_task": "Design an immutable run/recovery transaction identity shared by the operating engine and verified gate before another implementation attempt.",
+  "next_start": "SKIP_REUSE immutable transaction and changed-scope browser validation. Check this commit remote readback receipt first; external launcher deployment needs its exact current entrypoint before any write. Publisher golden pair waits for new evidence.",
+  "next_work_first_task": "Do not repeat transaction redesign. Reuse validated canonical HTML; only deployment boundary or newly evidenced input errors can reopen work.",
   "current_working_state_runnable": true
 }
