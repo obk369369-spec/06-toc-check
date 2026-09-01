@@ -1,0 +1,56 @@
+{
+  "schema_version": "TOOL006_DEPLOYMENT_ENTRY_SYNC_EVIDENCE_V1",
+  "verified_at": "2026-09-01T00:00:00+09:00",
+  "scope": "changed deployment entry only; existing PASS suites SKIP_REUSE",
+  "canonical_repo": "obk369369-spec/06-toc-check",
+  "canonical_commit_before": "c9fe1f449586071f9834992e6f1dcb8c81456ffc",
+  "canonical_engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
+  "deployment_directory": "D:\\GPT 도구 작업\\6번 목차 정리 도구 (워크 작업)",
+  "observed_failure": {
+    "entry": "toc_lock_v2_26_v10_실제본체반영_HOLD.html",
+    "sha256": "678b999d2989f4c75347d171908857dcad72bd8ac4bc611bed920d91b41c0f82",
+    "input_lines": 15,
+    "output_lines": 14,
+    "missing_behavior": "duplicate source heading removed",
+    "false_status": "PASS",
+    "old_button_label": "자동진단 보내기"
+  },
+  "repair": {
+    "method": "reuse existing canonical index.html and directly synchronize stale existing entry",
+    "new_tool_or_pipeline": false,
+    "backup": "toc_lock_v2_26_v10_실제본체반영_HOLD.pre-sync-20260901.html",
+    "deployed_entries": [
+      "index.html",
+      "toc_lock_v2_26_v10_실제본체반영_HOLD.html"
+    ],
+    "deployed_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce"
+  },
+  "changed_scope_retest": {
+    "input_lines": 15,
+    "output_lines": 15,
+    "duplicate_source_rows_preserved": 2,
+    "ordering": "PASS",
+    "indentation": "PASS",
+    "truncation": "PASS",
+    "omission": "PASS",
+    "copy_exact": "PASS",
+    "copy_lines": 15,
+    "button_label": "자가분석·개선",
+    "state": "PASS",
+    "gate": "G3",
+    "last_code": "COPY_PASS"
+  },
+  "existing_button_ids": [
+    "btnTestCase",
+    "btnRun",
+    "btnPickPoint",
+    "btnSendDiag",
+    "btnResetDiag",
+    "btnClearIn",
+    "btnClearOut",
+    "btnCopyOut",
+    "inputTopButton",
+    "outputTopButton"
+  ],
+  "result": "PASS"
+}
