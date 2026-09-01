@@ -93,9 +93,11 @@
     "simple_toc_pass_does_not_complete_tool": true
   },
   "pending_safe_archive": {
-    "status": "DEPLOYMENT_EVIDENCE_COMMITTED_REMOTE_READBACK_PENDING_FOR_THIS_CHECKPOINT",
+    "status": "REMOTE_VERIFIED",
     "readback_rule": "Checkpoint containing commit is safe only after remote SHA and file content equality are confirmed; see Work final receipt.",
-    "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
+    "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb",
+    "readback_commit": "b1941d366377b7e1420cddc03932d863ef7b9ad4",
+    "readback_content_sha": "81d66aff495e80a75304e7e14bdda24492ff8a4c"
   },
   "next_start": "SKIP_REUSE canonical engine and deployed-entry recovery. Do not repeat the 15-line changed-scope retest. Only a newly evidenced input error may reopen functional repair; publisher golden pair remains HOLD pending external evidence.",
   "next_work_first_task": "No TOOL006 code change is pending from this incident. Preserve both existing deployment entry names at canonical SHA; wait for new publisher evidence before touching publisher rules.",
