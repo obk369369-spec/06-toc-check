@@ -2,7 +2,7 @@
   "tool": "TOOL006",
   "status": "IN_PROGRESS",
   "checkpoint": "IMMUTABLE_ANOMALY_TRANSACTION_RUNTIME_VALIDATED",
-  "scope": "original run/recovery contract and source/number/depth/copy gates validated; publisher golden-pair and external deployment remain separate",
+  "scope": "original run/recovery gates SKIP_REUSE; confirmed stale deployed alternate entry was the actual omission/button regression and synchronized it to the canonical engine",
   "verified_commit": "c177b82b288242bbcbe28e77ec6b876986df72ee",
   "first_validation": {
     "run": 33250754262,
@@ -26,12 +26,20 @@
     "single_execution_path": true,
     "previous_verified_blob": "392600b921911c757fe13c902cba88f789993c1b",
     "current_engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
-    "usb_deployment": "NOT_VERIFIED_FOR_THIS_REVISION",
+    "usb_deployment": "PASS_DEPLOYED_ENTRY_SYNC",
     "canonical_classification": "CANONICAL_NORMAL",
-    "archive_status": "REMOTE_VERIFIED"
+    "archive_status": "REMOTE_VERIFIED",
+    "deployment_directory": "D:\\GPT 도구 작업\\6번 목차 정리 도구 (워크 작업)",
+    "deployed_entries": [
+      "index.html",
+      "toc_lock_v2_26_v10_실제본체반영_HOLD.html"
+    ],
+    "deployment_evidence": "tests/tool006_deployment_entry_sync_evidence.json",
+    "deployment_evidence_commit": "d48a214858ab4a21c2fdfbc539bb6731f3406a29",
+    "deployment_changed_scope_retest": "PASS"
   },
   "usb_incremental_canonicalization": {
-    "legacy_html": "SHELL_OR_STALE_NOT_PROMOTED",
+    "legacy_html": "SYNCHRONIZED_TO_CANONICAL_WITH_RECOVERABLE_BACKUP",
     "sim1500_scope": "SYNTHETIC_REGRESSION_ONLY_NOT_REAL_PUBLISHER_COMPLETE",
     "unverified_large_manifest_and_logs": "HOLD_UNKNOWN",
     "usb_delete_ready": false,
@@ -85,11 +93,11 @@
     "simple_toc_pass_does_not_complete_tool": true
   },
   "pending_safe_archive": {
-    "status": "VALIDATED_CHANGE_COMMIT_REQUIRES_REMOTE_READBACK",
+    "status": "DEPLOYMENT_EVIDENCE_COMMITTED_REMOTE_READBACK_PENDING_FOR_THIS_CHECKPOINT",
     "readback_rule": "Checkpoint containing commit is safe only after remote SHA and file content equality are confirmed; see Work final receipt.",
     "orphan_blob_not_canonical": "d4405971dc0a9533b85bb9692c612db7a54919eb"
   },
-  "next_start": "SKIP_REUSE immutable transaction and changed-scope browser validation. Check this commit remote readback receipt first; external launcher deployment needs its exact current entrypoint before any write. Publisher golden pair waits for new evidence.",
-  "next_work_first_task": "Do not repeat transaction redesign. Reuse validated canonical HTML; only deployment boundary or newly evidenced input errors can reopen work.",
+  "next_start": "SKIP_REUSE canonical engine and deployed-entry recovery. Do not repeat the 15-line changed-scope retest. Only a newly evidenced input error may reopen functional repair; publisher golden pair remains HOLD pending external evidence.",
+  "next_work_first_task": "No TOOL006 code change is pending from this incident. Preserve both existing deployment entry names at canonical SHA; wait for new publisher evidence before touching publisher rules.",
   "current_working_state_runnable": true
 }
