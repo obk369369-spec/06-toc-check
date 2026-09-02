@@ -3,7 +3,7 @@
   "base_remote_sha": "e937b9ffa658032c57db4e3072b93941b1288733",
   "scope": "immutable original_run_id normal/recovery transaction + source coverage/indent/copy output gates",
   "engine": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
-  "engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
+  "engine_sha256": "96c664c02bedbe8d6fd8f7e76757f60d991ab8099da34b327e6d589ca0263202",
   "contract": "T6_ANOMALY_CONTRACT embedded JSON, read by browser engine and Python gate; browser does not launch Python",
   "module_validation": {"python_shared_contract": "PASS", "vm_contract_cases": 7, "vm_is_browser_e2e": false},
   "browser": "Codex In-app Chromium; actual HTML served on localhost; UI buttons + actual clipboard read",
@@ -23,7 +23,9 @@
     {"case": "duplicate_titles_and_depth", "actual_clipboard": "1 Overview\n  1.1 Scope\n    1.1.1 Detail\n2 Overview\n  2.1 Scope", "depth_selector": 2, "exact_expected_comparison": "PASS", "source_kind": "targeted_regression"},
     {"case": "removed_output_copy", "result": "OUTPUT_GATE_BLOCKED"},
     {"case": "unknown_root", "result": "HOLD", "recovery_attempts": 1, "copy_enabled": false},
-    {"case": "hold_log_sync", "original_run_id": "T6-b905d22b-11d5-4047-bc00-cf7fab0260da", "state": "HOLD", "auto_log_final": "HOLD", "core_log_final": "HOLD", "packet_status": "HOLD", "issue": "OUTPUT_GATE_BLOCKED"}
+    {"case": "hold_log_sync", "original_run_id": "T6-b905d22b-11d5-4047-bc00-cf7fab0260da", "state": "HOLD", "auto_log_final": "HOLD", "core_log_final": "HOLD", "packet_status": "HOLD", "issue": "OUTPUT_GATE_BLOCKED"},
+    {"case": "depth_two_exact_filter", "input_rows": 7, "expected_rows": 5, "actual_rows": 5, "depth_three_rows": 0, "clipboard_exact_expected": "PASS"},
+    {"case": "ui_feature_click_flow", "button_count": 10, "clicked_and_verified": 10, "page_errors": 0, "result": "PASS"}
   ],
   "validation_sequence": ["changed transaction/coverage scope: first module + browser validation", "follow-up gate log consistency change: affected contract regression and first browser log-sync validation"],
   "same_failed_approach_retried": false,

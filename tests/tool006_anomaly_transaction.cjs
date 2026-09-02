@@ -32,9 +32,18 @@ test('unknown remains HOLD and consumes exactly one attempt',()=>{
  node('btnSendDiag').onclick();assert.equal(node('lastCode').textContent,'REPEATED_AUTO_REPAIR_FORBIDDEN');
 });
 test('same headings at different positions retained and full depth preserved',()=>{
+ node('depthSel').value='4';
  node('taIn').value='1 Overview\n1.1 Scope\n1.1.1 Detail\n2 Overview\n2.1 Scope';
  assert.equal(window.runTocStableV10().status,'PASS');
  assert.equal(node('copyBuffer').value,'1 Overview\n  1.1 Scope\n    1.1.1 Detail\n2 Overview\n  2.1 Scope');
+});
+test('depth two excludes every explicit or inferred depth-three row',()=>{
+ node('depthSel').value='2';
+ node('taIn').value='1 Overview\n1.1 Scope\n1.1.1 Explicit Detail\n2 By Product\n2.1 Primary Segment\n2.1.1 Deep Segment\n3 Appendix';
+ const out=window.runTocStableV10();
+ assert.equal(out.status,'PASS');
+ assert.equal(node('copyBuffer').value,'1 Overview\n  1.1 Scope\n2 By Product\n  2.1 Primary Segment\n3 Appendix');
+ assert.equal(out.rows.some(row=>row.depth>2),false);
 });
 test('pre-output rejects missing/reordered/changed title/changed depth',()=>{
  const {transaction:tx,validateOutput:check}=window.inspectContract();

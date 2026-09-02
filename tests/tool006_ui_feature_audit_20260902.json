@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "scope": "TOOL006 scoped historical/current/deployed UI and function comparison",
+  "baselines": {
+    "historical_stable": "I:/GPT 도구 작업/6번 목차 정리 도구 (워크 작업)/보관폴더/toc_lock_v2_26_안정본_운영창보정본_위로버튼보강.html",
+    "historical_anchor_intermediate": "I:/GPT 도구 작업/6번 목차 정리 도구 (워크 작업)/보관폴더/toc_lock_v2_25_1_버튼실행복구.html",
+    "github_current": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
+    "deployed_current": "I:/GPT 도구 작업/6번 목차 정리 도구 (워크 작업)/index.html"
+  },
+  "comparison": [
+    {"feature":"test case","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnTestCase click E2E","action_required":false},
+    {"feature":"paste/input textarea","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"taIn fill -> run output E2E","action_required":false},
+    {"feature":"depth selector","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"BROKEN_CONNECTION_FIXED","evidence":"Depth 2 previously retained 1.1.1; exact row comparison added","action_required":true},
+    {"feature":"organize/run","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnRun click -> PASS/output","action_required":false},
+    {"feature":"coordinate pick","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnPickPoint ON/OFF click E2E","action_required":false},
+    {"feature":"diagnostic/recovery","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"CHANGED_INTENTIONALLY","evidence":"automatic diagnostic replaced by one-action immutable self-analysis/recovery contract","action_required":false},
+    {"feature":"reset diagnostic","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnResetDiag resets packet preview","action_required":false},
+    {"feature":"clear input","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnClearIn actual click","action_required":false},
+    {"feature":"clear output","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"btnClearOut actual click","action_required":false},
+    {"feature":"copy output","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"SAME_PASS","evidence":"clipboard exact expected comparison","action_required":false},
+    {"feature":"input/output scroll top","historical":true,"current":true,"historical_action":true,"current_action":true,"judgment":"CHANGED_INTENTIONALLY","evidence":"duplicate toolbar buttons removed; two panel-local buttons retain both actions","action_required":false},
+    {"feature":"anchor structure correction","historical":"v2.25 intermediate only","current":false,"historical_action":true,"current_action":false,"judgment":"CHANGED_INTENTIONALLY","evidence":"absent from subsequent v2.26 stable baseline; current master locks single recovery path","action_required":false},
+    {"feature":"file import","historical":false,"current":false,"historical_action":false,"current_action":false,"judgment":"SAME_PASS","evidence":"no file control in compared v2.25/v2.26 baselines","action_required":false},
+    {"feature":"download/save","historical":false,"current":false,"historical_action":false,"current_action":false,"judgment":"SAME_PASS","evidence":"no download control in compared v2.25/v2.26 baselines; clipboard is canonical output","action_required":false}
+  ],
+  "button_counts": {"historical_v226_toolbar_plus_panel":12,"current":10,"missing_user_capability_count":0},
+  "deployment_before": {"github_sha256":"642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce","deployed_index_sha256":"642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce","mismatch":false},
+  "structural_diagnosis": {
+    "category":"D_UI_NORMAL_TOC_CLASSIFICATION_AND_DEPTH_FILTER_WRONG",
+    "first_divergence":"depth filtering",
+    "cause":"natural hierarchy detection was clamped to the selected display depth, while explicit numbered depth bypassed the display-depth filter",
+    "fix":"separate natural-depth classification from selected-depth filtering; exclude every row deeper than selected depth before renumber/output validation",
+    "single_fixture_exception":false
+  }
+}

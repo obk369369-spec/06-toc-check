@@ -67,7 +67,7 @@ T6 v10 integrated engine layer
 
   function clean(x){ return String(x||"").replace(/\t/g," ").replace(/\u00A0/g," ").replace(/[–—]/g,"-").replace(/\s+/g," ").trim(); }
   function isNoise(t){ return !t || /^(read more|read less|description|sample request|request sample|download sample|select license|buy now|enquire before buying)$/i.test(t) || /^(table|figure)\s+\d+/i.test(t) || /^\d+$/.test(t); }
-  function classifyLine(line, ctx, depthMax){
+  function classifyLine(line, ctx){
     let t=clean(line);
     if(isNoise(t)) return null;
     let m=t.match(/^(\d+(?:\.\d+){0,8})[.)\s]+(.+)$/);
@@ -83,21 +83,21 @@ T6 v10 integrated engine layer
     if(TOP_RE.test(t) || LONG_TOP_RE.test(t)){
       depth=1; ctx.parent=t; ctx.by=""; ctx.region=""; reason="top_detected";
     } else if(BY_RE.test(t)){
-      depth=Math.min(2, depthMax); ctx.by=(t.match(BY_RE)||[])[1]||"GROUP";ctx.region="";reason="by_head";
+      depth=2; ctx.by=(t.match(BY_RE)||[])[1]||"GROUP";ctx.region="";reason="by_head";
     } else if(REGION_RE.test(t)){
-      depth=ctx.by==="Region" ? Math.min(3,depthMax) : Math.min(2,depthMax);ctx.region=t;reason="region_child";
+      depth=ctx.by==="Region" ? 3 : 2;ctx.region=t;reason="region_child";
     } else if(COUNTRY_RE.test(t)){
-      depth=ctx.region ? Math.min(4,depthMax) : (ctx.by ? Math.min(3,depthMax) : Math.min(2,depthMax));reason="country_child";
+      depth=ctx.region ? 4 : (ctx.by ? 3 : 2);reason="country_child";
     } else if(COMPANY_CHILD_RE.test(t)){
-      depth=/Company Profiles|Competitive Landscape/i.test(ctx.parent||"") ? Math.min(3,depthMax) : Math.min(2,depthMax); reason="company_child";
+      depth=/Company Profiles|Competitive Landscape/i.test(ctx.parent||"") ? 3 : 2; reason="company_child";
     } else if(COMPANY_NAME_RE.test(t) && /Company Profiles|Competitive Landscape/i.test(ctx.parent||"")){
-      depth=Math.min(2,depthMax); reason="company_name_child";
+      depth=2; reason="company_name_child";
     } else if(CHILD_RE.test(t)){
-      depth=Math.min(2,depthMax); reason="known_child";
+      depth=2; reason="known_child";
     } else if(ctx.by){
-      depth=Math.min(3,depthMax); reason="by_group_child";
+      depth=3; reason="by_group_child";
     } else if(ctx.parent && /Key Insights|Market Dynamics|Research Methodology|Introduction/i.test(ctx.parent)){
-      depth=Math.min(2,depthMax); reason="parent_child";
+      depth=2; reason="parent_child";
     } else if(t.length>70 && /(Market|Analysis|Forecast|Insights|Outlook|Report)/i.test(t)){
       depth=1; ctx.parent=t; ctx.by="";ctx.region="";reason="long_heading_promotion";
     } else {
@@ -125,9 +125,10 @@ T6 v10 integrated engine layer
       const root=knownRoot(line);
       if(root && recovering) return;
       if(root){rows.push({text:clean(line),depth:1,hold:true,reason:"verified_noise",root,source_index});return;}
-      const r=classifyLine(line, ctx, depthMax||3);
+      const r=classifyLine(line, ctx);
       if(!r) return;
       r.source_index=source_index;
+      if(r.depth>(depthMax||3)) return;
       rows.push(r);
     });
     rows=renumber(rows, depthMax||3);
@@ -135,8 +136,15 @@ T6 v10 integrated engine layer
   }
   function validateOutput(tx,rows){
     const issues=[];
-    const wanted=tx.original_input.split(/\r?\n/).map((text,index)=>({text:clean(text),index}))
-      .filter(x=>!isNoise(x.text) && !(tx.recovery_attempts && knownRoot(x.text)));
+    const expectedCtx={parent:"",by:"",region:""};
+    const wanted=[];
+    tx.original_input.split(/\r?\n/).forEach((text,index)=>{
+      const cleaned=clean(text),root=knownRoot(cleaned);
+      if(isNoise(cleaned) || (tx.recovery_attempts && root)) return;
+      if(root){if(1<=tx.depth) wanted.push({text:cleaned,index});return;}
+      const classified=classifyLine(cleaned,expectedCtx);
+      if(classified && classified.depth<=tx.depth) wanted.push({text:cleaned,index});
+    });
     if(!rows.length) issues.push("NO_OUTPUT");
     if(rows.length!==wanted.length || rows.some((r,i)=>!wanted[i] || r.source_index!==wanted[i].index)) issues.push("SOURCE_COVERAGE_MISMATCH");
     const numbers=new Set();
