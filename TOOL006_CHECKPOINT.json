@@ -1,8 +1,8 @@
 {
   "tool": "TOOL006",
-  "status": "IN_PROGRESS",
-  "checkpoint": "IMMUTABLE_ANOMALY_TRANSACTION_RUNTIME_VALIDATED",
-  "scope": "original run/recovery gates SKIP_REUSE; confirmed stale deployed alternate entry was the actual omission/button regression and synchronized it to the canonical engine",
+  "status": "REMOTE_VERIFIED_DEPLOYED_CHANGED_SCOPE_PASS",
+  "checkpoint": "HISTORICAL_UI_AUDIT_AND_DEPTH_FILTER_DEPLOYED",
+  "scope": "historical/current/deployed UI compared; natural hierarchy separated from selected-depth filtering; actual I-drive canonical entry retested",
   "verified_commit": "c177b82b288242bbcbe28e77ec6b876986df72ee",
   "first_validation": {
     "run": 33250754262,
@@ -20,23 +20,39 @@
     "existing smoke",
     "existing functional E2E"
   ],
+  "validation_20260902": {
+    "historical_ui_audit": "PASS",
+    "current_button_count": 10,
+    "missing_user_capability_count": 0,
+    "actual_button_click_e2e": "PASS",
+    "actual_screenshot_recovered_15_line_case": "PASS",
+    "depth_two_exact_expected": "1 Overview\n  1.1 Scope\n2 By Product\n  2.1 Primary Segment\n3 Appendix",
+    "depth_three_rows_in_actual": 0,
+    "clipboard_exact_expected": "PASS",
+    "contract_tests": "8/8 PASS",
+    "functional_e2e": "9/9 PASS",
+    "smoke": "4/4 PASS",
+    "engine_sha256": "96c664c02bedbe8d6fd8f7e76757f60d991ab8099da34b327e6d589ca0263202",
+    "evidence": "tests/tool006_ui_feature_audit_20260902.json"
+  },
   "operating_program": {
     "status": "PASS",
     "file": "TOOL006_TOC/toc_lock_v2_26_v10_실제본체반영_HOLD.html",
     "single_execution_path": true,
     "previous_verified_blob": "392600b921911c757fe13c902cba88f789993c1b",
-    "current_engine_sha256": "642112d55bbfcf7e8638517f830efd3bc686fc2c353d98e7c63d8a9dd8632dce",
+    "current_engine_sha256": "96c664c02bedbe8d6fd8f7e76757f60d991ab8099da34b327e6d589ca0263202",
     "usb_deployment": "PASS_DEPLOYED_ENTRY_SYNC",
     "canonical_classification": "CANONICAL_NORMAL",
     "archive_status": "REMOTE_VERIFIED",
-    "deployment_directory": "D:\\GPT 도구 작업\\6번 목차 정리 도구 (워크 작업)",
+    "deployment_directory": "I:\\GPT 도구 작업\\6번 목차 정리 도구 (워크 작업)",
     "deployed_entries": [
       "index.html",
       "toc_lock_v2_26_v10_실제본체반영_HOLD.html"
     ],
     "deployment_evidence": "tests/tool006_deployment_entry_sync_evidence.json",
     "deployment_evidence_commit": "d48a214858ab4a21c2fdfbc539bb6731f3406a29",
-    "deployment_changed_scope_retest": "PASS"
+    "deployment_changed_scope_retest": "PASS",
+    "deployment_20260902_sha256": "96c664c02bedbe8d6fd8f7e76757f60d991ab8099da34b327e6d589ca0263202"
   },
   "usb_incremental_canonicalization": {
     "legacy_html": "SYNCHRONIZED_TO_CANONICAL_WITH_RECOVERABLE_BACKUP",
